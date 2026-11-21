@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</title>
+  <meta name="description" content="اپلیکیشن قابل نصب برای اندروید و آیفون جهت مدیریت سوخت، تسویه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو" />
+  <meta name="theme-color" content="#090d16" />
+
+  <!-- PWA & iOS Safari Install Metadata -->
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="سوخت ترانزیت" />
+  <link rel="apple-touch-icon" href="./icon-192.svg" />
+  <link rel="icon" type="image/svg+xml" href="./icon-192.svg" />
+
+  <style>
+    :root {
+      --bg-app: #090d16;
+      --bg-surface: rgba(17, 24, 39, 0.92);
+      --bg-input: rgba(11, 16, 28, 0.88);
+      --border-subtle: rgba(148, 163, 184, 0.16);
+      --border-focus: #38bdf8;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
+      --shadow-card: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Naskh Arabic", "Tahoma", sans-serif;
+      background: radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.14), transparent 42%),
+                  radial-gradient(circle at 85% 20%, rgba(16, 185, 129, 0.11), transparent 45%),
+                  radial-gradient(circle at 50% 90%, rgba(129, 140, 248, 0.12), transparent 50%),
+                  var(--bg-app);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.65;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: calc(118px + env(safe-area-inset-bottom, 0px));
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 16px 14px 28px;
+    }
+
+    /* Install Banner */
+    .install-banner {
+      background: linear-gradient(135deg, rgba(2, 132, 199, 0.22), rgba(16, 185, 129, 0.18));
+      border: 1px solid rgba(56, 189, 248, 0.38);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .install-banner-title {
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .install-banner-sub {
+      font-size: 0.77rem;
+      color: #cbd5e1;
+      margin-top: 2px;
+    }
+
+    /* Header */
+    .top-header {
+      background: linear-gradient(135deg, rgba(20, 30, 48, 0.95), rgba(15, 23, 42, 0.95));
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px 18px 16px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 16px;
+    }
+
+    .header-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(16, 185, 129, 0.22));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .brand-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      border: 1px solid var(--border-subtle);
+      background: rgba(30, 41, 59, 0.88);
+      color: var(--text-main);
+      padding: 8px 13px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      border-color: rgba(148, 163, 184, 0.38);
+      background: rgba(51, 65, 85, 0.92);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-color: rgba(56, 189, 248, 0.5);
+      color: #fff;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #059669, #10b981);
+      border-color: rgba(16, 185, 129, 0.55);
+      color: #fff;
+    }
+
+    .btn-amber {
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      border-color: rgba(245, 158, 11, 0.55);
+      color: #090d16;
+      font-weight: 700;
+    }
+
+    .btn-danger-soft {
+      background: rgba(244, 63, 94, 0.14);
+      border-color: rgba(244, 63, 94, 0.35);
+      color: #fda4af;
+    }
+
+    .save-status {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(148, 163, 184, 0.16);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.76rem;
+      color: var(--text-muted);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.14);
+      color: #6ee7b7;
+      font-weight: 600;
+    }
+
+    /* Tank Gauge Bar */
+    .tank-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .tank-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .tank-title {
+      font-size: 0.94rem;
+      font-weight: 700;
+      color: #e2e8f0;
+    }
+
+    .tank-bar-track {
+      height: 22px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      margin-bottom: 12px;
+    }
+
+    .tank-seg-used {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+
+    .tank-seg-company {
+      background: linear-gradient(90deg, #0284c7, #38bdf8);
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+
+    .tank-seg-personal {
+      background: linear-gradient(90deg, #059669, #34d399);
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+
+    .tank-legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 8px;
+      font-size: 0.78rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.55);
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .alert-box {
+      margin-top: 12px;
+      padding: 11px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: none;
+    }
+
+    .alert-warn {
+      display: block;
+      background: rgba(245, 158, 11, 0.14);
+      border: 1px solid rgba(245, 158, 11, 0.42);
+      color: #fcd34d;
+    }
+
+    .alert-danger {
+      display: block;
+      background: rgba(244, 63, 94, 0.16);
+      border: 1px solid rgba(244, 63, 94, 0.48);
+      color: #fda4af;
+    }
+
+    /* Sections / Cards */
+    .section-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #f8fafc;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(56, 189, 248, 0.15);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 820px) {
+      .grid-5 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field-label {
+      font-size: 0.79rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .field-hint {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-weight: 400;
+    }
+
+    .input-control, .select-control {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #ffffff;
+      background: var(--bg-input);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-control:focus, .select-control:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.16);
+    }
+
+    .input-ltr {
+      direction: ltr;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sub-box {
+      background: rgba(15, 23, 42, 0.62);
+      border: 1px solid rgba(148, 163, 184, 0.13);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .sub-box-title {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .kpi-card {
+      background: linear-gradient(160deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.92));
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 3px;
+      background: var(--kpi-accent, var(--accent-blue));
+    }
+
+    .kpi-label {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .kpi-main {
+      font-size: 1.16rem;
+      font-weight: 800;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: #cbd5e1;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      min-width: 580px;
+    }
+
+    th, td {
+      padding: 10px 11px;
+      text-align: right;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      vertical-align: middle;
+    }
+
+    th {
+      background: rgba(15, 23, 42, 0.9);
+      color: #94a3b8;
+      font-weight: 700;
+      font-size: 0.76rem;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .num-ltr {
+      direction: ltr;
+      text-align: left;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .tag-iran {
+      background: rgba(16, 185, 129, 0.16);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .tag-foreign {
+      background: rgba(56, 189, 248, 0.16);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .tag-fine {
+      background: rgba(244, 63, 94, 0.16);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .tag-buy {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .receipt-preview-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .receipt-thumb {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid rgba(56, 189, 248, 0.45);
+      cursor: pointer;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 18px;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(11, 16, 28, 0.95);
+      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+      z-index: 50;
+    }
+
+    .bottom-bar-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .bottom-bar .btn {
+      flex: 1 1 150px;
+      justify-content: center;
+      padding: 10px 12px;
+      font-size: 0.84rem;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.82);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #111827;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: var(--radius-lg);
+      max-width: 680px;
+      width: 100%;
+      max-height: 86vh;
+      overflow-y: auto;
+      padding: 18px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .close-btn {
+      background: rgba(148, 163, 184, 0.14);
+      color: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .archive-item {
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-img {
+      max-width: 100%;
+      max-height: 70vh;
+      border-radius: var(--radius-md);
+      display: block;
+      margin: 0 auto;
+    }
+
+    .toast {
+      position: fixed;
+      top: calc(18px + env(safe-area-inset-top, 0px));
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #065f46;
+      color: #ecfdf5;
+      border: 1px solid #34d399;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      z-index: 200;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast">انجام شد</div>
+
+  <div class="container">
+    <!-- Install App Banner (Android PWA & iOS Add to Home Screen) -->
+    <section id="installBanner" class="install-banner">
+      <div>
+        <div class="install-banner-title">📲 نصب اپلیکیشن روی گوشی اندروید و آیفون (iOS)</div>
+        <div id="installHintText" class="install-banner-sub">در اندروید با دکمه نصب یا منوی مرورگر «Add to Home Screen» و در آیفون از منوی Share گزینه «Add to Home Screen» را بزنید.</div>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button id="btnInstallApp" type="button" class="btn btn-success" onclick="triggerInstallPrompt()">
+          ⬇ نصب روی گوشی
+        </button>
+        <button type="button" class="btn" onclick="openInstallGuideModal()">
+          راهنمای اندروید و اپل
+        </button>
+      </div>
+    </section>
+
+    <!-- Header -->
+    <header class="top-header">
+      <div class="header-row">
+        <div class="brand-box">
+          <div class="brand-icon">🚛</div>
+          <div>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1>
+            <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-primary" onclick="openArchiveModal()">
+            📂 آرشیو سفرها (<span id="archiveCountBadge">0</span>)
+          </button>
+          <button type="button" class="btn btn-amber" onclick="saveCurrentTripToArchive()">
+            💾 ذخیره سفر در آرشیو
+          </button>
+          <button type="button" class="btn btn-danger-soft" onclick="resetDefaultTrip()">
+            ↺ بازنشانی سفر پیش‌فرض
+          </button>
+        </div>
+      </div>
+      <div class="save-status">
+        <span class="status-pill">● ذخیره خودکار روی حافظه گوشی فعال است</span>
+        <span id="lastSavedLabel">آخرین به‌روزرسانی: همین لحظه</span>
+      </div>
+    </header>
+
+    <!-- Tank Status Bar -->
+    <section class="tank-panel">
+      <div class="tank-header">
+        <span class="tank-title">⛽ وضعیت لحظه‌ای باک و تفکیک سهمیه سوخت</span>
+        <span id="tankSummaryText" class="badge">مانده باک: ۴۰۸.۸۰ لیتر</span>
+      </div>
+      <div class="tank-bar-track" aria-label="نوار وضعیت باک">
+        <div id="barUsed" class="tank-seg-used" style="width: 67%;"></div>
+        <div id="barCompany" class="tank-seg-company" style="width: 21.7%;"></div>
+        <div id="barPersonal" class="tank-seg-personal" style="width: 11.3%;"></div>
+      </div>
+      <div class="tank-legend">
+        <div class="legend-item">
+          <span class="dot" style="background: #f97316;"></span>
+          <span>مصرف کل سفر: <strong id="legUsed">۸۳۱.۲۰</strong> لیتر</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background: #38bdf8;"></span>
+          <span>اضافه‌سوخت شرکت (قابل فروش): <strong id="legCompany">۲۶۸.۸۰</strong> لیتر</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background: #34d399;"></span>
+          <span>سهم سوخت شخصی شما: <strong id="legPersonal">۱۴۰.۰۰</strong> لیتر</span>
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background: #a855f7;"></span>
+          <span>کل باقیمانده واقعی باک: <strong id="legRemaining">۴۰۸.۸۰</strong> لیتر</span>
+        </div>
+      </div>
+      <div id="fuelAlertBox" class="alert-box"></div>
+    </section>
+
+    <!-- Section 1: Trip & Fuel Parameters -->
+    <section class="section-card">
+      <div class="section-head">
+        <h2 class="section-title">۱. مشخصات سفر، مسافت‌ها و ضرایب مصرف سوخت</h2>
+        <span class="badge">محاسبه آنی</span>
+      </div>
+
+      <div class="grid-3">
+        <div class="field-group">
+          <label class="field-label" for="tripTitle">عنوان / مسیر سفر</label>
+          <input id="tripTitle" type="text" class="input-control" oninput="handleInputChange()" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="plateNo">شماره پلاک کشنده / تریلر</label>
+          <input id="plateNo" type="text" class="input-control input-ltr" oninput="handleInputChange()" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="tripDate">تاریخ شروع / ثبت سفر</label>
+          <input id="tripDate" type="text" class="input-control input-ltr" oninput="handleInputChange()" />
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top: 12px;">
+        <div class="field-group">
+          <label class="field-label" for="initialFuel">کل گازوئیل موجود در باک (لیتر)</label>
+          <input id="initialFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="companyQuota">سهمیه سوخت شرکت برای کل مسیر (لیتر)</label>
+          <input id="companyQuota" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="fuelSellPriceTry">نرخ فروش هر لیتر سوخت (لیر)</label>
+          <input id="fuelSellPriceTry" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+        </div>
+      </div>
+
+      <div class="sub-box">
+        <div class="sub-box-title">
+          <span>مسیر رفت (بارگیری / اعزام)</span>
+          <span class="field-hint">فرمول: مسافت × ضریب ÷ ۱۰۰</span>
+        </div>
+        <div class="grid-3">
+          <div class="field-group">
+            <label class="field-label" for="outboundKm">مسافت رفت (کیلومتر)</label>
+            <input id="outboundKm" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="outboundWeight">وزن بار رفت (تن)</label>
+            <input id="outboundWeight" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="outboundRate">ضریب مصرف رفت (لیتر / ۱۰۰ کم)</label>
+            <input id="outboundRate" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-box">
+        <div class="sub-box-title">
+          <span>مسیر برگشت</span>
+          <span class="field-hint">فرمول: مسافت × ضریب ÷ ۱۰۰</span>
+        </div>
+        <div class="grid-3">
+          <div class="field-group">
+            <label class="field-label" for="returnKm">مسافت برگشت (کیلومتر)</label>
+            <input id="returnKm" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="returnWeight">وزن بار برگشت (تن)</label>
+            <input id="returnWeight" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="returnRate">ضریب مصرف برگشت (لیتر / ۱۰۰ کم)</label>
+            <input id="returnRate" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-box">
+        <div class="sub-box-title">
+          <span>تردد خالی جهت بارگیری و کارکرد درجا</span>
+          <span class="field-hint">شامل بخاری، توقف یا صف مرز</span>
+        </div>
+        <div class="grid-3">
+          <div class="field-group">
+            <label class="field-label" for="emptyKm">مسافت خالی جهت بارگیری (کیلومتر)</label>
+            <input id="emptyKm" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="emptyRate">ضریب مصرف خالی (لیتر / ۱۰۰ کم)</label>
+            <input id="emptyRate" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="idleFuel">مصرف کارکرد درجا / آمپر (لیتر)</label>
+            <input id="idleFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Exchange Rates to Toman -->
+    <section class="section-card">
+      <div class="section-head">
+        <h2 class="section-title">۲. نرخ تبدیل ارزها به تومان (برای محاسبه لحظه‌ای تمام بخش‌ها)</h2>
+        <span class="badge">لیر • دلار • یورو • مانات • تومان</span>
+      </div>
+      <div class="grid-5">
+        <div class="field-group">
+          <label class="field-label" for="rateTRY">هر ۱ لیر (TRY)</label>
+          <input id="rateTRY" type="number" step="1" class="input-control input-ltr" oninput="handleInputChange()" />
+          <span class="field-hint">تومان</span>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="rateUSD">هر ۱ دلار (USD)</label>
+          <input id="rateUSD" type="number" step="1" class="input-control input-ltr" oninput="handleInputChange()" />
+          <span class="field-hint">تومان</span>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="rateEUR">هر ۱ یورو (EUR)</label>
+          <input id="rateEUR" type="number" step="1" class="input-control input-ltr" oninput="handleInputChange()" />
+          <span class="field-hint">تومان</span>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="rateAZN">هر ۱ مانات (AZN)</label>
+          <input id="rateAZN" type="number" step="1" class="input-control input-ltr" oninput="handleInputChange()" />
+          <span class="field-hint">تومان</span>
+        </div>
+        <div class="field-group">
+          <label class="field-label">تومان (IRT)</label>
+          <input type="text" value="۱ (واحد مبنا)" disabled class="input-control" style="opacity: 0.72;" />
+          <span class="field-hint">محاسبه مستقیم</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Fuel & Quota Settlement Results -->
+    <section class="section-card">
+      <div class="section-head">
+        <h2 class="section-title">۳. نتیجه محاسبه مصرف سوخت و تسویه شرکت و راننده</h2>
+        <span class="badge">تفکیک دقیق</span>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card" style="--kpi-accent: #f97316;">
+          <div class="kpi-label">مصرف کل سفر (رفت + خالی + درجا + برگشت)</div>
+          <div id="kpiTotalConsumed" class="kpi-main">۸۳۱.۲۰ لیتر</div>
+          <div id="kpiConsumedBreakdown" class="kpi-sub">رفت ۴۱۴.۸ + خالی ۱۴.۴ + درجا ۱۷ + برگشت ۳۸۵</div>
+        </div>
+
+        <div class="kpi-card" style="--kpi-accent: #38bdf8;">
+          <div class="kpi-label">اضافه‌سوخت شرکت (قابل فروش برای تسویه)</div>
+          <div id="kpiCompanySurplus" class="kpi-main">۲۶۸.۸۰ لیتر</div>
+          <div id="kpiCompanyValue" class="kpi-sub">۱۴,۷۸۴ لیر | ۷۸,۳۵۵,۲۰۰ تومان</div>
+        </div>
+
+        <div class="kpi-card" style="--kpi-accent: #10b981;">
+          <div class="kpi-label">سهم سوخت شخصی راننده</div>
+          <div id="kpiPersonalFuel" class="kpi-main">۱۴۰.۰۰ لیتر</div>
+          <div id="kpiPersonalValue" class="kpi-sub">۷,۷۰۰ لیر | ۴۰,۸۱۰,۰۰۰ تومان</div>
+        </div>
+
+        <div class="kpi-card" style="--kpi-accent: #a855f7;">
+          <div class="kpi-label">کل گازوئیل باقی‌مانده در باک</div>
+          <div id="kpiRemainingFuel" class="kpi-main">۴۰۸.۸۰ لیتر</div>
+          <div id="kpiRemainingValue" class="kpi-sub">ارزش کل: ۱۱۹,۱۶۵,۲۰۰ تومان</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Border Fuel Purchases & Fines (Iran & Foreign) -->
+    <section class="section-card">
+      <div class="section-head">
+        <h2 class="section-title">۴. ثبت خریدهای سوخت و جرایم گازوئیل (مرزهای ایران و خارج)</h2>
+        <span class="badge">جدا از سهمیه شرکت</span>
+      </div>
+
+      <div class="grid-3">
+        <div class="field-group">
+          <label class="field-label" for="bfZone">محدوده مرز</label>
+          <select id="bfZone" class="select-control">
+            <option value="IRAN">مرزهای ایران</option>
+            <option value="FOREIGN">مرزهای خارج (ترکیه / سایر کشورها)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="bfType">نوع تراکنش</label>
+          <select id="bfType" class="select-control">
+            <option value="FINE">جریمه گازوئیل / مابه‌التفاوت باک</option>
+            <option value="PURCHASE">خرید سوخت در مرز / مسیر</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="bfBorderName">نام مرز / توضیح</label>
+          <input id="bfBorderName" type="text" class="input-control" placeholder="مثلاً: بازرگان / گوربلاغ / رازی" />
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top: 12px;">
+        <div class="field-group">
+          <label class="field-label" for="bfAmount">مبلغ پرداختی</label>
+          <input id="bfAmount" type="number" step="0.01" class="input-control input-ltr" placeholder="0" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="bfCurrency">واحد ارز</label>
+          <select id="bfCurrency" class="select-control">
+            <option value="TRY">لیر ترکیه (TRY)</option>
+            <option value="IRT">تومان ایران (IRT)</option>
+            <option value="USD">دلار آمریکا (USD)</option>
+            <option value="EUR">یورو (EUR)</option>
+            <option value="AZN">مانات آذربایجان (AZN)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="bfLiters">مقدار سوخت / لیتر (اختیاری)</label>
+          <input id="bfLiters" type="number" step="0.01" class="input-control input-ltr" placeholder="0" />
+        </div>
+      </div>
+
+      <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-primary" onclick="addBorderFuelItem()">
+          ＋ افزودن خرید / جریمه مرزی
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>محدوده</th>
+              <th>نوع</th>
+              <th>مرز / شرح</th>
+              <th>لیتر</th>
+              <th>مبلغ اصلی</th>
+              <th>معادل تومان</th>
+              <th>حذف</th>
+            </tr>
+          </thead>
+          <tbody id="borderFuelTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 5: Manual Trip Expenses with Receipt Image -->
+    <section class="section-card">
+      <div class="section-head">
+        <h2 class="section-title">۵. هزینه‌های سفر داخل ایران و خارج از آن (با قابلیت ثبت عکس سند)</h2>
+        <span class="badge">محاسبه لحظه‌ای چندارزی</span>
+      </div>
+
+      <div class="grid-3">
+        <div class="field-group">
+          <label class="field-label" for="expScope">محل هزینه</label>
+          <select id="expScope" class="select-control">
+            <option value="INSIDE_IRAN">داخل ایران</option>
+            <option value="OUTSIDE_IRAN">خارج از ایران</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="expTitle">عنوان هزینه (عوارض، باسکول، تعمیر، غذا، پارکینگ...)</label>
+          <input id="expTitle" type="text" class="input-control" placeholder="مثلاً: عوارض بزرگراه یا پارکینگ" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="expCurrency">واحد پول</label>
+          <select id="expCurrency" class="select-control">
+            <option value="IRT">تومان ایران (IRT)</option>
+            <option value="TRY">لیر ترکیه (TRY)</option>
+            <option value="USD">دلار آمریکا (USD)</option>
+            <option value="EUR">یورو (EUR)</option>
+            <option value="AZN">مانات آذربایجان (AZN)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 12px;">
+        <div class="field-group">
+          <label class="field-label" for="expAmount">مبلغ هزینه</label>
+          <input id="expAmount" type="number" step="0.01" class="input-control input-ltr" placeholder="0" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="expReceiptInput">عکس رسید / سند (اختیاری)</label>
+          <input id="expReceiptInput" type="file" accept="image/*" class="input-control" onchange="handleReceiptUpload(event)" />
+          <div id="pendingReceiptPreview" class="receipt-preview-box"></div>
+        </div>
+      </div>
+
+      <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
+        <button type="button" class="btn btn-success" onclick="addTripExpenseItem()">
+          ＋ ثبت هزینه سفر
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>محدوده</th>
+              <th>عنوان هزینه</th>
+              <th>مبلغ اصلی</th>
+              <th>معادل تومان</th>
+              <th>سند / عکس</th>
+              <th>حذف</th>
+            </tr>
+          </thead>
+          <tbody id="tripExpenseTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 6: Separate Summary of Border Fuel/Fines & Trip Expenses -->
+    <section class="section-card">
+      <div class="section-head">
+        <h2 class="section-title">۶. گزارش جداگانه خریدها/جرایم مرزی و هزینه‌های سفر</h2>
+        <span class="badge">تفکیک کامل به تومان و ارزها</span>
+      </div>
+
+      <div class="sub-box" style="margin-top: 0;">
+        <div class="sub-box-title">
+          <span>الف) گزارش جداگانه خریدها و جرایم گازوئیل مرزهای ایران و خارج</span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--kpi-accent: #10b981;">
+            <div class="kpi-label">مجموع مرزهای ایران (خرید + جریمه)</div>
+            <div id="sumBfIranToman" class="kpi-main">۰ تومان</div>
+            <div id="sumBfIranCurrencies" class="kpi-sub">جزئیات ارزها: —</div>
+          </div>
+          <div class="kpi-card" style="--kpi-accent: #38bdf8;">
+            <div class="kpi-label">مجموع مرزهای خارج (خرید + جریمه)</div>
+            <div id="sumBfForeignToman" class="kpi-main">۰ تومان</div>
+            <div id="sumBfForeignCurrencies" class="kpi-sub">جزئیات ارزها: —</div>
+          </div>
+          <div class="kpi-card" style="--kpi-accent: #f43f5e;">
+            <div class="kpi-label">جمع کل خریدها و جرایم مرزی</div>
+            <div id="sumBfTotalToman" class="kpi-main">۰ تومان</div>
+            <div id="sumBfTotalCurrencies" class="kpi-sub">کل لیتر ثبت‌شده: ۰ لیتر</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-box">
+        <div class="sub-box-title">
+          <span>ب) گزارش جداگانه هزینه‌های سفر (داخل ایران و خارج از آن)</span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--kpi-accent: #f59e0b;">
+            <div class="kpi-label">جمع هزینه‌های داخل ایران</div>
+            <div id="sumExpInsideToman" class="kpi-main">۰ تومان</div>
+            <div id="sumExpInsideCurrencies" class="kpi-sub">جزئیات ارزها: —</div>
+          </div>
+          <div class="kpi-card" style="--kpi-accent: #818cf8;">
+            <div class="kpi-label">جمع هزینه‌های خارج از ایران</div>
+            <div id="sumExpOutsideToman" class="kpi-main">۰ تومان</div>
+            <div id="sumExpOutsideCurrencies" class="kpi-sub">جزئیات ارزها: —</div>
+          </div>
+          <div class="kpi-card" style="--kpi-accent: #ec4899;">
+            <div class="kpi-label">جمع کل هزینه‌های سفر (با سند و بدون سند)</div>
+            <div id="sumExpTotalToman" class="kpi-main">۰ تومان</div>
+            <div id="sumExpTotalCurrencies" class="kpi-sub">تعداد اسناد تصویری: ۰ عکس</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Sticky Bottom Bar -->
+  <div class="bottom-bar">
+    <div class="bottom-bar-inner">
+      <button type="button" class="btn btn-success" onclick="copyFullReport()">
+        📋 کپی گزارش کامل تسویه
+      </button>
+      <button type="button" class="btn btn-amber" onclick="saveCurrentTripToArchive()">
+        💾 ذخیره در آرشیو
+      </button>
+      <button type="button" class="btn btn-primary" onclick="openArchiveModal()">
+        📂 مشاهده سفرهای ذخیره‌شده
+      </button>
+    </div>
+  </div>
+
+  <!-- Install Guide Modal -->
+  <div id="installGuideModal" class="modal-backdrop" onclick="if(event.target===this)closeInstallGuideModal()">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title">📲 راهنمای نصب روی گوشی اندروید و اپل (iOS)</h3>
+        <button type="button" class="close-btn" onclick="closeInstallGuideModal()">✕</button>
+      </div>
+      <div style="font-size: 0.85rem; color: #e2e8f0; display: flex; flex-direction: column; gap: 12px;">
+        <div class="sub-box" style="margin-top: 0;">
+          <div class="sub-box-title">۱. نصب در گوشی اندروید (Chrome / Samsung Internet)</div>
+          <p style="color: #cbd5e1; font-size: 0.82rem;">
+            صفحه را در مرورگر باز کنید و دکمه <strong>«نصب روی گوشی»</strong> را بزنید؛ یا از منوی سه‌نقطه مرورگر گزینه <strong>«Add to Home screen»</strong> / <strong>«Install app»</strong> را انتخاب کنید تا آیکون اپلیکیشن به صفحه اصلی اضافه شود.
+          </p>
+        </div>
+        <div class="sub-box" style="margin-top: 0;">
+          <div class="sub-box-title">۲. نصب در گوشی اپل / آیفون (Safari)</div>
+          <p style="color: #cbd5e1; font-size: 0.82rem;">
+            این صفحه را حتماً در مرورگر <strong>Safari</strong> باز کنید، دکمه <strong>Share</strong> (مربع با فلش رو به بالا) را در پایین یا بالای صفحه بزنید و گزینه <strong>«Add to Home Screen»</strong> را انتخاب کنید تا مثل یک برنامه مستقل در آیفون نصب شود.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Archive Modal -->
+  <div id="archiveModal" class="modal-backdrop" onclick="if(event.target===this)closeArchiveModal()">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 class="modal-title">📂 آرشیو سفرهای ذخیره‌شده</h3>
+        <button type="button" class="close-btn" onclick="closeArchiveModal()">✕</button>
+      </div>
+      <div id="archiveListContainer"></div>
+    </div>
+  </div>
+
+  <!-- Image Preview Modal -->
+  <div id="imageModal" class="modal-backdrop" onclick="if(event.target===this)closeImageModal()">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="imageModalTitle" class="modal-title">تصویر سند / رسید</h3>
+        <button type="button" class="close-btn" onclick="closeImageModal()">✕</button>
+      </div>
+      <img id="imageModalImg" src="" alt="سند هزینه" class="modal-img" />
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_CURRENT_KEY = "transit_fuel_app_current_v5";
+    const STORAGE_ARCHIVE_KEY = "transit_fuel_app_archive_v5";
+
+    const CURRENCY_LABELS = {
+      IRT: "تومان",
+      TRY: "لیر",
+      USD: "دلار",
+      EUR: "یورو",
+      AZN: "مانات"
+    };
+
+    let deferredInstallPrompt = null;
+    let pendingReceiptDataUrl = "";
+    let pendingReceiptName = "";
+
+    // Register Service Worker for offline caching & PWA installability
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+
+    // Capture Android/Chromium install prompt
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      document.getElementById("installHintText").textContent =
+        "امکان نصب مستقیم روی دستگاه آماده است. دکمه «نصب روی گوشی» را بزنید.";
+    });
+
+    function triggerInstallPrompt() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then(() => {
+          deferredInstallPrompt = null;
+        });
+      } else {
+        openInstallGuideModal();
+      }
+    }
+
+    function openInstallGuideModal() {
+      document.getElementById("installGuideModal").classList.add("open");
+    }
+
+    function closeInstallGuideModal() {
+      document.getElementById("installGuideModal").classList.remove("open");
+    }
+
+    function getDefaultState() {
+      return {
+        tripTitle: "بازرگان ➔ مرسین ➔ رازی",
+        plateNo: "36 AA 285 / 36 AA 286",
+        tripDate: "21.11.2026",
+        initialFuel: 1240,
+        companyQuota: 1100,
+        fuelSellPriceTry: 55,
+        outboundKm: 1220,
+        outboundWeight: 23,
+        outboundRate: 34,
+        returnKm: 1100,
+        returnWeight: 24,
+        returnRate: 35,
+        emptyKm: 60,
+        emptyRate: 24,
+        idleFuel: 17,
+        rates: {
+          IRT: 1,
+          TRY: 5300,
+          USD: 195000,
+          EUR: 210000,
+          AZN: 115000
+        },
+        borderFuelItems: [],
+        tripExpenses: []
+      };
+    }
+
+    let state = loadCurrentState();
+
+    function loadCurrentState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_CURRENT_KEY);
+        if (!raw) return getDefaultState();
+        const parsed = JSON.parse(raw);
+        const def = getDefaultState();
+        return {
+          ...def,
+          ...parsed,
+          rates: { ...def.rates, ...(parsed.rates || {}) },
+          borderFuelItems: Array.isArray(parsed.borderFuelItems) ? parsed.borderFuelItems : [],
+          tripExpenses: Array.isArray(parsed.tripExpenses) ? parsed.tripExpenses : []
+        };
+      } catch (e) {
+        return getDefaultState();
+      }
+    }
+
+    function loadArchive() {
+      try {
+        const raw = localStorage.getItem(STORAGE_ARCHIVE_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveArchive(list) {
+      localStorage.setItem(STORAGE_ARCHIVE_KEY, JSON.stringify(list));
+      updateArchiveCountBadge();
+    }
+
+    function updateArchiveCountBadge() {
+      const list = loadArchive();
+      document.getElementById("archiveCountBadge").textContent = toPersianDigits(list.length);
+    }
+
+    function toPersianDigits(val) {
+      return String(val).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+    }
+
+    function formatNum(num, decimals = 2) {
+      const n = Number(num) || 0;
+      const fixed = Number.isInteger(n) && decimals === 0
+        ? n.toString()
+        : n.toLocaleString("en-US", {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+          });
+      return toPersianDigits(fixed);
+    }
+
+    function formatToman(amount) {
+      return formatNum(Math.round(Number(amount) || 0), 0) + " تومان";
+    }
+
+    function convertToToman(amount, currency) {
+      const a = Number(amount) || 0;
+      if (currency === "IRT") return a;
+      const rate = Number(state.rates[currency]) || 0;
+      return a * rate;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2400);
+    }
+
+    function populateFormFromState() {
+      document.getElementById("tripTitle").value = state.tripTitle;
+      document.getElementById("plateNo").value = state.plateNo;
+      document.getElementById("tripDate").value = state.tripDate;
+      document.getElementById("initialFuel").value = state.initialFuel;
+      document.getElementById("companyQuota").value = state.companyQuota;
+      document.getElementById("fuelSellPriceTry").value = state.fuelSellPriceTry;
+      document.getElementById("outboundKm").value = state.outboundKm;
+      document.getElementById("outboundWeight").value = state.outboundWeight;
+      document.getElementById("outboundRate").value = state.outboundRate;
+      document.getElementById("returnKm").value = state.returnKm;
+      document.getElementById("returnWeight").value = state.returnWeight;
+      document.getElementById("returnRate").value = state.returnRate;
+      document.getElementById("emptyKm").value = state.emptyKm;
+      document.getElementById("emptyRate").value = state.emptyRate;
+      document.getElementById("idleFuel").value = state.idleFuel;
+
+      document.getElementById("rateTRY").value = state.rates.TRY;
+      document.getElementById("rateUSD").value = state.rates.USD;
+      document.getElementById("rateEUR").value = state.rates.EUR;
+      document.getElementById("rateAZN").value = state.rates.AZN;
+    }
+
+    function readFormIntoState() {
+      state.tripTitle = document.getElementById("tripTitle").value.trim() || "سفر بدون عنوان";
+      state.plateNo = document.getElementById("plateNo").value.trim();
+      state.tripDate = document.getElementById("tripDate").value.trim();
+      state.initialFuel = parseFloat(document.getElementById("initialFuel").value) || 0;
+      state.companyQuota = parseFloat(document.getElementById("companyQuota").value) || 0;
+      state.fuelSellPriceTry = parseFloat(document.getElementById("fuelSellPriceTry").value) || 0;
+      state.outboundKm = parseFloat(document.getElementById("outboundKm").value) || 0;
+      state.outboundWeight = parseFloat(document.getElementById("outboundWeight").value) || 0;
+      state.outboundRate = parseFloat(document.getElementById("outboundRate").value) || 0;
+      state.returnKm = parseFloat(document.getElementById("returnKm").value) || 0;
+      state.returnWeight = parseFloat(document.getElementById("returnWeight").value) || 0;
+      state.returnRate = parseFloat(document.getElementById("returnRate").value) || 0;
+      state.emptyKm = parseFloat(document.getElementById("emptyKm").value) || 0;
+      state.emptyRate = parseFloat(document.getElementById("emptyRate").value) || 0;
+      state.idleFuel = parseFloat(document.getElementById("idleFuel").value) || 0;
+
+      state.rates.TRY = parseFloat(document.getElementById("rateTRY").value) || 0;
+      state.rates.USD = parseFloat(document.getElementById("rateUSD").value) || 0;
+      state.rates.EUR = parseFloat(document.getElementById("rateEUR").value) || 0;
+      state.rates.AZN = parseFloat(document.getElementById("rateAZN").value) || 0;
+      state.rates.IRT = 1;
+    }
+
+    function persistCurrentState() {
+      try {
+        localStorage.setItem(STORAGE_CURRENT_KEY, JSON.stringify(state));
+        const nowTime = new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" });
+        document.getElementById("lastSavedLabel").textContent = "آخرین ذخیره خودکار: " + toPersianDigits(nowTime);
+      } catch (e) {
+        showToast("هشدار: حجم تصاویر ذخیره شده زیاد است؛ عکس سبک‌تری انتخاب کنید.");
+      }
+    }
+
+    function calculateMetrics() {
+      const outboundFuel = (state.outboundKm * state.outboundRate) / 100;
+      const returnFuel = (state.returnKm * state.returnRate) / 100;
+      const emptyFuel = (state.emptyKm * state.emptyRate) / 100;
+      const idleFuel = state.idleFuel;
+      const totalConsumed = outboundFuel + returnFuel + emptyFuel + idleFuel;
+
+      const remainingFuel = state.initialFuel - totalConsumed;
+      const personalQuota = Math.max(0, state.initialFuel - state.companyQuota);
+      const companySurplus = state.companyQuota - totalConsumed;
+
+      const sellableCompanyLiters = Math.max(0, companySurplus);
+      const companyValueTry = sellableCompanyLiters * state.fuelSellPriceTry;
+      const companyValueToman = convertToToman(companyValueTry, "TRY");
+
+      const effectivePersonalLiters = Math.max(0, remainingFuel - sellableCompanyLiters);
+      const personalValueTry = effectivePersonalLiters * state.fuelSellPriceTry;
+      const personalValueToman = convertToToman(personalValueTry, "TRY");
+
+      const totalRemainingValueToman = convertToToman(Math.max(0, remainingFuel) * state.fuelSellPriceTry, "TRY");
+
+      return {
+        outboundFuel,
+        returnFuel,
+        emptyFuel,
+        idleFuel,
+        totalConsumed,
+        remainingFuel,
+        personalQuota,
+        companySurplus,
+        sellableCompanyLiters,
+        companyValueTry,
+        companyValueToman,
+        effectivePersonalLiters,
+        personalValueTry,
+        personalValueToman,
+        totalRemainingValueToman
+      };
+    }
+
+    function summarizeCurrencyMap(items) {
+      const map = {};
+      items.forEach(it => {
+        const c = it.currency || "IRT";
+        map[c] = (map[c] || 0) + (Number(it.amount) || 0);
+      });
+      const parts = Object.entries(map)
+        .filter(([, amt]) => amt > 0)
+        .map(([curr, amt]) => `${formatNum(amt, curr === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[curr] || curr}`);
+      return parts.length ? parts.join(" + ") : "—";
+    }
+
+    function renderAll() {
+      const m = calculateMetrics();
+
+      document.getElementById("kpiTotalConsumed").textContent = formatNum(m.totalConsumed, 2) + " لیتر";
+      document.getElementById("kpiConsumedBreakdown").textContent =
+        `رفت ${formatNum(m.outboundFuel, 1)} + خالی ${formatNum(m.emptyFuel, 1)} + درجا ${formatNum(m.idleFuel, 1)} + برگشت ${formatNum(m.returnFuel, 1)}`;
+
+      document.getElementById("kpiCompanySurplus").textContent = formatNum(m.companySurplus, 2) + " لیتر";
+      document.getElementById("kpiCompanyValue").textContent =
+        `${formatNum(m.companyValueTry, 0)} لیر | ${formatToman(m.companyValueToman)}`;
+
+      document.getElementById("kpiPersonalFuel").textContent = formatNum(m.effectivePersonalLiters, 2) + " لیتر";
+      document.getElementById("kpiPersonalValue").textContent =
+        `${formatNum(m.personalValueTry, 0)} لیر | ${formatToman(m.personalValueToman)}`;
+
+      document.getElementById("kpiRemainingFuel").textContent = formatNum(m.remainingFuel, 2) + " لیتر";
+      document.getElementById("kpiRemainingValue").textContent =
+        `ارزش کل باقیمانده: ${formatToman(m.totalRemainingValueToman)}`;
+
+      const baseTank = Math.max(state.initialFuel, m.totalConsumed, 1);
+      const usedPct = Math.min(100, Math.max(0, (m.totalConsumed / baseTank) * 100));
+      const compPct = Math.min(100 - usedPct, Math.max(0, (m.sellableCompanyLiters / baseTank) * 100));
+      const persPct = Math.min(100 - usedPct - compPct, Math.max(0, (m.effectivePersonalLiters / baseTank) * 100));
+
+      document.getElementById("barUsed").style.width = usedPct + "%";
+      document.getElementById("barCompany").style.width = compPct + "%";
+      document.getElementById("barPersonal").style.width = persPct + "%";
+
+      document.getElementById("tankSummaryText").textContent = `مانده باک: ${formatNum(m.remainingFuel, 2)} لیتر`;
+      document.getElementById("legUsed").textContent = formatNum(m.totalConsumed, 2);
+      document.getElementById("legCompany").textContent = formatNum(m.sellableCompanyLiters, 2);
+      document.getElementById("legPersonal").textContent = formatNum(m.effectivePersonalLiters, 2);
+      document.getElementById("legRemaining").textContent = formatNum(m.remainingFuel, 2);
+
+      const alertBox = document.getElementById("fuelAlertBox");
+      alertBox.className = "alert-box";
+      if (m.remainingFuel < 0) {
+        alertBox.classList.add("alert-danger");
+        alertBox.textContent = `⚠️ هشدار کسری سوخت: مصرف کل (${formatNum(m.totalConsumed, 2)} لیتر) از کل گازوئیل موجود (${formatNum(state.initialFuel, 2)} لیتر) بیشتر شده است!`;
+      } else if (m.companySurplus < 0) {
+        alertBox.classList.add("alert-warn");
+        alertBox.textContent = `⚠️ توجه: مصرف کل از سهمیه شرکت (${formatNum(state.companyQuota, 2)} لیتر) فراتر رفته و ${formatNum(Math.abs(m.companySurplus), 2)} لیتر از ذخیره باک برداشت شده است.`;
+      }
+
+      renderBorderFuelTable();
+      renderTripExpenseTable();
+      renderSeparateSummaries();
+    }
+
+    function handleInputChange() {
+      readFormIntoState();
+      persistCurrentState();
+      renderAll();
+    }
+
+    function addBorderFuelItem() {
+      const zone = document.getElementById("bfZone").value;
+      const type = document.getElementById("bfType").value;
+      const borderName = document.getElementById("bfBorderName").value.trim() || (zone === "IRAN" ? "مرز ایران" : "مرز خارج");
+      const amount = parseFloat(document.getElementById("bfAmount").value);
+      const currency = document.getElementById("bfCurrency").value;
+      const liters = parseFloat(document.getElementById("bfLiters").value) || 0;
+
+      if (!amount || amount <= 0) {
+        showToast("لطفاً مبلغ معتبر وارد کنید");
+        return;
+      }
+
+      state.borderFuelItems.push({
+        id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+        zone,
+        type,
+        borderName,
+        amount,
+        currency,
+        liters
+      });
+
+      document.getElementById("bfBorderName").value = "";
+      document.getElementById("bfAmount").value = "";
+      document.getElementById("bfLiters").value = "";
+
+      persistCurrentState();
+      renderAll();
+      showToast("مورد مرزی ثبت شد");
+    }
+
+    function deleteBorderFuelItem(id) {
+      state.borderFuelItems = state.borderFuelItems.filter(x => x.id !== id);
+      persistCurrentState();
+      renderAll();
+      showToast("مورد حذف شد");
+    }
+
+    function renderBorderFuelTable() {
+      const tbody = document.getElementById("borderFuelTableBody");
+      if (!state.borderFuelItems.length) {
+        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">هنوز خرید سوخت یا جریمه مرزی ثبت نشده است.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.borderFuelItems.map(item => {
+        const tomanVal = convertToToman(item.amount, item.currency);
+        const zoneBadge = item.zone === "IRAN"
+          ? `<span class="tag tag-iran">مرز ایران</span>`
+          : `<span class="tag tag-foreign">مرز خارج</span>`;
+        const typeBadge = item.type === "FINE"
+          ? `<span class="tag tag-fine">جریمه گازوئیل</span>`
+          : `<span class="tag tag-buy">خرید سوخت</span>`;
+
+        return `
+          <tr>
+            <td>${zoneBadge}</td>
+            <td>${typeBadge}</td>
+            <td>${escapeHtml(item.borderName)}</td>
+            <td class="num-ltr">${item.liters > 0 ? formatNum(item.liters, 2) + " L" : "—"}</td>
+            <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
+            <td class="num-ltr">${formatToman(tomanVal)}</td>
+            <td><button type="button" class="btn btn-danger-soft" style="padding: 4px 8px; font-size: 0.74rem;" onclick="deleteBorderFuelItem('${item.id}')">حذف</button></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function handleReceiptUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      const previewBox = document.getElementById("pendingReceiptPreview");
+      if (!file) {
+        pendingReceiptDataUrl = "";
+        pendingReceiptName = "";
+        previewBox.innerHTML = "";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const maxDim = 960;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          pendingReceiptDataUrl = canvas.toDataURL("image/jpeg", 0.72);
+          pendingReceiptName = file.name;
+
+          previewBox.innerHTML = `
+            <img src="${pendingReceiptDataUrl}" class="receipt-thumb" alt="پیش‌نمایش سند" onclick="openImageModal('${escapeAttr(pendingReceiptName)}', '${pendingReceiptDataUrl}')" />
+            <span style="font-size: 0.75rem; color: #6ee7b7;">سند آماده ثبت است</span>
+            <button type="button" class="btn btn-danger-soft" style="padding: 3px 8px; font-size: 0.72rem;" onclick="clearPendingReceipt()">حذف عکس</button>
+          `;
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearPendingReceipt() {
+      pendingReceiptDataUrl = "";
+      pendingReceiptName = "";
+      document.getElementById("expReceiptInput").value = "";
+      document.getElementById("pendingReceiptPreview").innerHTML = "";
+    }
+
+    function addTripExpenseItem() {
+      const scope = document.getElementById("expScope").value;
+      const title = document.getElementById("expTitle").value.trim() || (scope === "INSIDE_IRAN" ? "هزینه داخل ایران" : "هزینه خارج از ایران");
+      const currency = document.getElementById("expCurrency").value;
+      const amount = parseFloat(document.getElementById("expAmount").value);
+
+      if (!amount || amount <= 0) {
+        showToast("لطفاً مبلغ هزینه را وارد کنید");
+        return;
+      }
+
+      state.tripExpenses.push({
+        id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+        scope,
+        title,
+        currency,
+        amount,
+        receiptImage: pendingReceiptDataUrl || "",
+        receiptName: pendingReceiptName || "سند هزینه"
+      });
+
+      document.getElementById("expTitle").value = "";
+      document.getElementById("expAmount").value = "";
+      clearPendingReceipt();
+
+      persistCurrentState();
+      renderAll();
+      showToast("هزینه سفر ثبت شد");
+    }
+
+    function deleteTripExpenseItem(id) {
+      state.tripExpenses = state.tripExpenses.filter(x => x.id !== id);
+      persistCurrentState();
+      renderAll();
+      showToast("هزینه حذف شد");
+    }
+
+    function renderTripExpenseTable() {
+      const tbody = document.getElementById("tripExpenseTableBody");
+      if (!state.tripExpenses.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">هنوز هزینه سفر دستی ثبت نشده است.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.tripExpenses.map(item => {
+        const tomanVal = convertToToman(item.amount, item.currency);
+        const scopeBadge = item.scope === "INSIDE_IRAN"
+          ? `<span class="tag tag-iran">داخل ایران</span>`
+          : `<span class="tag tag-foreign">خارج از ایران</span>`;
+
+        const receiptHtml = item.receiptImage
+          ? `<img src="${item.receiptImage}" class="receipt-thumb" alt="سند" onclick="openImageModal('${escapeAttr(item.title)}', '${item.receiptImage}')" />`
+          : `<span style="color: var(--text-dim); font-size: 0.74rem;">بدون عکس</span>`;
+
+        return `
+          <tr>
+            <td>${scopeBadge}</td>
+            <td>${escapeHtml(item.title)}</td>
+            <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
+            <td class="num-ltr">${formatToman(tomanVal)}</td>
+            <td>${receiptHtml}</td>
+            <td><button type="button" class="btn btn-danger-soft" style="padding: 4px 8px; font-size: 0.74rem;" onclick="deleteTripExpenseItem('${item.id}')">حذف</button></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderSeparateSummaries() {
+      const bfIran = state.borderFuelItems.filter(x => x.zone === "IRAN");
+      const bfForeign = state.borderFuelItems.filter(x => x.zone === "FOREIGN");
+
+      const bfIranToman = bfIran.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+      const bfForeignToman = bfForeign.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+      const bfTotalToman = bfIranToman + bfForeignToman;
+      const bfTotalLiters = state.borderFuelItems.reduce((s, x) => s + (Number(x.liters) || 0), 0);
+
+      document.getElementById("sumBfIranToman").textContent = formatToman(bfIranToman);
+      document.getElementById("sumBfIranCurrencies").textContent = "ارزها: " + summarizeCurrencyMap(bfIran);
+
+      document.getElementById("sumBfForeignToman").textContent = formatToman(bfForeignToman);
+      document.getElementById("sumBfForeignCurrencies").textContent = "ارزها: " + summarizeCurrencyMap(bfForeign);
+
+      document.getElementById("sumBfTotalToman").textContent = formatToman(bfTotalToman);
+      document.getElementById("sumBfTotalCurrencies").textContent =
+        `کل لیتر ثبت‌شده: ${formatNum(bfTotalLiters, 2)} لیتر | ارزها: ${summarizeCurrencyMap(state.borderFuelItems)}`;
+
+      const expInside = state.tripExpenses.filter(x => x.scope === "INSIDE_IRAN");
+      const expOutside = state.tripExpenses.filter(x => x.scope === "OUTSIDE_IRAN");
+
+      const expInsideToman = expInside.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+      const expOutsideToman = expOutside.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+      const expTotalToman = expInsideToman + expOutsideToman;
+      const receiptsCount = state.tripExpenses.filter(x => !!x.receiptImage).length;
+
+      document.getElementById("sumExpInsideToman").textContent = formatToman(expInsideToman);
+      document.getElementById("sumExpInsideCurrencies").textContent = "ارزها: " + summarizeCurrencyMap(expInside);
+
+      document.getElementById("sumExpOutsideToman").textContent = formatToman(expOutsideToman);
+      document.getElementById("sumExpOutsideCurrencies").textContent = "ارزها: " + summarizeCurrencyMap(expOutside);
+
+      document.getElementById("sumExpTotalToman").textContent = formatToman(expTotalToman);
+      document.getElementById("sumExpTotalCurrencies").textContent =
+        `تعداد اسناد تصویری: ${toPersianDigits(receiptsCount)} عکس | ارزها: ${summarizeCurrencyMap(state.tripExpenses)}`;
+    }
+
+    function saveCurrentTripToArchive() {
+      readFormIntoState();
+      const m = calculateMetrics();
+      const bfTotalToman = state.borderFuelItems.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+      const expTotalToman = state.tripExpenses.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+
+      const archive = loadArchive();
+      const snapshot = {
+        archiveId: "trip_" + Date.now(),
+        savedAt: new Date().toLocaleString("fa-IR"),
+        summary: {
+          totalConsumed: m.totalConsumed,
+          companySurplus: m.companySurplus,
+          companyValueTry: m.companyValueTry,
+          companyValueToman: m.companyValueToman,
+          personalFuel: m.effectivePersonalLiters,
+          personalValueToman: m.personalValueToman,
+          bfTotalToman,
+          expTotalToman
+        },
+        data: JSON.parse(JSON.stringify(state))
+      };
+
+      archive.unshift(snapshot);
+      try {
+        saveArchive(archive);
+        showToast("سفر در آرشیو ذخیره شد");
+      } catch (e) {
+        showToast("حافظه آرشیو پر شد؛ یک سفر قدیمی یا عکس را حذف کنید.");
+      }
+    }
+
+    function openArchiveModal() {
+      const container = document.getElementById("archiveListContainer");
+      const list = loadArchive();
+
+      if (!list.length) {
+        container.innerHTML = `<div class="empty-state">هنوز هیچ سفری در آرشیو ذخیره نشده است.</div>`;
+      } else {
+        container.innerHTML = list.map(entry => {
+          const d = entry.data || {};
+          const s = entry.summary || {};
+          return `
+            <div class="archive-item">
+              <div>
+                <div style="font-weight: 800; font-size: 0.94rem; color: #fff;">
+                  ${escapeHtml(d.tripTitle || "سفر")} <span style="font-size: 0.76rem; color: #94a3b8;">(${escapeHtml(d.plateNo || "")})</span>
+                </div>
+                <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 3px;">
+                  تاریخ ثبت: ${escapeHtml(entry.savedAt || "")} | مصرف: ${formatNum(s.totalConsumed || 0, 2)} لیتر
+                </div>
+                <div style="font-size: 0.78rem; color: #7dd3fc; margin-top: 3px;">
+                  تسویه شرکت: ${formatNum(s.companyValueTry || 0, 0)} لیر (${formatToman(s.companyValueToman || 0)}) | سهم شخصی: ${formatNum(s.personalFuel || 0, 2)} لیتر
+                </div>
+                <div style="font-size: 0.76rem; color: #fcd34d; margin-top: 2px;">
+                  مرزها: ${formatToman(s.bfTotalToman || 0)} | هزینه‌های سفر: ${formatToman(s.expTotalToman || 0)}
+                </div>
+              </div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" style="padding: 6px 10px; font-size: 0.78rem;" onclick="loadArchivedTrip('${entry.archiveId}')">بارگذاری</button>
+                <button type="button" class="btn btn-danger-soft" style="padding: 6px 10px; font-size: 0.78rem;" onclick="deleteArchivedTrip('${entry.archiveId}')">حذف</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      document.getElementById("archiveModal").classList.add("open");
+    }
+
+    function closeArchiveModal() {
+      document.getElementById("archiveModal").classList.remove("open");
+    }
+
+    function loadArchivedTrip(archiveId) {
+      const list = loadArchive();
+      const found = list.find(x => x.archiveId === archiveId);
+      if (!found || !found.data) return;
+      const def = getDefaultState();
+      state = {
+        ...def,
+        ...found.data,
+        rates: { ...def.rates, ...(found.data.rates || {}) },
+        borderFuelItems: Array.isArray(found.data.borderFuelItems) ? found.data.borderFuelItems : [],
+        tripExpenses: Array.isArray(found.data.tripExpenses) ? found.data.tripExpenses : []
+      };
+      populateFormFromState();
+      persistCurrentState();
+      renderAll();
+      closeArchiveModal();
+      showToast("سفر از آرشیو بارگذاری شد");
+    }
+
+    function deleteArchivedTrip(archiveId) {
+      const list = loadArchive().filter(x => x.archiveId !== archiveId);
+      saveArchive(list);
+      openArchiveModal();
+      showToast("سفر از آرشیو حذف شد");
+    }
+
+    function resetDefaultTrip() {
+      if (!confirm("آیا مطمئن هستید که می‌خواهید اطلاعات سفر فعلی را به حالت پیش‌فرض بازنشانی کنید؟")) return;
+      state = getDefaultState();
+      populateFormFromState();
+      persistCurrentState();
+      renderAll();
+      showToast("اطلاعات به حالت پیش‌فرض بازگشت");
+    }
+
+    function openImageModal(title, src) {
+      document.getElementById("imageModalTitle").textContent = title || "تصویر سند";
+      document.getElementById("imageModalImg").src = src;
+      document.getElementById("imageModal").classList.add("open");
+    }
+
+    function closeImageModal() {
+      document.getElementById("imageModal").classList.remove("open");
+    }
+
+    function copyFullReport() {
+      readFormIntoState();
+      const m = calculateMetrics();
+      const bfIranToman = state.borderFuelItems.filter(x => x.zone === "IRAN").reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+      const bfForeignToman = state.borderFuelItems.filter(x => x.zone === "FOREIGN").reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+      const expInsideToman = state.tripExpenses.filter(x => x.scope === "INSIDE_IRAN").reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+      const expOutsideToman = state.tripExpenses.filter(x => x.scope === "OUTSIDE_IRAN").reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
+
+      const lines = [
+        `🚛 گزارش تسویه سفر: ${state.tripTitle}`,
+        `پلاک: ${state.plateNo} | تاریخ: ${state.tripDate}`,
+        `────────────────────`,
+        `⛽ سوخت اولیه: ${formatNum(state.initialFuel, 2)} لیتر | سهمیه شرکت: ${formatNum(state.companyQuota, 2)} لیتر`,
+        `📉 مصرف کل: ${formatNum(m.totalConsumed, 2)} لیتر (رفت ${formatNum(m.outboundFuel, 1)} + خالی ${formatNum(m.emptyFuel, 1)} + درجا ${formatNum(m.idleFuel, 1)} + برگشت ${formatNum(m.returnFuel, 1)})`,
+        `💼 اضافه‌سوخت شرکت: ${formatNum(m.companySurplus, 2)} لیتر ➔ ${formatNum(m.companyValueTry, 0)} لیر (${formatToman(m.companyValueToman)})`,
+        `👤 سهم سوخت شخصی: ${formatNum(m.effectivePersonalLiters, 2)} لیتر (${formatToman(m.personalValueToman)})`,
+        `🛢️ کل باقیمانده باک: ${formatNum(m.remainingFuel, 2)} لیتر`,
+        `────────────────────`,
+        `🚧 خرید و جرایم مرزی: مرز ایران ${formatToman(bfIranToman)} | مرز خارج ${formatToman(bfForeignToman)} | جمع: ${formatToman(bfIranToman + bfForeignToman)}`,
+        `🧾 هزینه‌های سفر: داخل ایران ${formatToman(expInsideToman)} | خارج از ایران ${formatToman(expOutsideToman)} | جمع: ${formatToman(expInsideToman + expOutsideToman)}`
+      ];
+
+      const text = lines.join("
+");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast("گزارش کامل کپی شد")).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      showToast("گزارش کامل کپی شد");
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function escapeAttr(str) {
+      return String(str).replace(/'/g, "\'").replace(/"/g, "&quot;");
+    }
+
+    populateFormFromState();
+    updateArchiveCountBadge();
+    renderAll();
+    persistCurrentState();
+  </script>
+</body>
+</html>
