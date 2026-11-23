@@ -1385,55 +1385,47 @@
 
     let editingTarget = null;
 
-    
     function applyEditedRecordIfAny(type, newItem) {
       if (!editingTarget || editingTarget.type !== type) return false;
-      const state = typeof loadState === "function" ? loadState() : null;
-      if (!state) return false;
-      const map = { border: "borderFuels", expense: "expenses", companyTx: "companyTransactions" };
-      const key = map[type];
-      if (!key || !Array.isArray(state[key]) || !state[key][editingTarget.index]) {
+      const arr = type === "border" ? state.borderFuelItems : type === "expense" ? state.tripExpenses : null;
+      if (!Array.isArray(arr) || !arr[editingTarget.index]) {
         editingTarget = null;
         return false;
       }
-      const oldItem = state[key][editingTarget.index];
-      state[key][editingTarget.index] = {
+      const oldItem = arr[editingTarget.index];
+      arr[editingTarget.index] = {
         ...oldItem,
         ...newItem,
+        id: oldItem.id,
         createdAt: oldItem.createdAt || getNowSystemDateTime(),
         updatedAt: getNowSystemDateTime()
       };
       editingTarget = null;
-      if (typeof saveState === "function") saveState(state);
-      if (typeof renderAll === "function") renderAll();
-      showToast("آیتم با موفقیت ویرایش شد.");
+      persistCurrentState();
+      renderAll();
+      showToast("آیتم با موفقیت ویرایش شد");
       return true;
     }
 
     function editRecordByType(type, index) {
-      const state = typeof loadState === "function" ? loadState() : {};
-      if (type === "border" && Array.isArray(state.borderFuels) && state.borderFuels[index]) {
-        const it = state.borderFuels[index];
+      if (type === "border" && Array.isArray(state.borderFuelItems) && state.borderFuelItems[index]) {
+        const it = state.borderFuelItems[index];
         editingTarget = { type, index };
-        if (document.getElementById("borderName")) document.getElementById("borderName").value = it.borderName || "";
-        if (document.getElementById("borderAmount")) document.getElementById("borderAmount").value = it.amount || "";
-        if (document.getElementById("borderCurrency")) document.getElementById("borderCurrency").value = it.currency || "IRT";
-        if (document.getElementById("borderLiters")) document.getElementById("borderLiters").value = it.liters || "";
-        showToast("آیتم سوخت مرزی برای ویرایش در فرم قرار گرفت؛ پس از اصلاح ثبت کنید.");
-      } else if (type === "expense" && Array.isArray(state.expenses) && state.expenses[index]) {
-        const it = state.expenses[index];
+        if (document.getElementById("bfZone")) document.getElementById("bfZone").value = it.zone || "exit";
+        if (document.getElementById("bfType")) document.getElementById("bfType").value = it.type || "official";
+        if (document.getElementById("bfBorderName")) document.getElementById("bfBorderName").value = it.borderName || "";
+        if (document.getElementById("bfLiters")) document.getElementById("bfLiters").value = it.liters || "";
+        if (document.getElementById("bfAmount")) document.getElementById("bfAmount").value = it.amount || "";
+        if (document.getElementById("bfCurrency")) document.getElementById("bfCurrency").value = it.currency || "IRT";
+        showToast("مورد سوخت مرزی در فرم قرار گرفت؛ پس از اصلاح ثبت کنید");
+      } else if (type === "expense" && Array.isArray(state.tripExpenses) && state.tripExpenses[index]) {
+        const it = state.tripExpenses[index];
         editingTarget = { type, index };
-        if (document.getElementById("expenseTitle")) document.getElementById("expenseTitle").value = it.title || "";
-        if (document.getElementById("expenseAmount")) document.getElementById("expenseAmount").value = it.amount || "";
-        if (document.getElementById("expenseCurrency")) document.getElementById("expenseCurrency").value = it.currency || "IRT";
-        showToast("آیتم هزینه برای ویرایش در فرم قرار گرفت؛ پس از اصلاح ثبت کنید.");
-      } else if (type === "companyTx" && Array.isArray(state.companyTransactions) && state.companyTransactions[index]) {
-        const it = state.companyTransactions[index];
-        editingTarget = { type, index };
-        if (document.getElementById("txPayer")) document.getElementById("txPayer").value = it.payer || "";
-        if (document.getElementById("txAmount")) document.getElementById("txAmount").value = it.amount || "";
-        if (document.getElementById("txCurrency")) document.getElementById("txCurrency").value = it.currency || "IRT";
-        showToast("تراکنش شرکت برای ویرایش در فرم قرار گرفت؛ پس از اصلاح ثبت کنید.");
+        if (document.getElementById("expScope")) document.getElementById("expScope").value = it.scope || "driver";
+        if (document.getElementById("expTitle")) document.getElementById("expTitle").value = it.title || "";
+        if (document.getElementById("expAmount")) document.getElementById("expAmount").value = it.amount || "";
+        if (document.getElementById("expCurrency")) document.getElementById("expCurrency").value = it.currency || "IRT";
+        showToast("مورد هزینه در فرم قرار گرفت؛ پس از اصلاح ثبت کنید");
       }
     }
 
@@ -1624,6 +1616,18 @@
         return;
       }
 
+      if (applyEditedRecordIfAny('border', {
+        zone,
+        type,
+        borderName,
+        amount,
+        currency,
+        liters
+      })) {
+        document.getElementById("bfLiters").value = "";
+        document.getElementById("bfAmount").value = "";
+        return;
+      }
       state.borderFuelItems.push({
         id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
         zone,
@@ -1658,7 +1662,7 @@
         return;
       }
 
-      tbody.innerHTML = state.borderFuelItems.map(item => {
+      tbody.innerHTML = state.borderFuelItems.map((item, idx) => {
         const tomanVal = convertToToman(item.amount, item.currency);
         const zoneBadge = item.zone === "IRAN"
           ? `<span class="tag tag-iran">مرز ایران</span>`
@@ -1743,6 +1747,16 @@
         return;
       }
 
+      if (applyEditedRecordIfAny('expense', {
+        scope,
+        title,
+        currency,
+        amount
+      })) {
+        document.getElementById("expTitle").value = "";
+        document.getElementById("expAmount").value = "";
+        return;
+      }
       state.tripExpenses.push({
         id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
         scope,
@@ -1777,7 +1791,7 @@
         return;
       }
 
-      tbody.innerHTML = state.tripExpenses.map(item => {
+      tbody.innerHTML = state.tripExpenses.map((item, idx) => {
         const tomanVal = convertToToman(item.amount, item.currency);
         const scopeBadge = item.scope === "INSIDE_IRAN"
           ? `<span class="tag tag-iran">داخل ایران</span>`
