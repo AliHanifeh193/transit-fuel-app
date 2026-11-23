@@ -1382,6 +1382,36 @@
       }
     }
 
+
+    let editingTarget = null;
+
+    function editRecordByType(type, index) {
+      const state = typeof loadState === "function" ? loadState() : {};
+      if (type === "border" && Array.isArray(state.borderFuels) && state.borderFuels[index]) {
+        const it = state.borderFuels[index];
+        editingTarget = { type, index };
+        if (document.getElementById("borderName")) document.getElementById("borderName").value = it.borderName || "";
+        if (document.getElementById("borderAmount")) document.getElementById("borderAmount").value = it.amount || "";
+        if (document.getElementById("borderCurrency")) document.getElementById("borderCurrency").value = it.currency || "IRT";
+        if (document.getElementById("borderLiters")) document.getElementById("borderLiters").value = it.liters || "";
+        showToast("آیتم سوخت مرزی برای ویرایش در فرم قرار گرفت؛ پس از اصلاح ثبت کنید.");
+      } else if (type === "expense" && Array.isArray(state.expenses) && state.expenses[index]) {
+        const it = state.expenses[index];
+        editingTarget = { type, index };
+        if (document.getElementById("expenseTitle")) document.getElementById("expenseTitle").value = it.title || "";
+        if (document.getElementById("expenseAmount")) document.getElementById("expenseAmount").value = it.amount || "";
+        if (document.getElementById("expenseCurrency")) document.getElementById("expenseCurrency").value = it.currency || "IRT";
+        showToast("آیتم هزینه برای ویرایش در فرم قرار گرفت؛ پس از اصلاح ثبت کنید.");
+      } else if (type === "companyTx" && Array.isArray(state.companyTransactions) && state.companyTransactions[index]) {
+        const it = state.companyTransactions[index];
+        editingTarget = { type, index };
+        if (document.getElementById("txPayer")) document.getElementById("txPayer").value = it.payer || "";
+        if (document.getElementById("txAmount")) document.getElementById("txAmount").value = it.amount || "";
+        if (document.getElementById("txCurrency")) document.getElementById("txCurrency").value = it.currency || "IRT";
+        showToast("تراکنش شرکت برای ویرایش در فرم قرار گرفت؛ پس از اصلاح ثبت کنید.");
+      }
+    }
+
     function showToast(msg) {
       const toast = document.getElementById("toast");
       toast.textContent = msg;
@@ -1616,7 +1646,7 @@
           <tr>
             <td>${zoneBadge}</td>
             <td>${typeBadge}</td>
-            <td>${escapeHtml(item.borderName)}${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
+            <td>${escapeHtml(item.borderName)} <button type="button" onclick="editRecordByType('border', ${idx})" style="margin-right:6px;padding:2px 6px;font-size:0.72rem;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#38bdf8;cursor:pointer;">✏️ ویرایش</button>${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
             <td class="num-ltr">${item.liters > 0 ? formatNum(item.liters, 2) + " L" : "—"}</td>
             <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
             <td class="num-ltr">${formatToman(tomanVal)}</td>
@@ -1735,7 +1765,7 @@
         return `
           <tr>
             <td>${scopeBadge}</td>
-            <td>${escapeHtml(item.title)}${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
+            <td>${escapeHtml(item.title)} <button type="button" onclick="editRecordByType('expense', ${idx})" style="margin-right:6px;padding:2px 6px;font-size:0.72rem;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#38bdf8;cursor:pointer;">✏️ ویرایش</button>${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
             <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
             <td class="num-ltr">${formatToman(tomanVal)}</td>
             <td>${receiptHtml}</td>
