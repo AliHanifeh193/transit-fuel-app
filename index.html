@@ -1385,6 +1385,31 @@
 
     let editingTarget = null;
 
+    
+    function applyEditedRecordIfAny(type, newItem) {
+      if (!editingTarget || editingTarget.type !== type) return false;
+      const state = typeof loadState === "function" ? loadState() : null;
+      if (!state) return false;
+      const map = { border: "borderFuels", expense: "expenses", companyTx: "companyTransactions" };
+      const key = map[type];
+      if (!key || !Array.isArray(state[key]) || !state[key][editingTarget.index]) {
+        editingTarget = null;
+        return false;
+      }
+      const oldItem = state[key][editingTarget.index];
+      state[key][editingTarget.index] = {
+        ...oldItem,
+        ...newItem,
+        createdAt: oldItem.createdAt || getNowSystemDateTime(),
+        updatedAt: getNowSystemDateTime()
+      };
+      editingTarget = null;
+      if (typeof saveState === "function") saveState(state);
+      if (typeof renderAll === "function") renderAll();
+      showToast("آیتم با موفقیت ویرایش شد.");
+      return true;
+    }
+
     function editRecordByType(type, index) {
       const state = typeof loadState === "function" ? loadState() : {};
       if (type === "border" && Array.isArray(state.borderFuels) && state.borderFuels[index]) {
