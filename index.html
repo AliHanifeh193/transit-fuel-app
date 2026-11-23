@@ -7,7 +7,6 @@
   <meta name="description" content="اپلیکیشن قابل نصب برای اندروید و آیفون جهت مدیریت سوخت، تسویه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو" />
   <meta name="theme-color" content="#090d16" />
 
-  <!-- PWA & iOS Safari Install Metadata -->
   <link rel="manifest" href="./manifest.json" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -65,7 +64,6 @@
       padding: 16px 14px 28px;
     }
 
-    /* Install Banner */
     .install-banner {
       background: linear-gradient(135deg, rgba(2, 132, 199, 0.22), rgba(16, 185, 129, 0.18));
       border: 1px solid rgba(56, 189, 248, 0.38);
@@ -91,7 +89,6 @@
       margin-top: 2px;
     }
 
-    /* Header */
     .top-header {
       background: linear-gradient(135deg, rgba(20, 30, 48, 0.95), rgba(15, 23, 42, 0.95));
       border: 1px solid var(--border-subtle);
@@ -216,7 +213,6 @@
       font-weight: 600;
     }
 
-    /* Tank Gauge Bar */
     .tank-panel {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
@@ -317,7 +313,6 @@
       color: #fda4af;
     }
 
-    /* Sections / Cards */
     .section-card {
       background: var(--bg-surface);
       border: 1px solid var(--border-subtle);
@@ -725,7 +720,6 @@
   <div id="toast" class="toast">انجام شد</div>
 
   <div class="container">
-    <!-- Install App Banner (Android PWA & iOS Add to Home Screen) -->
     <section id="installBanner" class="install-banner">
       <div>
         <div class="install-banner-title">📲 نصب اپلیکیشن روی گوشی اندروید و آیفون (iOS)</div>
@@ -741,7 +735,6 @@
       </div>
     </section>
 
-    <!-- Header -->
     <header class="top-header">
       <div class="header-row">
         <div class="brand-box">
@@ -769,7 +762,6 @@
       </div>
     </header>
 
-    <!-- Tank Status Bar -->
     <section class="tank-panel">
       <div class="tank-header">
         <span class="tank-title">⛽ وضعیت لحظه‌ای باک و تفکیک سهمیه سوخت</span>
@@ -801,7 +793,6 @@
       <div id="fuelAlertBox" class="alert-box"></div>
     </section>
 
-    <!-- Section 1: Trip & Fuel Parameters -->
     <section class="section-card">
       <div class="section-head">
         <h2 class="section-title">۱. مشخصات سفر، مسافت‌ها و ضرایب مصرف سوخت</h2>
@@ -902,7 +893,6 @@
       </div>
     </section>
 
-    <!-- Section 2: Exchange Rates to Toman -->
     <section class="section-card">
       <div class="section-head">
         <h2 class="section-title">۲. نرخ تبدیل ارزها به تومان (برای محاسبه لحظه‌ای تمام بخش‌ها)</h2>
@@ -937,7 +927,6 @@
       </div>
     </section>
 
-    <!-- Section 3: Fuel & Quota Settlement Results -->
     <section class="section-card">
       <div class="section-head">
         <h2 class="section-title">۳. نتیجه محاسبه مصرف سوخت و تسویه شرکت و راننده</h2>
@@ -971,7 +960,6 @@
       </div>
     </section>
 
-    <!-- Section 4: Border Fuel Purchases & Fines (Iran & Foreign) -->
     <section class="section-card">
       <div class="section-head">
         <h2 class="section-title">۴. ثبت خریدهای سوخت و جرایم گازوئیل (مرزهای ایران و خارج)</h2>
@@ -1044,7 +1032,6 @@
       </div>
     </section>
 
-    <!-- Section 5: Manual Trip Expenses with Receipt Image -->
     <section class="section-card">
       <div class="section-head">
         <h2 class="section-title">۵. هزینه‌های سفر داخل ایران و خارج از آن (با قابلیت ثبت عکس سند)</h2>
@@ -1110,7 +1097,6 @@
       </div>
     </section>
 
-    <!-- Section 6: Separate Summary of Border Fuel/Fines & Trip Expenses -->
     <section class="section-card">
       <div class="section-head">
         <h2 class="section-title">۶. گزارش جداگانه خریدها/جرایم مرزی و هزینه‌های سفر</h2>
@@ -1162,10 +1148,27 @@
           </div>
         </div>
       </div>
+
+      <div class="sub-box">
+        <div class="sub-box-title">
+          <span>ج) جمع‌بندی کلی پرداختی‌ها و هزینه‌های ثبت‌شده سفر</span>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card" style="--kpi-accent: #38bdf8;">
+            <div class="kpi-label">جمع کل هزینه‌های ثبت‌شده (مرز + سفر)</div>
+            <div id="sumGrandCostsToman" class="kpi-main">۰ تومان</div>
+            <div id="sumGrandCostsSub" class="kpi-sub">خرید/جریمه مرزی + هزینه‌های سفر</div>
+          </div>
+          <div class="kpi-card" style="--kpi-accent: #10b981;">
+            <div class="kpi-label">ارزش اضافه‌سوخت شرکت</div>
+            <div id="sumCompanySettlementToman" class="kpi-main">۰ تومان</div>
+            <div id="sumCompanySettlementSub" class="kpi-sub">بر اساس نرخ فروش سوخت</div>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 
-  <!-- Sticky Bottom Bar -->
   <div class="bottom-bar">
     <div class="bottom-bar-inner">
       <button type="button" class="btn btn-success" onclick="copyFullReport()">
@@ -1180,7 +1183,6 @@
     </div>
   </div>
 
-  <!-- Install Guide Modal -->
   <div id="installGuideModal" class="modal-backdrop" onclick="if(event.target===this)closeInstallGuideModal()">
     <div class="modal-card">
       <div class="modal-head">
@@ -1204,7 +1206,6 @@
     </div>
   </div>
 
-  <!-- Archive Modal -->
   <div id="archiveModal" class="modal-backdrop" onclick="if(event.target===this)closeArchiveModal()">
     <div class="modal-card">
       <div class="modal-head">
@@ -1215,7 +1216,6 @@
     </div>
   </div>
 
-  <!-- Image Preview Modal -->
   <div id="imageModal" class="modal-backdrop" onclick="if(event.target===this)closeImageModal()">
     <div class="modal-card">
       <div class="modal-head">
@@ -1242,14 +1242,12 @@
     let pendingReceiptDataUrl = "";
     let pendingReceiptName = "";
 
-    // Register Service Worker for offline caching & PWA installability
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").catch(() => {});
       });
     }
 
-    // Capture Android/Chromium install prompt
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredInstallPrompt = e;
@@ -1535,7 +1533,7 @@
 
       renderBorderFuelTable();
       renderTripExpenseTable();
-      renderSeparateSummaries();
+      renderSeparateSummaries(m);
     }
 
     function handleInputChange() {
@@ -1731,7 +1729,8 @@
       }).join("");
     }
 
-    function renderSeparateSummaries() {
+    function renderSeparateSummaries(m) {
+      const metrics = m || calculateMetrics();
       const bfIran = state.borderFuelItems.filter(x => x.zone === "IRAN");
       const bfForeign = state.borderFuelItems.filter(x => x.zone === "FOREIGN");
 
@@ -1767,6 +1766,14 @@
       document.getElementById("sumExpTotalToman").textContent = formatToman(expTotalToman);
       document.getElementById("sumExpTotalCurrencies").textContent =
         `تعداد اسناد تصویری: ${toPersianDigits(receiptsCount)} عکس | ارزها: ${summarizeCurrencyMap(state.tripExpenses)}`;
+
+      document.getElementById("sumGrandCostsToman").textContent = formatToman(bfTotalToman + expTotalToman);
+      document.getElementById("sumGrandCostsSub").textContent =
+        `مرزها: ${formatToman(bfTotalToman)} + هزینه‌ها: ${formatToman(expTotalToman)}`;
+
+      document.getElementById("sumCompanySettlementToman").textContent = formatToman(metrics.companyValueToman);
+      document.getElementById("sumCompanySettlementSub").textContent =
+        `${formatNum(metrics.companyValueTry, 0)} لیر (${formatNum(metrics.sellableCompanyLiters, 2)} لیتر قابل فروش)`;
     }
 
     function saveCurrentTripToArchive() {
@@ -1910,8 +1917,7 @@
         `🧾 هزینه‌های سفر: داخل ایران ${formatToman(expInsideToman)} | خارج از ایران ${formatToman(expOutsideToman)} | جمع: ${formatToman(expInsideToman + expOutsideToman)}`
       ];
 
-      const text = lines.join("
-");
+      const text = lines.join("\n");
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => showToast("گزارش کامل کپی شد")).catch(() => fallbackCopy(text));
       } else {
@@ -1938,7 +1944,7 @@
     }
 
     function escapeAttr(str) {
-      return String(str).replace(/'/g, "\'").replace(/"/g, "&quot;");
+      return String(str).replace(/'/g, "\\'").replace(/"/g, "&quot;");
     }
 
     populateFormFromState();
