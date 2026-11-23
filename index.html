@@ -1368,6 +1368,20 @@
       return a * rate;
     }
 
+    function getNowSystemDateTime() {
+      try {
+        return new Date().toLocaleString("fa-IR", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+      } catch (e) {
+        return new Date().toLocaleString();
+      }
+    }
+
     function showToast(msg) {
       const toast = document.getElementById("toast");
       toast.textContent = msg;
@@ -1562,7 +1576,8 @@
         borderName,
         amount,
         currency,
-        liters
+        liters,
+        createdAt: getNowSystemDateTime()
       });
 
       document.getElementById("bfBorderName").value = "";
@@ -1601,7 +1616,7 @@
           <tr>
             <td>${zoneBadge}</td>
             <td>${typeBadge}</td>
-            <td>${escapeHtml(item.borderName)}</td>
+            <td>${escapeHtml(item.borderName)}${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
             <td class="num-ltr">${item.liters > 0 ? formatNum(item.liters, 2) + " L" : "—"}</td>
             <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
             <td class="num-ltr">${formatToman(tomanVal)}</td>
@@ -1679,6 +1694,7 @@
         title,
         currency,
         amount,
+        createdAt: getNowSystemDateTime(),
         receiptImage: pendingReceiptDataUrl || "",
         receiptName: pendingReceiptName || "سند هزینه"
       });
@@ -1719,7 +1735,7 @@
         return `
           <tr>
             <td>${scopeBadge}</td>
-            <td>${escapeHtml(item.title)}</td>
+            <td>${escapeHtml(item.title)}${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
             <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
             <td class="num-ltr">${formatToman(tomanVal)}</td>
             <td>${receiptHtml}</td>
