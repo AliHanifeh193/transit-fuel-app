@@ -740,7 +740,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795505139</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795505615</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -800,6 +800,10 @@
       </div>
 
       <div class="grid-3">
+        <div class="field-group">
+          <label class="field-label" for="tripNumber">شماره سفر</label>
+          <input id="tripNumber" type="text" class="input-control input-ltr" placeholder="مثلاً 1405-012" oninput="handleInputChange()" />
+        </div>
         <div class="field-group">
           <label class="field-label" for="tripTitle">عنوان / مسیر سفر</label>
           <input id="tripTitle" type="text" class="input-control" oninput="handleInputChange()" />
@@ -1291,6 +1295,38 @@
       document.getElementById("installGuideModal").classList.remove("open");
     }
 
+      <div class="card" style="margin-top: 14px; border-color: rgba(56, 189, 248, 0.35);">
+        <div class="card-header">
+          <span class="card-title">تأیید نهایی مدیریت / حسابداری و خالص دریافتی راننده</span>
+          <span class="badge" id="approvalBadge">در انتظار بازبینی</span>
+        </div>
+        <div class="grid-3">
+          <div class="field-group">
+            <label class="field-label" for="approvalStatus">وضعیت تأیید نهایی</label>
+            <select id="approvalStatus" class="input-control" onchange="handleInputChange()">
+              <option value="در انتظار بازبینی">در انتظار بازبینی</option>
+              <option value="تأیید نهایی شده">تأیید نهایی شده</option>
+              <option value="نیازمند اصلاح">نیازمند اصلاح</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="approvedBy">تأییدکننده (مدیر / حسابدار)</label>
+            <input id="approvedBy" type="text" class="input-control" placeholder="نام مسئول بازبینی" oninput="handleInputChange()" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="approvedAt">تاریخ تأیید نهایی</label>
+            <input id="approvedAt" type="text" class="input-control input-ltr" placeholder="مثلاً 1405/09/03" oninput="handleInputChange()" />
+          </div>
+        </div>
+        <div class="field-group" style="margin-top: 10px;">
+          <label class="field-label" for="approvalNote">توضیحات بازبینی و تسویه برای راننده</label>
+          <input id="approvalNote" type="text" class="input-control" placeholder="توضیح مسئول حسابداری یا مدیریت درباره خالص دریافتی سفر" oninput="handleInputChange()" />
+        </div>
+        <div id="driverNetPayoutBanner" style="margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148, 163, 184, 0.25); font-size: 0.86rem; color: #e2e8f0;">
+          خالص دریافتی راننده پس از تأیید نهایی نمایش داده می‌شود.
+        </div>
+      </div>
+
     function getDefaultState() {
       return {
         tripTitle: "بازرگان ➔ مرسین ➔ رازی",
@@ -1465,6 +1501,38 @@
       const amt = Number(amount) || 0;
       if (!currency || currency === "IRT") return amt;
       return amt * getCurrencyRateToToman(currency);
+    }
+
+    function computeDriverNetPayoutToman(m, expTotalToman) {
+      const personalVal = Number((m && (m.personalValueToman ?? m.personalFuelValueToman)) || 0);
+      const expensesVal = Number(expTotalToman ?? (m && m.totalExpensesToman) ?? 0);
+      return personalVal - expensesVal;
+    }
+
+    function updateApprovalAndPayoutBanner() {
+      const m = typeof calculateMetrics === "function" ? calculateMetrics() : {};
+      const expTotal = typeof state !== "undefined" && Array.isArray(state.tripExpenses)
+        ? state.tripExpenses.reduce((sum, x) => sum + (typeof convertToToman === "function" ? convertToToman(x.amount, x.currency) : (Number(x.amount) || 0)), 0)
+        : (Number(m.totalExpensesToman) || 0);
+      const netToman = computeDriverNetPayoutToman(m, expTotal);
+      const tripNo = (state && state.tripNumber) ? state.tripNumber : "---";
+      const status = (state && state.approvalStatus) || "در انتظار بازبینی";
+      const approver = (state && state.approvedBy) ? " | تأییدکننده: " + state.approvedBy : "";
+      const appDate = (state && state.approvedAt) ? " | تاریخ: " + state.approvedAt : "";
+      const note = (state && state.approvalNote) ? " | یادداشت: " + state.approvalNote : "";
+
+      const badge = document.getElementById("approvalBadge");
+      if (badge) badge.textContent = status;
+
+      const banner = document.getElementById("driverNetPayoutBanner");
+      if (banner) {
+        const formattedNet = typeof formatToman === "function" ? formatToman(netToman) : String(Math.round(netToman)) + " تومان";
+        banner.innerHTML =
+          "<strong>خالص دریافتی سفر شماره " + escapeHtml(tripNo) + ":</strong> " +
+          "<span style='color:#34d399; font-weight:800;'>" + formattedNet + "</span>" +
+          " — وضعیت: <strong>" + escapeHtml(status) + "</strong>" +
+          escapeHtml(approver + appDate + note);
+      }
     }
 
     function getReportTextContent() {
@@ -2256,6 +2324,23 @@
       }
     }
 
+    function finalizeArchivedTripApproval(archiveId) {
+      const list = typeof loadArchive === "function" ? loadArchive() : [];
+      const idx = list.findIndex(item => String(item.archiveId) === String(archiveId));
+      if (idx === -1) return;
+      const approver = prompt("نام مسئول بازبینی / حسابداری تأییدکننده:", list[idx].data?.approvedBy || "");
+      if (approver === null) return;
+      list[idx].data = list[idx].data || {};
+      list[idx].data.approvalStatus = "تأیید نهایی شده";
+      list[idx].data.approvedBy = approver.trim() || "مسئول حسابداری";
+      list[idx].data.approvedAt = new Date().toLocaleDateString("fa-IR");
+      saveArchive(list);
+      if (typeof showToast === "function") {
+        showToast("تأیید نهایی سفر شماره " + (list[idx].data.tripNumber || "---") + " ثبت شد");
+      }
+      openArchiveModal();
+    }
+
     function openArchiveModal() {
       const container = document.getElementById("archiveListContainer");
       const list = loadArchive();
@@ -2286,6 +2371,7 @@
                 <button type="button" class="btn btn-primary" style="padding: 6px 10px; font-size: 0.78rem;" onclick="loadArchivedTrip('${entry.archiveId}')">بارگذاری</button>
                 <button type="button" class="btn btn-ghost" style="padding: 6px 10px; font-size: 0.78rem;" onclick="exportArchivedTrip('${entry.archiveId}', 'txt')">TXT</button>
                 <button type="button" class="btn btn-ghost" style="padding: 6px 10px; font-size: 0.78rem;" onclick="exportArchivedTrip('${entry.archiveId}', 'csv')">CSV</button>
+                <button type="button" class="btn btn-ghost" style="padding: 6px 10px; font-size: 0.78rem;" onclick="finalizeArchivedTripApproval('${entry.archiveId}')">تأیید نهایی</button>
                 <button type="button" class="btn btn-danger-soft" style="padding: 6px 10px; font-size: 0.78rem;" onclick="deleteArchivedTrip('${entry.archiveId}')">حذف</button>
               </div>
             </div>
