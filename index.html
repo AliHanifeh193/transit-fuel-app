@@ -805,7 +805,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795508151</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795508348</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -873,6 +873,7 @@
         <h2 class="section-title">۱. مشخصات سفر، مسافت‌ها و ضرایب مصرف سوخت</h2>
         <span class="badge">محاسبه آنی</span>
       </div>
+      <div class="section-hint">اطلاعات پایه سفر، موجودی و سهمیه سوخت، مسافت و ضریب مصرف را وارد کنید تا محاسبات لحظه‌ای انجام شود.</div>
 
       <div class="grid-3">
         <div class="field-group">
@@ -893,6 +894,7 @@
         <div class="field-group">
           <label class="field-label" for="tripDate">تاریخ شروع / ثبت سفر</label>
           <input id="tripDate" type="text" class="input-control input-ltr" oninput="handleInputChange()" />
+          <div class="field-hint">تاریخ شروع یا ثبت سفر برای نظم در آرشیو.</div>
         </div>
       </div>
 
@@ -900,22 +902,27 @@
         <div class="field-group">
           <label class="field-label" for="initialFuel">کل گازوئیل موجود در باک (لیتر)</label>
           <input id="initialFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <div class="field-hint">موجودی کل گازوئیل داخل باک در ابتدای حرکت.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="companyQuota">سهمیه سوخت شرکت برای کل مسیر (لیتر)</label>
           <input id="companyQuota" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <div class="field-hint">سهمیه مصوب شرکت برای کل مسیر رفت و برگشت.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="extraOutboundFuel">سوخت اضافی مسیر رفت (لیتر)</label>
           <input id="extraOutboundFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <div class="field-hint">سوخت اضافی خریداری‌شده در مسیر رفت.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="extraReturnFuel">سوخت اضافی مسیر برگشت (لیتر)</label>
           <input id="extraReturnFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <div class="field-hint">سوخت اضافی خریداری‌شده در مسیر برگشت.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="fuelSellPriceTry">نرخ فروش هر لیتر سوخت (لیر)</label>
           <input id="fuelSellPriceTry" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <div class="field-hint">نرخ هر لیتر سوخت به لیر برای تسویه و ارزش‌گذاری.</div>
         </div>
       </div>
 
@@ -928,14 +935,17 @@
           <div class="field-group">
             <label class="field-label" for="outboundKm">مسافت رفت (کیلومتر)</label>
             <input id="outboundKm" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <div class="field-hint">مسافت طی‌شده در مسیر رفت (کیلومتر).</div>
           </div>
           <div class="field-group">
             <label class="field-label" for="outboundWeight">وزن بار رفت (تن)</label>
             <input id="outboundWeight" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <div class="field-hint">تناژ بار حمل‌شده در مسیر رفت.</div>
           </div>
           <div class="field-group">
             <label class="field-label" for="outboundRate">ضریب مصرف رفت (لیتر / ۱۰۰ کم)</label>
             <input id="outboundRate" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <div class="field-hint">مصرف استاندارد در هر ۱۰۰ کیلومتر مسیر رفت.</div>
           </div>
         </div>
       </div>
@@ -949,10 +959,12 @@
           <div class="field-group">
             <label class="field-label" for="returnKm">مسافت برگشت (کیلومتر)</label>
             <input id="returnKm" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <div class="field-hint">مسافت طی‌شده در مسیر برگشت (کیلومتر).</div>
           </div>
           <div class="field-group">
             <label class="field-label" for="returnWeight">وزن بار برگشت (تن)</label>
             <input id="returnWeight" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <div class="field-hint">تناژ بار یا وضعیت خالی/پر در مسیر برگشت.</div>
           </div>
           <div class="field-group">
             <label class="field-label" for="returnRate">ضریب مصرف برگشت (لیتر / ۱۰۰ کم)</label>
