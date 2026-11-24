@@ -805,7 +805,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795508348</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795536704</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -1446,13 +1446,33 @@
         "امکان نصب مستقیم روی دستگاه آماده است. دکمه «نصب روی گوشی» را بزنید.";
     });
 
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      const hint = document.getElementById("installHintText");
+      if (hint) {
+        hint.textContent = "اپلیکیشن با موفقیت روی دستگاه نصب شد.";
+      }
+      if (typeof showToast === "function") {
+        showToast("اپلیکیشن نصب شد");
+      }
+    });
+
     function triggerInstallPrompt() {
       if (deferredInstallPrompt) {
         deferredInstallPrompt.prompt();
-        deferredInstallPrompt.userChoice.then(() => {
+        deferredInstallPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult && choiceResult.outcome === "accepted" && typeof showToast === "function") {
+            showToast("نصب برنامه آغاز شد");
+          }
           deferredInstallPrompt = null;
+        }).catch(() => {
+          deferredInstallPrompt = null;
+          openInstallGuideModal();
         });
       } else {
+        if (typeof showToast === "function") {
+          showToast("در صورت عدم نمایش پنجره نصب، از منوی مرورگر گزینه نصب را بزنید");
+        }
         openInstallGuideModal();
       }
     }
