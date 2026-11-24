@@ -740,7 +740,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795503086</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795503359</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -1444,33 +1444,75 @@
     }
 
 
+
+    function getCurrencyRateToToman(currency) {
+      if (!currency || currency === "IRT") return 1;
+      const r = (state && state.rates) || {};
+      return Number(r[currency]) || 1;
+    }
+
+    function toTomanAmount(amount, currency) {
+      const amt = Number(amount) || 0;
+      if (!currency || currency === "IRT") return amt;
+      return amt * getCurrencyRateToToman(currency);
+    }
+
     function getReportTextContent() {
       const m = typeof calculateMetrics === "function" ? calculateMetrics() : {};
       const title = (state && state.tripTitle) || "سفر ترانزیتی";
-      const dateStr = (state && state.tripDate) || getNowSystemDateTime();
+      const dateStr = (state && state.tripDate) || "نامشخص";
+      const nowStr = typeof getNowSystemDateTime === "function" ? getNowSystemDateTime() : new Date().toLocaleString("fa-IR");
+      const rates = (state && state.rates) || {};
+
       const lines = [
+        "========================================",
         "🚛 گزارش کامل تسویه و سوخت ترانزیت",
-        "عنوان سفر: " + title,
-        "تاریخ ثبت/گزارش: " + getNowSystemDateTime() + " (تاریخ سفر: " + dateStr + ")",
+        "========================================",
+        "📌 عنوان سفر: " + title,
+        "📅 تاریخ سفر: " + dateStr,
+        "🕒 زمان تهیه گزارش: " + nowStr,
         "----------------------------------------",
-        "مصرف کل سوخت: " + formatNum(m.totalConsumed || 0, 2) + " لیتر",
-        "سهمیه شرکت: " + formatNum(m.companyQuota || 0, 2) + " لیتر",
-        "مازاد/کسری سوخت: " + formatNum(m.diffFuel || 0, 2) + " لیتر",
-        "جمع هزینه‌های سفر: " + formatToman(m.totalExpensesToman || 0),
+        "⛽ خلاصه وضعیت سوخت:",
+        "• مصرف کل سوخت: " + formatNum(m.totalConsumed || 0, 2) + " لیتر",
+        "• سهمیه شرکت: " + formatNum(m.companyQuota || 0, 2) + " لیتر",
+        "• مازاد / کسری سوخت: " + formatNum(m.diffFuel || 0, 2) + " لیتر",
+        "----------------------------------------",
+        "💰 خلاصه مالی و هزینه‌ها:",
+        "• جمع هزینه‌های سفر (تومان): " + formatToman(m.totalExpensesToman || 0),
+        "• نرخ ارزها (تومان): لیر=" + formatNum(rates.TRY || 0, 0) + " | دلار=" + formatNum(rates.USD || 0, 0) + " | یورو=" + formatNum(rates.EUR || 0, 0) + " | منات=" + formatNum(rates.AZN || 0, 0),
         "----------------------------------------"
       ];
-      if (Array.isArray(state.borderFuelItems) && state.borderFuelItems.length) {
-        lines.push("سوخت‌های مرزی:");
-        state.borderFuelItems.forEach((it, i) => {
-          lines.push(`${i + 1}. ${it.borderName || "مرز"} | ${it.liters || 0} L | ${formatNum(it.amount || 0, it.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[it.currency] || it.currency || ""}`);
+
+      const borders = Array.isArray(state.borderFuelItems) ? state.borderFuelItems : [];
+      lines.push("🛂 سوخت‌های مرزی (" + borders.length + " مورد):");
+      if (!borders.length) {
+        lines.push("  موردی ثبت نشده است.");
+      } else {
+        borders.forEach((it, i) => {
+          const cur = it.currency || "IRT";
+          const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
+          const tomanVal = toTomanAmount(it.amount, cur);
+          const timePart = it.createdAt ? " [" + it.createdAt + "]" : "";
+          lines.push(`  ${i + 1}. ${it.borderName || "مرز"} | ${formatNum(it.liters || 0, 2)} لیتر | ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel} (${formatToman(tomanVal)})${timePart}`);
         });
       }
-      if (Array.isArray(state.tripExpenses) && state.tripExpenses.length) {
-        lines.push("هزینه‌های سفر:");
-        state.tripExpenses.forEach((it, i) => {
-          lines.push(`${i + 1}. ${it.title || "هزینه"} | ${formatNum(it.amount || 0, it.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[it.currency] || it.currency || ""}`);
+
+      const expenses = Array.isArray(state.tripExpenses) ? state.tripExpenses : [];
+      lines.push("----------------------------------------");
+      lines.push("🧾 هزینه‌های سفر (" + expenses.length + " مورد):");
+      if (!expenses.length) {
+        lines.push("  موردی ثبت نشده است.");
+      } else {
+        expenses.forEach((it, i) => {
+          const cur = it.currency || "IRT";
+          const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
+          const tomanVal = toTomanAmount(it.amount, cur);
+          const timePart = it.createdAt ? " [" + it.createdAt + "]" : "";
+          lines.push(`  ${i + 1}. ${it.title || "هزینه"} | ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel} (${formatToman(tomanVal)})${timePart}`);
         });
       }
+
+      lines.push("========================================");
       return lines.join("\n");
     }
 
@@ -1508,45 +1550,159 @@
 
     function shareOrDownloadCsvReport() {
       const rows = [
-        ["بخش", "شرح", "مقدار/لیتر", "مبلغ", "واحد", "زمان ثبت"]
+        ["ردیف", "بخش", "شرح / مرز", "مقدار (لیتر)", "مبلغ اصلی", "واحد ارز", "نرخ به تومان", "معادل تومان", "زمان ثبت"]
       ];
+      let rowNum = 1;
       (state.borderFuelItems || []).forEach(it => {
-        rows.push(["سوخت مرزی", it.borderName || "", it.liters || 0, it.amount || 0, CURRENCY_LABELS[it.currency] || it.currency || "", it.createdAt || ""]);
+        const cur = it.currency || "IRT";
+        const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
+        const rate = getCurrencyRateToToman(cur);
+        const tomanVal = toTomanAmount(it.amount, cur);
+        rows.push([
+          rowNum++,
+          "سوخت مرزی",
+          it.borderName || "",
+          Number(it.liters) || 0,
+          Number(it.amount) || 0,
+          curLabel,
+          rate,
+          Math.round(tomanVal),
+          it.createdAt || ""
+        ]);
       });
       (state.tripExpenses || []).forEach(it => {
-        rows.push(["هزینه سفر", it.title || "", "", it.amount || 0, CURRENCY_LABELS[it.currency] || it.currency || "", it.createdAt || ""]);
+        const cur = it.currency || "IRT";
+        const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
+        const rate = getCurrencyRateToToman(cur);
+        const tomanVal = toTomanAmount(it.amount, cur);
+        rows.push([
+          rowNum++,
+          "هزینه سفر",
+          it.title || "",
+          "",
+          Number(it.amount) || 0,
+          curLabel,
+          rate,
+          Math.round(tomanVal),
+          it.createdAt || ""
+        ]);
       });
       const csv = rows.map(r => r.map(v => '"' + String(v ?? "").replace(/"/g, '""') + '"').join(",")).join("\n");
       const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
       shareOrDownloadFile(blob, "gozaresh-tasviye.csv");
     }
 
+    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = String(text || "").split(" ");
+      let line = "";
+      let curY = y;
+      for (let i = 0; i < words.length; i++) {
+        const testLine = line ? line + " " + words[i] : words[i];
+        if (ctx.measureText(testLine).width > maxWidth && line) {
+          ctx.fillText(line, x, curY);
+          line = words[i];
+          curY += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      if (line) {
+        ctx.fillText(line, x, curY);
+        curY += lineHeight;
+      }
+      return curY;
+    }
+
     function shareOrDownloadPngReport() {
+      const m = typeof calculateMetrics === "function" ? calculateMetrics() : {};
+      const title = (state && state.tripTitle) || "سفر ترانزیتی";
+      const dateStr = (state && state.tripDate) || "نامشخص";
+      const nowStr = typeof getNowSystemDateTime === "function" ? getNowSystemDateTime() : new Date().toLocaleString("fa-IR");
+
       const canvas = document.createElement("canvas");
-      canvas.width = 900;
-      canvas.height = 1100;
+      canvas.width = 960;
+      canvas.height = 1280;
       const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#0f172a";
+
+      ctx.fillStyle = "#0b1220";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 32px sans-serif";
+      ctx.fillStyle = "#132038";
+      ctx.fillRect(36, 36, canvas.width - 72, 140);
+      ctx.strokeStyle = "#1e3a5f";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(36, 36, canvas.width - 72, 140);
+
       ctx.textAlign = "right";
-      ctx.fillText("گزارش کامل تسویه و سوخت ترانزیت", 850, 70);
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 34px sans-serif";
+      ctx.fillText("گزارش کامل تسویه و سوخت ترانزیت", canvas.width - 64, 92);
 
-      ctx.fillStyle = "#94a3b8";
-      ctx.font = "20px sans-serif";
-      ctx.fillText("زمان ایجاد: " + getNowSystemDateTime(), 850, 110);
+      ctx.fillStyle = "#cbd5e1";
+      ctx.font = "21px sans-serif";
+      ctx.fillText("سفر: " + title + "   |   تاریخ سفر: " + dateStr, canvas.width - 64, 138);
 
-      const lines = getReportTextContent().split("\n");
-      ctx.fillStyle = "#f8fafc";
-      ctx.font = "22px sans-serif";
-      let y = 170;
-      for (const line of lines) {
-        if (y > 1040) break;
-        ctx.fillText(line.slice(0, 68), 850, y);
-        y += 38;
+      const cards = [
+        { label: "مصرف کل سوخت", val: formatNum(m.totalConsumed || 0, 2) + " L", color: "#38bdf8" },
+        { label: "سهمیه شرکت", val: formatNum(m.companyQuota || 0, 2) + " L", color: "#34d399" },
+        { label: "مازاد / کسری", val: formatNum(m.diffFuel || 0, 2) + " L", color: "#fbbf24" },
+        { label: "جمع هزینه‌ها", val: formatToman(m.totalExpensesToman || 0), color: "#f87171" }
+      ];
+      const cardW = 204;
+      const gap = 16;
+      cards.forEach((c, idx) => {
+        const xRight = canvas.width - 36 - idx * (cardW + gap);
+        const xLeft = xRight - cardW;
+        ctx.fillStyle = "#111c30";
+        ctx.fillRect(xLeft, 200, cardW, 120);
+        ctx.strokeStyle = "#243b5a";
+        ctx.strokeRect(xLeft, 200, cardW, 120);
+
+        ctx.fillStyle = "#94a3b8";
+        ctx.font = "18px sans-serif";
+        ctx.fillText(c.label, xRight - 16, 236);
+
+        ctx.fillStyle = c.color;
+        ctx.font = "bold 22px sans-serif";
+        ctx.fillText(c.val, xRight - 16, 286);
+      });
+
+      let y = 370;
+      ctx.fillStyle = "#e2e8f0";
+      ctx.font = "bold 25px sans-serif";
+      ctx.fillText("ریز آیتم‌های ثبت‌شده", canvas.width - 44, y);
+      y += 42;
+
+      const allItems = [];
+      (state.borderFuelItems || []).forEach(it => {
+        const cur = it.currency || "IRT";
+        const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
+        allItems.push(`[مرز] ${it.borderName || "مرز"} — ${formatNum(it.liters || 0, 1)}L — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel}`);
+      });
+      (state.tripExpenses || []).forEach(it => {
+        const cur = it.currency || "IRT";
+        const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
+        allItems.push(`[هزینه] ${it.title || "هزینه"} — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel}`);
+      });
+
+      ctx.font = "21px sans-serif";
+      if (!allItems.length) {
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillText("هیچ آیتم سوخت مرزی یا هزینه سفری ثبت نشده است.", canvas.width - 44, y);
+        y += 36;
+      } else {
+        for (let i = 0; i < allItems.length && y < 1160; i++) {
+          ctx.fillStyle = i % 2 === 0 ? "#101a2d" : "#0e1728";
+          ctx.fillRect(36, y - 24, canvas.width - 72, 38);
+          ctx.fillStyle = "#f1f5f9";
+          y = wrapCanvasText(ctx, `${i + 1}. ${allItems[i]}`, canvas.width - 52, y, canvas.width - 104, 34);
+          y += 8;
+        }
       }
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "18px sans-serif";
+      ctx.fillText("ایجاد شده در: " + nowStr, canvas.width - 44, canvas.height - 32);
 
       canvas.toBlob(blob => {
         if (blob) shareOrDownloadFile(blob, "gozaresh-tasviye.png");
