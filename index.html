@@ -740,7 +740,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795506034</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795506546</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -1362,6 +1362,19 @@
     }
 
 
+      <div class="card" style="margin-top: 12px; border-color: rgba(248, 113, 113, 0.35);">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+          <div>
+            <div style="font-weight: 800; font-size: 0.9rem; color: #fff;">حریم خصوصی اطلاعات راننده هنگام ارسال گزارش</div>
+            <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;">مقدار اضافه سوخت و درآمد/سهم از فروش فقط در صورت موافقت راننده ارسال می‌شوند.</div>
+          </div>
+          <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.84rem; color: #fca5a5;">
+            <input id="hidePrivateDriverData" type="checkbox" checked onchange="handleInputChange()" />
+            <span>عدم ارسال بخش‌های خصوصی (در صورت عدم موافقت ارسال نشود)</span>
+          </label>
+        </div>
+      </div>
+
     function getDefaultState() {
       return {
         tripTitle: "بازرگان ➔ مرسین ➔ رازی",
@@ -1570,6 +1583,42 @@
       }
     }
 
+    function askDriverPrivateDataPermission() {
+      const cb = document.getElementById("hidePrivateDriverData");
+      const currentlyHidden = cb ? Boolean(cb.checked) : Boolean(state && state.hidePrivateDriverData);
+      if (!currentlyHidden) {
+        return true;
+      }
+      const allowPrivate = confirm(
+        "آیا مایل هستید بخش‌های خصوصی راننده (مقدار اضافه سوخت و درآمد / سهم از فروش) در گزارش ارسالی گنجانده شوند؟\n\n" +
+        "• تأیید (OK): اطلاعات خصوصی در گزارش ارسال می‌شوند.\n" +
+        "• لغو (Cancel): اطلاعات خصوصی ارسال نمی‌شوند و محرمانه می‌مانند."
+      );
+      if (cb) cb.checked = !allowPrivate;
+      if (typeof state !== "undefined" && state) state.hidePrivateDriverData = !allowPrivate;
+      return allowPrivate;
+    }
+
+    function getSanitizedTextForPrivacy(rawText, allowPrivate) {
+      if (allowPrivate) return rawText;
+      return rawText
+        .split("\n")
+        .map(line => {
+          if (
+            line.includes("سوخت اضافی") ||
+            line.includes("اضافه سوخت") ||
+            line.includes("سهم شخصی") ||
+            line.includes("درآمد") ||
+            line.includes("خالص دریافتی")
+          ) {
+            const labelPart = line.split(":")[0] || "بخش خصوصی راننده";
+            return labelPart + ": [محرمانه - عدم ارسال به درخواست راننده]";
+          }
+          return line;
+        })
+        .join("\n");
+    }
+
     function getReportTextContent() {
       const m = typeof calculateMetrics === "function" ? calculateMetrics() : {};
       const title = (state && state.tripTitle) || "سفر ترانزیتی";
@@ -1658,6 +1707,7 @@
     }
 
     function shareOrDownloadTxtReport() {
+      const allowPrivate = askDriverPrivateDataPermission();
       const txt = getReportTextContent();
       const blob = new Blob(["\ufeff" + txt], { type: "text/plain;charset=utf-8" });
       shareOrDownloadFile(blob, "gozaresh-tasviye.txt");
