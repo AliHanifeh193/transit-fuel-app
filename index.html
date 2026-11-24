@@ -740,7 +740,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795504032</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795504431</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -2166,6 +2166,54 @@
         `${formatNum(metrics.companyValueTry, 0)} لیر (${formatNum(metrics.sellableCompanyLiters, 2)} لیتر قابل فروش)`;
     }
 
+    function resetFormForNextTrip() {
+      const savedRates = state && state.rates ? Object.assign({}, state.rates) : null;
+      const fresh = typeof getDefaultState === "function" ? getDefaultState() : {};
+      fresh.tripTitle = "";
+      fresh.tripDate = "";
+      fresh.initialFuel = 0;
+      fresh.companyQuota = 0;
+      fresh.extraOutboundFuel = 0;
+      fresh.extraReturnFuel = 0;
+      fresh.extraRouteFuel = 0;
+      fresh.outboundKm = 0;
+      fresh.outboundWeight = 0;
+      fresh.outboundRate = 0;
+      fresh.returnKm = 0;
+      fresh.returnWeight = 0;
+      fresh.returnRate = 0;
+      fresh.emptyKm = 0;
+      fresh.emptyRate = 0;
+      fresh.idleFuel = 0;
+      fresh.borderFuelItems = [];
+      fresh.tripExpenses = [];
+      if (savedRates) fresh.rates = savedRates;
+
+      state = fresh;
+      if (typeof editingTarget !== "undefined") {
+        editingTarget = null;
+      }
+
+      const idsToClear = [
+        "tripTitle", "tripDate", "initialFuel", "companyQuota",
+        "extraOutboundFuel", "extraReturnFuel",
+        "outboundKm", "outboundWeight", "outboundRate",
+        "returnKm", "returnWeight", "returnRate",
+        "emptyKm", "emptyRate", "idleFuel",
+        "bfBorderName", "bfLiters", "bfAmount",
+        "expTitle", "expAmount"
+      ];
+      idsToClear.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "";
+      });
+      const receiptEl = document.getElementById("expReceiptInput");
+      if (receiptEl) receiptEl.value = "";
+
+      if (typeof persistCurrentState === "function") persistCurrentState();
+      if (typeof renderAll === "function") renderAll();
+    }
+
     function saveCurrentTripToArchive() {
       readFormIntoState();
       const m = calculateMetrics();
@@ -2192,7 +2240,8 @@
       archive.unshift(snapshot);
       try {
         saveArchive(archive);
-        showToast("سفر در آرشیو ذخیره شد");
+        resetFormForNextTrip();
+        showToast("سفر در آرشیو ذخیره شد و فرم برای سفر بعدی آماده است");
       } catch (e) {
         showToast("حافظه آرشیو پر شد؛ یک سفر قدیمی یا عکس را حذف کنید.");
       }
