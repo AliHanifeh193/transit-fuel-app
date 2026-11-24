@@ -755,7 +755,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795506999</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795507236</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -1096,7 +1096,13 @@
         </div>
         <div class="field-group">
           <label class="field-label" for="expReceiptInput">عکس رسید / سند (اختیاری)</label>
-          <input id="expReceiptInput" type="file" accept="image/*" class="input-control" onchange="handleReceiptUpload(event)" />
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button type="button" class="btn btn-primary" style="padding: 8px 12px; font-size: 0.8rem;" onclick="document.getElementById('cameraReceiptInput').click()">
+              📷 عکس مستقیم با دوربین
+            </button>
+            <input id="cameraReceiptInput" type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleReceiptUpload(event)" />
+            <input id="expReceiptInput" type="file" accept="image/*" class="input-control" style="flex: 1; min-width: 170px;" onchange="handleReceiptUpload(event)" />
+          </div>
           <div id="pendingReceiptPreview" class="receipt-preview-box"></div>
         </div>
       </div>
@@ -2208,7 +2214,10 @@
     function clearPendingReceipt() {
       pendingReceiptDataUrl = "";
       pendingReceiptName = "";
-      document.getElementById("expReceiptInput").value = "";
+      const expInp = document.getElementById("expReceiptInput");
+      const camInp = document.getElementById("cameraReceiptInput");
+      if (expInp) expInp.value = "";
+      if (camInp) camInp.value = "";
       document.getElementById("pendingReceiptPreview").innerHTML = "";
     }
 
