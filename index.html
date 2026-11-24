@@ -740,7 +740,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795505615</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795506034</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -1247,7 +1247,73 @@
     </div>
   </div>
 
-  <script>
+        <div class="card" style="margin-top: 14px; border-color: rgba(56, 189, 248, 0.35);">
+        <div class="card-header">
+          <span class="card-title">تأیید نهایی مدیریت / حسابداری و خالص دریافتی راننده</span>
+          <span class="badge" id="approvalBadge">در انتظار بازبینی</span>
+        </div>
+        <div class="grid-3">
+          <div class="field-group">
+            <label class="field-label" for="approvalStatus">وضعیت تأیید نهایی</label>
+            <select id="approvalStatus" class="input-control" onchange="handleInputChange()">
+              <option value="در انتظار بازبینی">در انتظار بازبینی</option>
+              <option value="تأیید نهایی شده">تأیید نهایی شده</option>
+              <option value="نیازمند اصلاح">نیازمند اصلاح</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="approvedBy">تأییدکننده (مدیر / حسابدار)</label>
+            <input id="approvedBy" type="text" class="input-control" placeholder="نام مسئول بازبینی" oninput="handleInputChange()" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="approvedAt">تاریخ تأیید نهایی</label>
+            <input id="approvedAt" type="text" class="input-control input-ltr" placeholder="مثلاً 1405/09/03" oninput="handleInputChange()" />
+          </div>
+        </div>
+        <div class="field-group" style="margin-top: 10px;">
+          <label class="field-label" for="approvalNote">توضیحات بازبینی و تسویه برای راننده</label>
+          <input id="approvalNote" type="text" class="input-control" placeholder="توضیح مسئول حسابداری یا مدیریت درباره خالص دریافتی سفر" oninput="handleInputChange()" />
+        </div>
+        <div id="driverNetPayoutBanner" style="margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148, 163, 184, 0.25); font-size: 0.86rem; color: #e2e8f0;">
+          خالص دریافتی راننده پس از تأیید نهایی نمایش داده می‌شود.
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 14px; border-color: rgba(251, 191, 36, 0.35);">
+        <div class="card-header">
+          <span class="card-title">انتقادات و پیشنهادات کاربران</span>
+          <span class="badge" id="feedbackCountBadge">0 مورد</span>
+        </div>
+        <div class="grid-3">
+          <div class="field-group">
+            <label class="field-label" for="fbType">نوع پیام</label>
+            <select id="fbType" class="input-control">
+              <option value="پیشنهاد">پیشنهاد</option>
+              <option value="انتقاد / ایراد">انتقاد / ایراد</option>
+              <option value="حسابداری و تسویه">حسابداری و تسویه</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="fbAuthor">نام و نقش کاربر</label>
+            <input id="fbAuthor" type="text" class="input-control" placeholder="مثلاً راننده / حسابدار / مدیر" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="fbTripNo">شماره سفر مرتبط (اختیاری)</label>
+            <input id="fbTripNo" type="text" class="input-control input-ltr" placeholder="مثلاً 1405-012" />
+          </div>
+        </div>
+        <div class="field-group" style="margin-top: 10px;">
+          <label class="field-label" for="fbMessage">متن انتقاد یا پیشنهاد</label>
+          <textarea id="fbMessage" rows="2" class="input-control" placeholder="نظر، پیشنهاد بهبود یا ایراد مشاهده‌شده را بنویسید..."></textarea>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+          <button type="button" class="btn btn-primary" onclick="submitUserFeedback()">ثبت انتقاد / پیشنهاد</button>
+          <button type="button" class="btn btn-ghost" onclick="exportFeedbacksTxt()">خروجی TXT پیام‌ها</button>
+        </div>
+        <div id="feedbackListContainer" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+
+<script>
     const STORAGE_CURRENT_KEY = "transit_fuel_app_current_v5";
     const STORAGE_ARCHIVE_KEY = "transit_fuel_app_archive_v5";
 
@@ -1295,37 +1361,6 @@
       document.getElementById("installGuideModal").classList.remove("open");
     }
 
-      <div class="card" style="margin-top: 14px; border-color: rgba(56, 189, 248, 0.35);">
-        <div class="card-header">
-          <span class="card-title">تأیید نهایی مدیریت / حسابداری و خالص دریافتی راننده</span>
-          <span class="badge" id="approvalBadge">در انتظار بازبینی</span>
-        </div>
-        <div class="grid-3">
-          <div class="field-group">
-            <label class="field-label" for="approvalStatus">وضعیت تأیید نهایی</label>
-            <select id="approvalStatus" class="input-control" onchange="handleInputChange()">
-              <option value="در انتظار بازبینی">در انتظار بازبینی</option>
-              <option value="تأیید نهایی شده">تأیید نهایی شده</option>
-              <option value="نیازمند اصلاح">نیازمند اصلاح</option>
-            </select>
-          </div>
-          <div class="field-group">
-            <label class="field-label" for="approvedBy">تأییدکننده (مدیر / حسابدار)</label>
-            <input id="approvedBy" type="text" class="input-control" placeholder="نام مسئول بازبینی" oninput="handleInputChange()" />
-          </div>
-          <div class="field-group">
-            <label class="field-label" for="approvedAt">تاریخ تأیید نهایی</label>
-            <input id="approvedAt" type="text" class="input-control input-ltr" placeholder="مثلاً 1405/09/03" oninput="handleInputChange()" />
-          </div>
-        </div>
-        <div class="field-group" style="margin-top: 10px;">
-          <label class="field-label" for="approvalNote">توضیحات بازبینی و تسویه برای راننده</label>
-          <input id="approvalNote" type="text" class="input-control" placeholder="توضیح مسئول حسابداری یا مدیریت درباره خالص دریافتی سفر" oninput="handleInputChange()" />
-        </div>
-        <div id="driverNetPayoutBanner" style="margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148, 163, 184, 0.25); font-size: 0.86rem; color: #e2e8f0;">
-          خالص دریافتی راننده پس از تأیید نهایی نمایش داده می‌شود.
-        </div>
-      </div>
 
     function getDefaultState() {
       return {
@@ -2507,6 +2542,113 @@
     updateArchiveCountBadge();
     renderAll();
     persistCurrentState();
-  </script>
+      const FEEDBACK_STORAGE_KEY = "transit_fuel_user_feedbacks_v1";
+
+    function loadUserFeedbacks() {
+      try {
+        const raw = localStorage.getItem(FEEDBACK_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveUserFeedbacks(items) {
+      localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function renderUserFeedbacks() {
+      const list = loadUserFeedbacks();
+      const badge = document.getElementById("feedbackCountBadge");
+      if (badge) badge.textContent = list.length + " مورد";
+
+      const container = document.getElementById("feedbackListContainer");
+      if (!container) return;
+
+      if (!list.length) {
+        container.innerHTML = `<div class="empty-state">هنوز انتقاد یا پیشنهادی ثبت نشده است.</div>`;
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <div class="archive-item">
+          <div>
+            <div style="font-weight: 800; font-size: 0.9rem; color: #fff;">
+              [${escapeHtml(item.type || "پیشنهاد")}] ${escapeHtml(item.author || "کاربر")}
+              ${item.tripNo ? `<span style="font-size: 0.76rem; color: #7dd3fc;">(سفر: ${escapeHtml(item.tripNo)})</span>` : ""}
+            </div>
+            <div style="font-size: 0.84rem; color: #e2e8f0; margin-top: 4px; white-space: pre-wrap;">${escapeHtml(item.message || "")}</div>
+            <div style="font-size: 0.74rem; color: #94a3b8; margin-top: 4px;">${escapeHtml(item.createdAt || "")}</div>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-danger-soft" style="padding: 6px 10px; font-size: 0.78rem;" onclick="deleteUserFeedback('${item.id}')">حذف</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function submitUserFeedback() {
+      const typeEl = document.getElementById("fbType");
+      const authorEl = document.getElementById("fbAuthor");
+      const tripNoEl = document.getElementById("fbTripNo");
+      const msgEl = document.getElementById("fbMessage");
+      const message = (msgEl && msgEl.value ? msgEl.value : "").trim();
+
+      if (!message) {
+        if (typeof showToast === "function") showToast("لطفاً متن انتقاد یا پیشنهاد را وارد کنید");
+        return;
+      }
+
+      const list = loadUserFeedbacks();
+      list.unshift({
+        id: "fb_" + Date.now(),
+        type: (typeEl && typeEl.value) || "پیشنهاد",
+        author: ((authorEl && authorEl.value) || "").trim() || "کاربر برنامه",
+        tripNo: ((tripNoEl && tripNoEl.value) || "").trim(),
+        message,
+        createdAt: new Date().toLocaleString("fa-IR")
+      });
+      saveUserFeedbacks(list);
+      if (msgEl) msgEl.value = "";
+      if (tripNoEl) tripNoEl.value = "";
+      renderUserFeedbacks();
+      if (typeof showToast === "function") showToast("انتقاد یا پیشنهاد شما ثبت شد");
+    }
+
+    function deleteUserFeedback(id) {
+      const next = loadUserFeedbacks().filter(x => String(x.id) !== String(id));
+      saveUserFeedbacks(next);
+      renderUserFeedbacks();
+      if (typeof showToast === "function") showToast("مورد انتخاب‌شده حذف شد");
+    }
+
+    function exportFeedbacksTxt() {
+      const list = loadUserFeedbacks();
+      if (!list.length) {
+        if (typeof showToast === "function") showToast("موردی برای خروجی وجود ندارد");
+        return;
+      }
+      const lines = ["گزارش انتقادات و پیشنهادات کاربران", "========================================"];
+      list.forEach((it, idx) => {
+        lines.push(`${idx + 1}. [${it.type}] ${it.author} | سفر: ${it.tripNo || "-"} | زمان: ${it.createdAt}`);
+        lines.push(`   متن: ${it.message}`);
+        lines.push("----------------------------------------");
+      });
+      const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "user-feedbacks.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderUserFeedbacks();
+      if (typeof updateApprovalAndPayoutBanner === "function") updateApprovalAndPayoutBanner();
+    });
+
+</script>
 </body>
 </html>
