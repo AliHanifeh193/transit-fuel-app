@@ -805,7 +805,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795508058</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795508151</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -861,7 +861,9 @@
     <div id="sectionNavBar" class="section-nav-bar" role="tablist" aria-label="انتخاب بخش‌های برنامه">
       <button type="button" class="section-nav-btn active" data-sec-btn="all" onclick="switchAppSection('all')">همه بخش‌ها</button>
       <button type="button" class="section-nav-btn" data-sec-btn="fuel" onclick="switchAppSection('fuel')">⛽ سوخت و مسیر</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="rates" onclick="switchAppSection('rates')">💱 نرخ ارزها</button>
       <button type="button" class="section-nav-btn" data-sec-btn="expenses" onclick="switchAppSection('expenses')">🧾 هزینه‌ها و اسناد</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="export" onclick="switchAppSection('export')">📤 ارسال و خروجی</button>
       <button type="button" class="section-nav-btn" data-sec-btn="approval" onclick="switchAppSection('approval')">✅ تأیید نهایی و خالص</button>
       <button type="button" class="section-nav-btn" data-sec-btn="feedback" onclick="switchAppSection('feedback')">💬 انتقادات و پیشنهادات</button>
     </div>
@@ -981,7 +983,7 @@
       </div>
     </section>
 
-    <section class="section-card">
+    <section class="section-card" data-app-section="rates">
       <div class="section-head">
         <h2 class="section-title">۲. نرخ تبدیل ارزها به تومان (برای محاسبه لحظه‌ای تمام بخش‌ها)</h2>
         <span class="badge">لیر • دلار • یورو • مانات • تومان</span>
@@ -1264,7 +1266,7 @@
     </section>
   </div>
 
-  <div class="bottom-bar">
+  <div class="bottom-bar" data-app-section="export">
     <div class="bottom-bar-inner">
       <button type="button" class="btn btn-success" onclick="copyFullReport()">
         📋 کپی گزارش کامل تسویه
