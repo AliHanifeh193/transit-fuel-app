@@ -1,10 +1,10 @@
-const CACHE_NAME = "transit-fuel-pwa-1795459083";
+const CACHE_NAME = "transit-fuel-pwa-1795536886";
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./icon-192.svg",
-  "./icon-512.svg"
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
