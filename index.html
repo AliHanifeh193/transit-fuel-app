@@ -746,6 +746,40 @@
       }
     </style>
 
+
+    <style id="sectionSwitcherStyle">
+      .section-nav-bar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 12px 0 14px 0;
+        padding: 10px;
+        border-radius: 14px;
+        background: rgba(15, 23, 42, 0.78);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+      }
+      .section-nav-btn {
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        background: rgba(30, 41, 59, 0.75);
+        color: #e2e8f0;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.82rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .section-nav-btn.active {
+        background: linear-gradient(135deg, #0284c7, #0369a1);
+        border-color: #38bdf8;
+        color: #ffffff;
+      }
+      .section-hidden-by-nav {
+        display: none !important;
+      }
+    </style>
+
 </head>
 <body>
   <div id="toast" class="toast">انجام شد</div>
@@ -771,7 +805,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795507517</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795508058</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -824,7 +858,15 @@
       <div id="fuelAlertBox" class="alert-box"></div>
     </section>
 
-    <section class="section-card">
+    <div id="sectionNavBar" class="section-nav-bar" role="tablist" aria-label="انتخاب بخش‌های برنامه">
+      <button type="button" class="section-nav-btn active" data-sec-btn="all" onclick="switchAppSection('all')">همه بخش‌ها</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="fuel" onclick="switchAppSection('fuel')">⛽ سوخت و مسیر</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="expenses" onclick="switchAppSection('expenses')">🧾 هزینه‌ها و اسناد</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="approval" onclick="switchAppSection('approval')">✅ تأیید نهایی و خالص</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="feedback" onclick="switchAppSection('feedback')">💬 انتقادات و پیشنهادات</button>
+    </div>
+
+    <section class="section-card" data-app-section="fuel">
       <div class="section-head">
         <h2 class="section-title">۱. مشخصات سفر، مسافت‌ها و ضرایب مصرف سوخت</h2>
         <span class="badge">محاسبه آنی</span>
@@ -1078,7 +1120,7 @@
       </div>
     </section>
 
-    <section class="section-card">
+    <section class="section-card" data-app-section="expenses">
       <div class="section-head">
         <h2 class="section-title">۵. هزینه‌های سفر داخل ایران و خارج از آن (با قابلیت ثبت عکس سند)</h2>
         <span class="badge">محاسبه لحظه‌ای چندارزی</span>
@@ -1290,7 +1332,7 @@
 
         
     <div id="bottomFeedbackAndApprovalSection" style="max-width: 1120px; margin: 16px auto 48px auto; padding: 0 14px;">
-<div class="card" style="margin-top: 14px; border-color: rgba(56, 189, 248, 0.35);">
+<div data-app-section="approval" class="card" style="margin-top: 14px; border-color: rgba(56, 189, 248, 0.35);">
         <div class="card-header">
           <span class="card-title">تأیید نهایی مدیریت / حسابداری و خالص دریافتی راننده</span>
           <span class="badge" id="approvalBadge">در انتظار بازبینی</span>
@@ -1324,7 +1366,7 @@
         </div>
       </div>
 
-      <div class="card" style="margin-top: 14px; border-color: rgba(251, 191, 36, 0.35);">
+      <div data-app-section="feedback" class="card" style="margin-top: 14px; border-color: rgba(251, 191, 36, 0.35);">
         <div class="card-header">
           <span class="card-title">انتقادات و پیشنهادات کاربران</span>
           <span class="badge" id="feedbackCountBadge">0 مورد</span>
@@ -2748,6 +2790,41 @@
     document.addEventListener("DOMContentLoaded", () => {
       renderUserFeedbacks();
       if (typeof updateApprovalAndPayoutBanner === "function") updateApprovalAndPayoutBanner();
+    });
+
+    let currentActiveAppSection = "all";
+
+    function switchAppSection(sectionKey) {
+      if (typeof handleInputChange === "function") {
+        handleInputChange();
+      } else if (typeof persistCurrentState === "function") {
+        persistCurrentState();
+      }
+
+      currentActiveAppSection = sectionKey || "all";
+      const targets = document.querySelectorAll("[data-app-section]");
+      targets.forEach(el => {
+        const key = el.getAttribute("data-app-section");
+        if (currentActiveAppSection === "all" || key === currentActiveAppSection) {
+          el.classList.remove("section-hidden-by-nav");
+        } else {
+          el.classList.add("section-hidden-by-nav");
+        }
+      });
+
+      document.querySelectorAll("[data-sec-btn]").forEach(btn => {
+        const isMatch = btn.getAttribute("data-sec-btn") === currentActiveAppSection;
+        btn.classList.toggle("active", isMatch);
+      });
+
+      const navBar = document.getElementById("sectionNavBar");
+      if (navBar) {
+        navBar.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      switchAppSection(currentActiveAppSection);
     });
 
 </script>
