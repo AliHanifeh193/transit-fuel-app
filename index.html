@@ -730,6 +730,22 @@
       }
     </style>
 
+
+    <style id="fieldGuideStyle">
+      .section-hint {
+        font-size: 0.78rem;
+        color: #94a3b8;
+        margin: 4px 0 10px 0;
+        line-height: 1.5;
+      }
+      .field-hint {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        margin-top: 4px;
+        line-height: 1.45;
+      }
+    </style>
+
 </head>
 <body>
   <div id="toast" class="toast">انجام شد</div>
@@ -755,7 +771,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795507236</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795507517</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -818,14 +834,17 @@
         <div class="field-group">
           <label class="field-label" for="tripNumber">شماره سفر</label>
           <input id="tripNumber" type="text" class="input-control input-ltr" placeholder="مثلاً 1405-012" oninput="handleInputChange()" />
+          <div class="field-hint">کد یکتای سفر برای پیگیری سریع در گزارش‌ها و آرشیو.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="tripTitle">عنوان / مسیر سفر</label>
           <input id="tripTitle" type="text" class="input-control" oninput="handleInputChange()" />
+          <div class="field-hint">مبدأ، مسیر ترانزیت و مقصد سفر را کوتاه بنویسید.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="plateNo">شماره پلاک کشنده / تریلر</label>
           <input id="plateNo" type="text" class="input-control input-ltr" oninput="handleInputChange()" />
+          <div class="field-hint">پلاک کشنده و در صورت نیاز تریلر را وارد کنید.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="tripDate">تاریخ شروع / ثبت سفر</label>
@@ -1093,6 +1112,7 @@
         <div class="field-group">
           <label class="field-label" for="expAmount">مبلغ هزینه</label>
           <input id="expAmount" type="number" step="0.01" class="input-control input-ltr" placeholder="0" />
+          <div class="field-hint">مبلغ را بر اساس ارز انتخاب‌شده همان هزینه وارد کنید.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="expReceiptInput">عکس رسید / سند (اختیاری)</label>
@@ -1275,6 +1295,7 @@
           <span class="card-title">تأیید نهایی مدیریت / حسابداری و خالص دریافتی راننده</span>
           <span class="badge" id="approvalBadge">در انتظار بازبینی</span>
         </div>
+        <div class="section-hint">پس از بررسی اسناد سفر، وضعیت تأیید نهایی را تعیین کنید تا خالص دریافتی راننده شفاف نمایش داده شود.</div>
         <div class="grid-3">
           <div class="field-group">
             <label class="field-label" for="approvalStatus">وضعیت تأیید نهایی</label>
@@ -1296,6 +1317,7 @@
         <div class="field-group" style="margin-top: 10px;">
           <label class="field-label" for="approvalNote">توضیحات بازبینی و تسویه برای راننده</label>
           <input id="approvalNote" type="text" class="input-control" placeholder="توضیح مسئول حسابداری یا مدیریت درباره خالص دریافتی سفر" oninput="handleInputChange()" />
+          <div class="field-hint">نکات کسورات، پاداش یا اصلاحات تسویه برای اطلاع راننده.</div>
         </div>
         <div id="driverNetPayoutBanner" style="margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148, 163, 184, 0.25); font-size: 0.86rem; color: #e2e8f0;">
           خالص دریافتی راننده پس از تأیید نهایی نمایش داده می‌شود.
@@ -1307,6 +1329,7 @@
           <span class="card-title">انتقادات و پیشنهادات کاربران</span>
           <span class="badge" id="feedbackCountBadge">0 مورد</span>
         </div>
+        <div class="section-hint">محل ثبت نظرات، گزارش خطا یا پیشنهاد بهبود برای همه کاربران؛ پیام‌ها ذخیره و قابل خروجی TXT هستند.</div>
         <div class="grid-3">
           <div class="field-group">
             <label class="field-label" for="fbType">نوع پیام</label>
@@ -1328,6 +1351,7 @@
         <div class="field-group" style="margin-top: 10px;">
           <label class="field-label" for="fbMessage">متن انتقاد یا پیشنهاد</label>
           <textarea id="fbMessage" rows="2" class="input-control" placeholder="نظر، پیشنهاد بهبود یا ایراد مشاهده‌شده را بنویسید..."></textarea>
+          <div class="field-hint">ایرادهای محاسباتی، پیشنهاد صفحه‌ها یا نکات تسویه را ثبت کنید.</div>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
           <button type="button" class="btn btn-primary" onclick="submitUserFeedback()">ثبت انتقاد / پیشنهاد</button>
