@@ -740,7 +740,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795502820</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795503086</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -1174,6 +1174,15 @@
       <button type="button" class="btn btn-success" onclick="copyFullReport()">
         📋 کپی گزارش کامل تسویه
       </button>
+      <button type="button" class="btn btn-primary" onclick="shareOrDownloadTxtReport()">
+        📄 فایل متنی (.txt)
+      </button>
+      <button type="button" class="btn btn-primary" onclick="shareOrDownloadCsvReport()">
+        📊 فایل اکسل (.csv)
+      </button>
+      <button type="button" class="btn btn-amber" onclick="shareOrDownloadPngReport()">
+        🖼️ تصویر گزارش (.png)
+      </button>
       <button type="button" class="btn btn-amber" onclick="saveCurrentTripToArchive()">
         💾 ذخیره در آرشیو
       </button>
@@ -1432,6 +1441,116 @@
     function cancelEditMode() {
       editingTarget = null;
       showToast("حالت ویرایش لغو شد");
+    }
+
+
+    function getReportTextContent() {
+      const m = typeof calculateMetrics === "function" ? calculateMetrics() : {};
+      const title = (state && state.tripTitle) || "سفر ترانزیتی";
+      const dateStr = (state && state.tripDate) || getNowSystemDateTime();
+      const lines = [
+        "🚛 گزارش کامل تسویه و سوخت ترانزیت",
+        "عنوان سفر: " + title,
+        "تاریخ ثبت/گزارش: " + getNowSystemDateTime() + " (تاریخ سفر: " + dateStr + ")",
+        "----------------------------------------",
+        "مصرف کل سوخت: " + formatNum(m.totalConsumed || 0, 2) + " لیتر",
+        "سهمیه شرکت: " + formatNum(m.companyQuota || 0, 2) + " لیتر",
+        "مازاد/کسری سوخت: " + formatNum(m.diffFuel || 0, 2) + " لیتر",
+        "جمع هزینه‌های سفر: " + formatToman(m.totalExpensesToman || 0),
+        "----------------------------------------"
+      ];
+      if (Array.isArray(state.borderFuelItems) && state.borderFuelItems.length) {
+        lines.push("سوخت‌های مرزی:");
+        state.borderFuelItems.forEach((it, i) => {
+          lines.push(`${i + 1}. ${it.borderName || "مرز"} | ${it.liters || 0} L | ${formatNum(it.amount || 0, it.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[it.currency] || it.currency || ""}`);
+        });
+      }
+      if (Array.isArray(state.tripExpenses) && state.tripExpenses.length) {
+        lines.push("هزینه‌های سفر:");
+        state.tripExpenses.forEach((it, i) => {
+          lines.push(`${i + 1}. ${it.title || "هزینه"} | ${formatNum(it.amount || 0, it.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[it.currency] || it.currency || ""}`);
+        });
+      }
+      return lines.join("\n");
+    }
+
+    async function shareOrDownloadFile(blob, filename) {
+      try {
+        const file = new File([blob], filename, { type: blob.type });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: filename,
+            text: "گزارش تسویه سفر ترانزیتی",
+            files: [file]
+          });
+          showToast("فایل برای اشتراک‌گذاری آماده شد");
+          return;
+        }
+      } catch (e) {
+        if (e && e.name === "AbortError") return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      showToast("فایل " + filename + " دانلود شد");
+    }
+
+    function shareOrDownloadTxtReport() {
+      const txt = getReportTextContent();
+      const blob = new Blob(["\ufeff" + txt], { type: "text/plain;charset=utf-8" });
+      shareOrDownloadFile(blob, "gozaresh-tasviye.txt");
+    }
+
+    function shareOrDownloadCsvReport() {
+      const rows = [
+        ["بخش", "شرح", "مقدار/لیتر", "مبلغ", "واحد", "زمان ثبت"]
+      ];
+      (state.borderFuelItems || []).forEach(it => {
+        rows.push(["سوخت مرزی", it.borderName || "", it.liters || 0, it.amount || 0, CURRENCY_LABELS[it.currency] || it.currency || "", it.createdAt || ""]);
+      });
+      (state.tripExpenses || []).forEach(it => {
+        rows.push(["هزینه سفر", it.title || "", "", it.amount || 0, CURRENCY_LABELS[it.currency] || it.currency || "", it.createdAt || ""]);
+      });
+      const csv = rows.map(r => r.map(v => '"' + String(v ?? "").replace(/"/g, '""') + '"').join(",")).join("\n");
+      const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+      shareOrDownloadFile(blob, "gozaresh-tasviye.csv");
+    }
+
+    function shareOrDownloadPngReport() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 900;
+      canvas.height = 1100;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#0f172a";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#38bdf8";
+      ctx.font = "bold 32px sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText("گزارش کامل تسویه و سوخت ترانزیت", 850, 70);
+
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "20px sans-serif";
+      ctx.fillText("زمان ایجاد: " + getNowSystemDateTime(), 850, 110);
+
+      const lines = getReportTextContent().split("\n");
+      ctx.fillStyle = "#f8fafc";
+      ctx.font = "22px sans-serif";
+      let y = 170;
+      for (const line of lines) {
+        if (y > 1040) break;
+        ctx.fillText(line.slice(0, 68), 850, y);
+        y += 38;
+      }
+
+      canvas.toBlob(blob => {
+        if (blob) shareOrDownloadFile(blob, "gozaresh-tasviye.png");
+      }, "image/png");
     }
 
     function showToast(msg) {
