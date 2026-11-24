@@ -740,7 +740,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795504431</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795504794</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -2167,15 +2167,16 @@
     }
 
     function resetFormForNextTrip() {
-      const savedRates = state && state.rates ? Object.assign({}, state.rates) : null;
       const fresh = typeof getDefaultState === "function" ? getDefaultState() : {};
       fresh.tripTitle = "";
+      fresh.plateNo = "";
       fresh.tripDate = "";
       fresh.initialFuel = 0;
       fresh.companyQuota = 0;
       fresh.extraOutboundFuel = 0;
       fresh.extraReturnFuel = 0;
       fresh.extraRouteFuel = 0;
+      fresh.fuelSellPriceTry = 0;
       fresh.outboundKm = 0;
       fresh.outboundWeight = 0;
       fresh.outboundRate = 0;
@@ -2187,7 +2188,11 @@
       fresh.idleFuel = 0;
       fresh.borderFuelItems = [];
       fresh.tripExpenses = [];
-      if (savedRates) fresh.rates = savedRates;
+      if (fresh.rates && typeof fresh.rates === "object") {
+        Object.keys(fresh.rates).forEach(k => { fresh.rates[k] = 0; });
+      } else {
+        fresh.rates = { TRY: 0, USD: 0, EUR: 0, AZN: 0 };
+      }
 
       state = fresh;
       if (typeof editingTarget !== "undefined") {
@@ -2195,17 +2200,21 @@
       }
 
       const idsToClear = [
-        "tripTitle", "tripDate", "initialFuel", "companyQuota",
-        "extraOutboundFuel", "extraReturnFuel",
+        "tripTitle", "plateNo", "tripDate", "initialFuel", "companyQuota",
+        "extraOutboundFuel", "extraReturnFuel", "fuelSellPriceTry",
         "outboundKm", "outboundWeight", "outboundRate",
         "returnKm", "returnWeight", "returnRate",
         "emptyKm", "emptyRate", "idleFuel",
+        "rateTRY", "rateUSD", "rateEUR", "rateAZN",
         "bfBorderName", "bfLiters", "bfAmount",
         "expTitle", "expAmount"
       ];
       idsToClear.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = "";
+      });
+      document.querySelectorAll('.grid-5 input[id^="rate"]').forEach(el => {
+        el.value = "";
       });
       const receiptEl = document.getElementById("expReceiptInput");
       if (receiptEl) receiptEl.value = "";
