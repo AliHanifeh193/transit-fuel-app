@@ -740,7 +740,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795504794</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795505139</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -2284,6 +2284,8 @@
               </div>
               <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                 <button type="button" class="btn btn-primary" style="padding: 6px 10px; font-size: 0.78rem;" onclick="loadArchivedTrip('${entry.archiveId}')">بارگذاری</button>
+                <button type="button" class="btn btn-ghost" style="padding: 6px 10px; font-size: 0.78rem;" onclick="exportArchivedTrip('${entry.archiveId}', 'txt')">TXT</button>
+                <button type="button" class="btn btn-ghost" style="padding: 6px 10px; font-size: 0.78rem;" onclick="exportArchivedTrip('${entry.archiveId}', 'csv')">CSV</button>
                 <button type="button" class="btn btn-danger-soft" style="padding: 6px 10px; font-size: 0.78rem;" onclick="deleteArchivedTrip('${entry.archiveId}')">حذف</button>
               </div>
             </div>
@@ -2296,6 +2298,26 @@
 
     function closeArchiveModal() {
       document.getElementById("archiveModal").classList.remove("open");
+    }
+
+    function exportArchivedTrip(archiveId, format) {
+      const list = typeof loadArchive === "function" ? loadArchive() : [];
+      const found = list.find(item => String(item.archiveId) === String(archiveId));
+      if (!found || !found.data) {
+        if (typeof showToast === "function") showToast("اطلاعات سفر آرشیوشده یافت نشد");
+        return;
+      }
+      const prevState = state;
+      try {
+        state = JSON.parse(JSON.stringify(found.data));
+        if (format === "csv" && typeof shareOrDownloadCsvReport === "function") {
+          shareOrDownloadCsvReport();
+        } else if (typeof shareOrDownloadTxtReport === "function") {
+          shareOrDownloadTxtReport();
+        }
+      } finally {
+        state = prevState;
+      }
     }
 
     function loadArchivedTrip(archiveId) {
