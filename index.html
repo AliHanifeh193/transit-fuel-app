@@ -740,7 +740,7 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795503817</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795504032</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
@@ -824,8 +824,12 @@
           <input id="companyQuota" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
         </div>
         <div class="field-group">
-          <label class="field-label" for="extraRouteFuel">سوخت اضافی مسیر شرکت (لیتر)</label>
-          <input id="extraRouteFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <label class="field-label" for="extraOutboundFuel">سوخت اضافی مسیر رفت (لیتر)</label>
+          <input id="extraOutboundFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="extraReturnFuel">سوخت اضافی مسیر برگشت (لیتر)</label>
+          <input id="extraReturnFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
         </div>
         <div class="field-group">
           <label class="field-label" for="fuelSellPriceTry">نرخ فروش هر لیتر سوخت (لیر)</label>
@@ -1294,7 +1298,8 @@
         tripDate: "21.11.2026",
         initialFuel: 1240,
         companyQuota: 1100,
-        extraRouteFuel: 20,
+        extraOutboundFuel: 20,
+        extraReturnFuel: 0,
         fuelSellPriceTry: 55,
         outboundKm: 1220,
         outboundWeight: 23,
@@ -1479,7 +1484,9 @@
         "----------------------------------------",
         "⛽ خلاصه وضعیت سوخت:",
         "• مصرف کل سوخت: " + formatNum(m.totalConsumed || 0, 2) + " لیتر",
-        "• سهمیه شرکت: " + formatNum(m.companyQuota || 0, 2) + " لیتر",
+        "• سهمیه کل شرکت: " + formatNum(state.companyQuota || 0, 2) + " لیتر",
+        "• سوخت اضافی مسیر (رفت: " + formatNum(m.extraOutboundFuel || 0, 1) + "L | برگشت: " + formatNum(m.extraReturnFuel || 0, 1) + "L | جمع: " + formatNum(m.extraRouteFuel || 0, 1) + "L)",
+        "• سهمیه محاسباتی شرکت: " + formatNum(m.effectiveCompanyQuota ?? state.companyQuota ?? 0, 2) + " لیتر",
         "• مازاد / کسری سوخت: " + formatNum(m.diffFuel || 0, 2) + " لیتر",
         "----------------------------------------",
         "💰 خلاصه مالی و هزینه‌ها:",
@@ -1752,7 +1759,9 @@
       state.plateNo = document.getElementById("plateNo").value.trim();
       state.tripDate = document.getElementById("tripDate").value.trim();
       state.initialFuel = parseFloat(document.getElementById("initialFuel").value) || 0;
-      state.extraRouteFuel = parseFloat(document.getElementById("extraRouteFuel")?.value) || 0;
+      state.extraOutboundFuel = parseFloat(document.getElementById("extraOutboundFuel")?.value) || 0;
+      state.extraReturnFuel = parseFloat(document.getElementById("extraReturnFuel")?.value) || 0;
+      state.extraRouteFuel = state.extraOutboundFuel + state.extraReturnFuel;
       state.companyQuota = parseFloat(document.getElementById("companyQuota").value) || 0;
       state.fuelSellPriceTry = parseFloat(document.getElementById("fuelSellPriceTry").value) || 0;
       state.outboundKm = parseFloat(document.getElementById("outboundKm").value) || 0;
@@ -1790,7 +1799,9 @@
       const totalConsumed = outboundFuel + returnFuel + emptyFuel + idleFuel;
 
       const rawCompanyQuota = Number(state.companyQuota) || 0;
-      const extraRouteFuel = Math.max(0, Number(state.extraRouteFuel) || 0);
+      const extraOutboundFuel = Math.max(0, Number(state.extraOutboundFuel) || 0);
+      const extraReturnFuel = Math.max(0, Number(state.extraReturnFuel) || 0);
+      const extraRouteFuel = extraOutboundFuel + extraReturnFuel;
       const effectiveCompanyQuota = Math.max(0, rawCompanyQuota - extraRouteFuel);
 
       const remainingFuel = state.initialFuel - totalConsumed;
@@ -1813,6 +1824,10 @@
         emptyFuel,
         idleFuel,
         totalConsumed,
+        extraOutboundFuel,
+        extraReturnFuel,
+        extraRouteFuel,
+        effectiveCompanyQuota,
         remainingFuel,
         personalQuota,
         companySurplus,
