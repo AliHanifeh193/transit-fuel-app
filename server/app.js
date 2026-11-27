@@ -6,6 +6,7 @@ const path = require("node:path");
 const {isDeepStrictEqual} = require("node:util");
 const {randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash} = require("node:crypto");
 const {DatabaseSync} = require("node:sqlite");
+const {normalizePhone,maskPhone,newChallenge,verifyCode,webhookSms} = require("./sms-auth");
 const {calculate, fields, currencies} = require("../calculations");
 const root = path.resolve(__dirname, "..");
 const assets = new Map(Object.entries({
@@ -32,6 +33,8 @@ function openDatabase(filename) {
       role TEXT NOT NULL CHECK(role IN ('driver','admin','accounting')),
       credential TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1
     );
+    CREATE TABLE IF NOT EXISTS phone_accounts (user_id TEXT PRIMARY KEY REFERENCES users(id),phone TEXT UNIQUE NOT NULL);
+    CREATE TABLE IF NOT EXISTS otp_challenges (id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),purpose TEXT NOT NULL,salt TEXT NOT NULL,code_hash TEXT NOT NULL,expires INTEGER NOT NULL,attempts INTEGER NOT NULL,created INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (
       token TEXT PRIMARY KEY, user_id TEXT NOT NULL REFERENCES users(id), expires INTEGER NOT NULL
     );
@@ -95,6 +98,7 @@ function insertUser(db, entry) {
   const id = randomUUID();
   db.prepare("INSERT INTO users (id,username,name,role,credential) VALUES (?,?,?,?,?)")
     .run(id, username, name, entry.role, passwordRecord(entry.password));
+  if(entry.phone){const phone=normalizePhone(entry.phone);requireCondition(phone,400,"invalid_phone");db.prepare("INSERT INTO phone_accounts(user_id,phone) VALUES(?,?)").run(id,phone);}
   return id;
 }
 
@@ -187,15 +191,39 @@ async function getBody(req) {
   }
 }
 
-function createServer({filename, origin, secure = true}) {
+function createServer({filename, origin, secure = true, authMode = "password", sendSms = webhookSms}) {
   const db = openDatabase(filename);
-  const attempts = new Map();
+  requireCondition(["password","sms"].includes(authMode),500,"invalid_auth_mode");
+  const attempts=new Map(), otpRequests=new Map();
   const hash = token => createHash("sha256").update(token).digest("hex");
   const cookie = secure ? "__Host-transit" : "transit";
   function setCookie(res, token, age) {
     res.setHeader("Set-Cookie", `${cookie}=${token}; Path=/; Max-Age=${age}; HttpOnly; SameSite=Strict${secure ? "; Secure" : ""}`);
   }
 
+  function startSession(res,account,token){
+    const now=Date.now(),sid=randomBytes(32).toString("hex"),age=28800;
+    db.prepare("DELETE FROM sessions WHERE expires<=?").run(now);
+    if(token)db.prepare("DELETE FROM sessions WHERE token=?").run(hash(token));
+    db.prepare("INSERT INTO sessions VALUES(?,?,?)").run(hash(sid),account.id,now+age*1000);
+    setCookie(res,sid,age);return{id:account.id,name:account.name,role:account.role};
+  }
+  function throttle(key){
+    const now=Date.now();let state=otpRequests.get(key);
+    if(!state||state.until<now){state={count:0,last:0,until:now+600000};}
+    requireCondition(state.count<5&&now-state.last>=60000,429,"try_later");
+    state.count++;state.last=now;otpRequests.set(key,state);
+  }
+  async function issueOtp(account,purpose){
+    const phone=db.prepare("SELECT phone FROM phone_accounts WHERE user_id=?").get(account.id)?.phone;
+    requireCondition(phone,409,"phone_required");
+    const {id,code}=newChallenge(db,account.id,purpose);
+    try{await sendSms(phone,code);}catch{
+      db.prepare("DELETE FROM otp_challenges WHERE id=?").run(id);
+      throw new RequestError(503,"sms_unavailable");
+    }
+    return{challengeId:id,phoneMasked:maskPhone(phone),expiresIn:180};
+  }
   async function api(req, res, route) {
     const method = req.method;
     if (method !== "GET") requireCondition(req.headers.origin === origin, 403, "invalid_origin");
@@ -219,13 +247,31 @@ function createServer({filename, origin, secure = true}) {
       const match = matchesPassword(password, user?.credential);
       requireCondition(match && user, 401, "invalid_credentials");
       attempts.delete(ip);
-      const id = randomBytes(32).toString("hex");
-      const age = 8 * 60 * 60;
-      db.prepare("DELETE FROM sessions WHERE expires<=?").run(now);
-      if (token) db.prepare("DELETE FROM sessions WHERE token=?").run(hash(token));
-      db.prepare("INSERT INTO sessions VALUES (?,?,?)").run(hash(id), user.id, now + age * 1000);
-      setCookie(res, id, age);
-      return {id: user.id, name: user.name, role: user.role};
+      if(authMode==="sms"){
+        requireCondition(user.role!=="driver",403,"driver_otp_only");
+        throttle("staff:"+ip+":"+user.id);
+        return {...(await issueOtp(user,"staff")),mfaRequired:true};
+      }
+      return startSession(res,user,token);
+    }
+    if(authMode==="sms"&&method==="POST"&&route==="/api/auth/request"){
+      const body=await getBody(req),phone=normalizePhone(body.phone);
+      requireCondition(phone,400,"invalid_phone");
+      throttle("driver:"+req.socket.remoteAddress+":"+phone);
+      const account=db.prepare(`SELECT u.id,u.name,u.role FROM users u JOIN phone_accounts p ON p.user_id=u.id WHERE p.phone=? AND u.role='driver' AND u.active=1`).get(phone);
+      if(!account)return{requested:true};
+      return{...(await issueOtp(account,"driver")),requested:true};
+    }
+    if(authMode==="sms"&&method==="POST"&&route==="/api/auth/verify"){
+      const body=await getBody(req);
+      requireCondition(typeof body.challengeId==="string"&&/^[a-f0-9]{64}$/.test(body.challengeId),400,"invalid_challenge");
+      const c=db.prepare(`SELECT c.*,u.id AS account_id,u.name,u.role,u.active FROM otp_challenges c JOIN users u ON c.user_id=u.id WHERE c.id=?`).get(body.challengeId);
+      requireCondition(c&&c.active&&c.expires>Date.now()&&c.attempts<5,401,"invalid_otp");
+      db.prepare("UPDATE otp_challenges SET attempts=attempts+1 WHERE id=?").run(c.id);
+      requireCondition(verifyCode(body.code,c),401,"invalid_otp");
+      requireCondition(c.purpose===(c.role==="driver"?"driver":"staff"),403,"forbidden");
+      db.prepare("DELETE FROM otp_challenges WHERE id=?").run(c.id);
+      return startSession(res,{id:c.account_id,name:c.name,role:c.role},token);
     }
     const user = token && db.prepare(`
       SELECT u.id,u.name,u.role FROM users u JOIN sessions s ON s.user_id=u.id
@@ -257,7 +303,7 @@ function createServer({filename, origin, secure = true}) {
     }
     if (method === "GET" && route === "/api/users") {
       requireCondition(user.role === "admin", 403, "forbidden");
-      return db.prepare("SELECT id,username,name,role,active FROM users ORDER BY username").all();
+      return db.prepare("SELECT u.id,u.username,u.name,u.role,u.active,p.phone FROM users u LEFT JOIN phone_accounts p ON p.user_id=u.id ORDER BY u.username").all();
     }
     if (method === "POST" && route === "/api/users") {
       requireCondition(user.role === "admin", 403, "forbidden");
@@ -266,6 +312,20 @@ function createServer({filename, origin, secure = true}) {
         const id = insertUser(db, body);
         audit(db, user.id, id, "user_created");
         return {id};
+      });
+    }
+    const phoneUpdate=/^\/api\/users\/([a-f0-9-]{36})\/phone$/.exec(route);
+    if(method==="PATCH"&&phoneUpdate){
+      requireCondition(user.role==="admin"&&user.id!==phoneUpdate[1],403,"forbidden");
+      const body=await getBody(req),phone=normalizePhone(body.phone);
+      requireCondition(phone,400,"invalid_phone");
+      return atomic(db,()=>{
+        const target=db.prepare("SELECT id FROM users WHERE id=?").get(phoneUpdate[1]);
+        requireCondition(target,404,"not_found");
+        db.prepare("INSERT INTO phone_accounts(user_id,phone) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET phone=excluded.phone").run(target.id,phone);
+        db.prepare("DELETE FROM sessions WHERE user_id=?").run(target.id);
+        db.prepare("DELETE FROM otp_challenges WHERE user_id=?").run(target.id);
+        audit(db,user.id,target.id,"phone_updated");return{};
       });
     }
     const managed = /^\/api\/(users|vehicles)\/([a-f0-9-]{36})$/.exec(route);
