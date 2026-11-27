@@ -190,12 +190,17 @@
   async function administration(vehicles) {
     const section = element("section", "");
     const username = input("text", 64), name = input("text", 120), password = input("password", 128);
-    const role = select(Object.entries(roles));
+    const role = select(Object.entries(roles)), phone = input("tel", 20);
+    phone.placeholder = "+989121234567 / +905321234567";
     const plate = input("text", 100);
     section.append(element("h3", "مدیریت کاربران و ناوگان"),
-      field("نام کاربری", username), field("نام", name), field("رمز اولیه", password), field("نقش", role),
+      field("نام کاربری", username), field("نام", name), field("رمز اولیه مدیر/حسابدار", password),
+       field("نقش", role), field("شماره موبایل ثبت‌شده", phone),
       button("ایجاد کاربر", async () => {
-        await api("users", "POST", {username: username.value, name: name.value, password: password.value, role: role.value});
+        await api("users", "POST", {
+           username: username.value, name: name.value, role: role.value, phone: phone.value,
+           password: authMode === "sms" && role.value === "driver" ? crypto.randomUUID() : password.value
+         });
         password.value = "";
         await refresh();
       }), field("پلاک", plate), button("ثبت خودرو", async () => {
@@ -204,7 +209,17 @@
       }));
     for (const [resource, entries] of [["users", await api("users")], ["vehicles", vehicles]]) {
       for (const entry of entries) {
-        const line = element("p", entry.plate || entry.name + " (" + roles[entry.role] + ")");
+        const line = element("p", entry.plate || entry.name + " (" + roles[entry.role] + ")" +
+           (entry.phone ? " | " + entry.phone : ""));
+        if (resource === "users" && entry.id !== activeUser.id) {
+          const newPhone = input("tel", 20);
+          newPhone.placeholder = "+989121234567 / +905321234567";
+          line.append(field("اصلاح شماره", newPhone), button("ثبت شماره جدید", async () => {
+            if (!confirm("شماره تلفن تغییر کند؟ تمام نشست‌های فعلی این کاربر خارج خواهند شد.")) return;
+            await api("users/" + entry.id + "/phone", "PATCH", {phone: newPhone.value});
+            await refresh();
+          }));
+        }
         if (entry.id !== activeUser.id) line.append(button(entry.active ? "غیرفعال" : "فعال", async () => {
           if (!confirm("وضعیت تغییر کند؟")) return;
           await api(resource + "/" + entry.id, "PATCH", {active: !entry.active});
