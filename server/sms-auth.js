@@ -11,7 +11,7 @@ function latinDigits(value) {
 // Iranian and Turkish mobile numbers in canonical E.164 notation.
 function normalizePhone(input) {
   if (typeof input !== "string") return null;
-  let p = input.trim().replace(/[\s()-]/g, "");
+  let p = latinDigits(input.trim()).replace(/[\s()-]/g, "");
   if (p.startsWith("0098")) p = "+98" + p.slice(4);
   else if (p.startsWith("0090")) p = "+90" + p.slice(4);
   else if (/^09\d{9}$/.test(p)) p = "+98" + p.slice(1);
@@ -23,8 +23,8 @@ function maskPhone(p) { return p ? p.slice(0, 4) + "•••••" + p.slice(-
 function otpCode() { return String(randomInt(0, 1_000_000)).padStart(6, "0"); }
 function hashCode(code, salt) { return scryptSync(code, salt, 32).toString("hex"); }
 function verifyCode(code, challenge) {
-  if (typeof code !== "string" || !/^\d{6}$/.test(code)) return false;
-  const actual = Buffer.from(hashCode(code, challenge.salt), "hex");
+  if (typeof code !== "string" || !/^\d{6}$/.test(latinDigits(code))) return false;
+  const actual = Buffer.from(hashCode(latinDigits(code), challenge.salt), "hex");
   const expected = Buffer.from(challenge.code_hash, "hex");
   return expected.length === actual.length && timingSafeEqual(actual, expected);
 }
