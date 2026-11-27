@@ -1,6 +1,13 @@
 "use strict";
 const {randomInt, randomBytes, scryptSync, timingSafeEqual} = require("node:crypto");
 
+// Accept numbers entered using Persian/Arabic digit keyboards.
+function latinDigits(value) {
+  return value.replace(/[۰-۹٠-٩]/g, char => {
+    const n = char.charCodeAt(0);
+    return String(n >= 0x06F0 ? n - 0x06F0 : n - 0x0660);
+  });
+}
 // Iranian and Turkish mobile numbers in canonical E.164 notation.
 function normalizePhone(input) {
   if (typeof input !== "string") return null;
