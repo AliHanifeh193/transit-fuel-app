@@ -28,7 +28,7 @@ async function withTimeout(fetchFn, url, options) {
 }
 
 async function sendViaSmsIr(phone, code, {env=process.env, fetchFn=fetch} = {}) {
-  if (!/^\\+989\\d{9}$/.test(phone) || !/^\\d{6}$/.test(code)) throw Error("smsir_invalid_recipient");
+  if (!/^\+989\d{9}$/.test(phone) || !/^\d{6}$/.test(code)) throw Error("smsir_invalid_recipient");
   const {apiKey, templateId, param} = assertSmsSettings(env);
   const response = await withTimeout(fetchFn, "https://api.sms.ir/v1/send/verify", {
     method:"POST",
@@ -47,7 +47,7 @@ async function sendViaSmsIr(phone, code, {env=process.env, fetchFn=fetch} = {}) 
 }
 
 async function sendViaTurkeyGateway(phone, code, {env=process.env, fetchFn=fetch} = {}) {
-  if (!/^\\+905\\d{9}$/.test(phone) || !/^\\d{6}$/.test(code)) throw Error("turkey_invalid_recipient");
+  if (!/^\+905\d{9}$/.test(phone) || !/^\d{6}$/.test(code)) throw Error("turkey_invalid_recipient");
   const url = env.TRANSIT_TURKEY_SMS_WEBHOOK_URL;
   const secret = env.TRANSIT_TURKEY_SMS_WEBHOOK_TOKEN;
   if (!url || !secret || !/^https:\/\//i.test(url)) throw Error("turkey_sms_not_configured");
