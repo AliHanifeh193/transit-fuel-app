@@ -351,7 +351,10 @@ function createServer({filename, origin, secure = true, authMode = "password", s
       return atomic(db, () => {
         const changed = db.prepare(`UPDATE ${table} SET active=? WHERE id=?`).run(Number(body.active), id);
         requireCondition(changed.changes === 1, 404, "not_found");
-        if (table === "users" && !body.active) db.prepare("DELETE FROM sessions WHERE user_id=?").run(id);
+        if (table === "users" && !body.active) {
+          db.prepare("DELETE FROM sessions WHERE user_id=?").run(id);
+          db.prepare("DELETE FROM otp_challenges WHERE user_id=?").run(id);
+        }
         audit(db, user.id, id, body.active ? "enabled" : "disabled");
         return {};
       });
