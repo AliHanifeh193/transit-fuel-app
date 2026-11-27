@@ -98,9 +98,11 @@ https://app.sms.ir/developer/help/sandbox
 ```text
 TRANSIT_SMS_PROVIDER=smsir
 TRANSIT_SMSIR_TEMPLATE_ID=123456
-TRANSIT_SMSIR_PARAMETER=CODE
+TRANSIT_SMSIR_PARAMETER=Code
 TRANSIT_SMSIR_API_KEY=<sandbox-api-key>
 ```
+
+**نتیجه آزمایش مستقیم (۲۷ نوامبر ۲۰۲۶):** درخواست PowerShell با کلید Sandbox، قالب `123456`، متغیر `Code` و شماره نمونه پاسخ `API_STATUS: 1` و `API_MESSAGE: موفق` گرفت. این فقط موفقیت API را نشان می‌دهد و ارسال/دریافت واقعی یا ورود در اپ را اثبات نمی‌کند.
 
 **نکته:** پاسخ ساختگی Sandbox لزوماً مانند پاسخ ارسال واقعی نیست؛ پیش از ادعای موفقیت کامل اتصال باید پاسخ واقعی تست Sandbox با کد بررسی شود. تا آن زمان، این تنظیمات فقط برای تست ارتباط API هستند و به معنی آمادگی ورود واقعی راننده، مدیر و حسابدار نیستند.
 
