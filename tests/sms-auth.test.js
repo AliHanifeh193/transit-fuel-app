@@ -88,3 +88,53 @@ test("SMS delivery failure does not create a session or reveal an OTP",async t=>
   assert.deepEqual(await response.json(),{error:"sms_unavailable"});
   assert.equal(response.headers.get("set-cookie"),null);
 });
+
+test("existing password-only sessions are invalidated when SMS mode is activated",async t=>{
+  const dir=mkdtempSync(join(tmpdir(),"transit-mfa-cutover-")),filename=join(dir,"test.sqlite");
+  const db=openDatabase(filename);
+  insertUser(db,{username:"admin",name:"Admin",role:"admin",password:"long-example-password-9876",phone:"+989121234567"});
+  db.close();
+  const origin="http://localhost";
+  const old=createServer({filename,origin,secure:false,authMode:"password"});
+  await new Promise(resolve=>old.listen(0,"127.0.0.1",resolve));
+  const login=await fetch("http://127.0.0.1:"+old.address().port+"/api/login",{
+    method:"POST",headers:{Origin:origin,"Content-Type":"application/json"},
+    body:JSON.stringify({username:"admin",password:"long-example-password-9876"})
+  });
+  assert.equal(login.status,200);
+  const oldCookie=login.headers.get("set-cookie").split(";")[0];
+  await new Promise(resolve=>old.close(resolve));
+  let received;
+  const modern=createServer({filename,origin,secure:false,authMode:"sms",sendSms:async(_phone,code)=>{received=code;}});
+  await new Promise(resolve=>modern.listen(0,"127.0.0.1",resolve));
+  t.after(async()=>{await new Promise(resolve=>modern.close(resolve));rmSync(dir,{recursive:true,force:true});});
+  const base="http://127.0.0.1:"+modern.address().port;
+  const oldSession=await fetch(base+"/api/session",{headers:{Cookie:oldCookie}});
+  assert.equal(await oldSession.json(),null,"old password-only session must not bypass MFA");
+  const mfa=await fetch(base+"/api/login",{method:"POST",headers:{Origin:origin,"Content-Type":"application/json"},body:JSON.stringify({username:"admin",password:"long-example-password-9876"})});
+  assert.equal((await mfa.json()).mfaRequired,true);
+  assert.equal(typeof received,"string");
+});
+
+test("expired OTPs and exhausted attempt quotas cannot authenticate",async t=>{
+  const dir=mkdtempSync(join(tmpdir(),"transit-otp-expiry-")),filename=join(dir,"test.sqlite");
+  const db=openDatabase(filename);
+  insertUser(db,{username:"driver",name:"Driver",role:"driver",password:"long-example-password-9876",phone:"+989121234567"});
+  db.close();
+  const codes=[];
+  const origin="http://localhost";
+  const server=createServer({filename,origin,secure:false,authMode:"sms",sendSms:async(_phone,code)=>codes.push(code)});
+  await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
+  t.after(async()=>{await new Promise(resolve=>server.close(resolve));rmSync(dir,{recursive:true,force:true});});
+  const base="http://127.0.0.1:"+server.address().port;
+  async function post(route,data){
+    const r=await fetch(base+"/api/"+route,{method:"POST",headers:{Origin:origin,"Content-Type":"application/json"},body:JSON.stringify(data)});
+    return {status:r.status,body:await r.json()};
+  }
+  const request=await post("auth/request",{phone:"09121234567"});
+  const ticket=request.body.challengeId;
+  const writable=openDatabase(filename);
+  writable.prepare("UPDATE otp_challenges SET expires=? WHERE id=?").run(Date.now()-1000,ticket);
+  writable.close();
+  assert.equal((await post("auth/verify",{challengeId:ticket,code:codes[0]})).status,401);
+});
