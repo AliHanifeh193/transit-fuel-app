@@ -3,8 +3,14 @@
 (() => {
   const login = document.getElementById("companyLogin");
   const workspace = document.getElementById("companyWorkspace");
+  const driverForm = document.getElementById("driverPhoneLogin");
+  const otpForm = document.getElementById("companyOtp");
+  const otpHint = document.getElementById("otpHint");
+  const cancelOtp = document.getElementById("cancelOtp");
   const status = document.getElementById("companyStatus");
   let activeUser;
+  let authMode = "password";
+  let pendingChallenge = null;
   let local = {};
   let ready = false;
   let syncing = false;
@@ -20,7 +26,13 @@
     invalid_amount: "مقادیر سفر باید عدد معتبر و نامنفی باشند",
     invalid_password: "رمز عبور باید ۱۲ تا ۱۲۸ نویسه داشته باشد",
     invalid_vehicle: "وسیله نقلیه فعال نیست",
-    try_later: "تلاش‌های ورود زیاد است. چند دقیقه بعد دوباره امتحان کنید."
+    try_later: "تلاش‌های ورود زیاد است. بعداً دوباره امتحان کنید.",
+    invalid_phone: "شماره موبایل ایران یا ترکیه معتبر نیست.",
+    invalid_otp: "کد نامعتبر یا منقضی شده است.",
+    invalid_challenge: "درخواست تأیید نامعتبر است. دوباره کد بخواهید.",
+    phone_required: "شماره موبایل این حساب ثبت نشده است. با مدیر سامانه تماس بگیرید.",
+    sms_unavailable: "ارسال پیامک در حال حاضر در دسترس نیست.",
+    driver_otp_only: "رانندگان باید از ورود پیامکی استفاده کنند."
   };
 
   function element(tag, value) {
@@ -210,7 +222,9 @@
 
   async function refresh() {
     workspace.hidden = !activeUser;
-    login.hidden = Boolean(activeUser);
+    login.hidden = Boolean(activeUser) || Boolean(pendingChallenge);
+    driverForm.hidden = Boolean(activeUser) || authMode !== "sms" || Boolean(pendingChallenge);
+    otpForm.hidden = Boolean(activeUser) || !pendingChallenge;
     if (!activeUser) { workspace.replaceChildren(); return; }
     await synchronize();
     let vehicles, trips;
@@ -299,9 +313,16 @@
     const values = new FormData(login);
     login.querySelector("button").disabled = true;
     try {
-      activeUser = await api("login", "POST", Object.fromEntries(values));
+      const result = await api("login", "POST", Object.fromEntries(values));
       login.reset();
-      status.textContent = "";
+      if (result.mfaRequired) {
+        pendingChallenge = result.challengeId;
+        otpHint.textContent = "کد تأیید به " + result.phoneMasked + " ارسال شد؛ اعتبار: ۳ دقیقه";
+        status.textContent = "برای تکمیل ورود مدیر یا حسابدار، کد پیامکی را وارد کنید.";
+      } else {
+        activeUser = result;
+        status.textContent = "";
+      }
       await refresh();
     } catch (error) {
       login.elements.password.value = "";
@@ -310,11 +331,50 @@
       login.querySelector("button").disabled = false;
     }
   });
+  driverForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = driverForm.querySelector("button");
+    button.disabled = true;
+    try {
+      const result = await api("auth/request", "POST", Object.fromEntries(new FormData(driverForm)));
+      if (result.challengeId) {
+        pendingChallenge = result.challengeId;
+        otpHint.textContent = "کد تأیید به " + result.phoneMasked + " ارسال شد؛ اعتبار: ۳ دقیقه";
+        status.textContent = "";
+        await refresh();
+      } else {
+        status.textContent = "اگر شماره در سامانه ثبت شده باشد، پیامک ورود ارسال می‌شود.";
+      }
+    } catch (error) { report(error); }
+    finally { button.disabled = false; }
+  });
+  otpForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = otpForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    try {
+      activeUser = await api("auth/verify", "POST", {
+        challengeId: pendingChallenge,
+        code: otpForm.elements.code.value
+      });
+      pendingChallenge = null;
+      otpForm.reset();
+      status.textContent = "";
+      await refresh();
+    } catch (error) { otpForm.elements.code.value = ""; report(error); }
+    finally { button.disabled = false; }
+  });
+  cancelOtp.addEventListener("click", async () => {
+    pendingChallenge = null;
+    otpForm.reset();
+    status.textContent = "";
+    await refresh();
+  });
   document.addEventListener("transit-storage-ready", async event => {
     local = event.detail;
     ready = true;
     try {
-      await api("health");
+      authMode = (await api("health")).authMode === "sms" ? "sms" : "password";
       activeUser = await api("session");
       await refresh();
     } catch {
