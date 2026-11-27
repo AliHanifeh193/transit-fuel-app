@@ -54,3 +54,17 @@ test("Turkish SMS numbers never travel to SMS.ir",async()=>{
     fetchFn
   }),/not_configured/);
 });
+
+test("SMS.ir Sandbox requires explicit sandbox mode and reserved template", async () => {
+  const sandbox = {...env, TRANSIT_SMSIR_TEMPLATE_ID:"123456", TRANSIT_SMS_ENV:"sandbox"};
+  assert.throws(() => assertSmsSettings({...env, TRANSIT_SMSIR_TEMPLATE_ID:"123456"}), /sandbox_requires_explicit_mode/);
+  assert.throws(() => assertSmsSettings({...env, TRANSIT_SMS_ENV:"sandbox"}), /sandbox_template_mismatch/);
+  const fetchFn = async (url, options) => {
+    assert.equal(url, "https://api.sms.ir/v1/send/verify");
+    const body = JSON.parse(options.body);
+    assert.equal(body.templateId, 123456);
+    assert.equal(body.parameters[0].name,"Code");
+    return {ok:true, json:async () => ({status:1, message:"موفق",data:{messageId:42,cost:0}})};
+  };
+  await sendViaSmsIr("+989121234567","482731",{env:sandbox,fetchFn});
+});
