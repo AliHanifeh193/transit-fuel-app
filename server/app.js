@@ -195,6 +195,10 @@ async function getBody(req) {
 function createServer({filename, origin, secure = true, authMode = "password", sendSms = webhookSms}) {
   const db = openDatabase(filename);
   requireCondition(["password","sms"].includes(authMode),500,"invalid_auth_mode");
+  if (authMode === "sms" && sendSms === webhookSms) {
+    requireCondition(/^https:\/\//i.test(process.env.TRANSIT_SMS_WEBHOOK_URL || "") &&
+      Boolean(process.env.TRANSIT_SMS_WEBHOOK_TOKEN),500,"sms_not_configured");
+  }
   // Sessions granted under password-only mode must never survive an SMS-MFA cutover.
   const previousMode=db.prepare("SELECT value FROM auth_settings WHERE key='mode'").get()?.value;
   if(previousMode!==authMode) atomic(db,()=>{
@@ -215,10 +219,10 @@ function createServer({filename, origin, secure = true, authMode = "password", s
     db.prepare("INSERT INTO sessions VALUES(?,?,?)").run(hash(sid),account.id,now+age*1000);
     setCookie(res,sid,age);return{id:account.id,name:account.name,role:account.role};
   }
-  function throttle(key){
+  function throttle(key, minGap = 60000, max = 5){
     const now=Date.now();let state=otpRequests.get(key);
     if(!state||state.until<now){state={count:0,last:0,until:now+600000};}
-    requireCondition(state.count<5&&now-state.last>=60000,429,"try_later");
+    requireCondition(state.count<max&&now-state.last>=minGap,429,"try_later");
     state.count++;state.last=now;otpRequests.set(key,state);
   }
   async function issueOtp(account,purpose){
@@ -256,6 +260,7 @@ function createServer({filename, origin, secure = true, authMode = "password", s
       attempts.delete(ip);
       if(authMode==="sms"){
         requireCondition(user.role!=="driver",403,"driver_otp_only");
+        throttle("all:"+ip, 0, 30);
         throttle("staff:"+ip+":"+user.id);
         return {...(await issueOtp(user,"staff")),mfaRequired:true};
       }
@@ -264,6 +269,7 @@ function createServer({filename, origin, secure = true, authMode = "password", s
     if(authMode==="sms"&&method==="POST"&&route==="/api/auth/request"){
       const body=await getBody(req),phone=normalizePhone(body.phone);
       requireCondition(phone,400,"invalid_phone");
+      throttle("all:"+req.socket.remoteAddress, 0, 30);
       throttle("driver:"+req.socket.remoteAddress+":"+phone);
       const account=db.prepare(`SELECT u.id,u.name,u.role FROM users u JOIN phone_accounts p ON p.user_id=u.id WHERE p.phone=? AND u.role='driver' AND u.active=1`).get(phone);
       if(!account)return{requested:true,challengeId:randomBytes(32).toString("hex"),phoneMasked:maskPhone(phone),expiresIn:180};
@@ -315,6 +321,7 @@ function createServer({filename, origin, secure = true, authMode = "password", s
     if (method === "POST" && route === "/api/users") {
       requireCondition(user.role === "admin", 403, "forbidden");
       const body = await getBody(req);
+      if (authMode === "sms") requireCondition(normalizePhone(body.phone), 400, "invalid_phone");
       return atomic(db, () => {
         const id = insertUser(db, body);
         audit(db, user.id, id, "user_created");
