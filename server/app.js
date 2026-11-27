@@ -230,7 +230,7 @@ function createServer({filename, origin, secure = true, authMode = "password", s
     const token = req.headers.cookie?.split(/;\s*/).find(value => value.startsWith(cookie + "="))?.split("=")[1];
     if (method === "GET" && route === "/api/health") {
       db.prepare("SELECT 1").get();
-      return {status: "ok", version: "1.0.0"};
+      return {status: "ok", version: "1.0.0", authMode};
     }
     if (method === "POST" && route === "/api/login") {
       const now = Date.now();
@@ -489,6 +489,21 @@ if (require.main === module) {
       audit(db, id, id, "initial_admin_created");
     });
     db.close();
+  } else if (process.argv[2] === "set-phone") {
+    const username = process.argv[3], phone = normalizePhone(process.argv[4]);
+    requireCondition(username && phone, 400, "invalid_phone");
+    const db = openDatabase(filename);
+    try {
+      const account = db.prepare("SELECT id FROM users WHERE username=?").get(username);
+      requireCondition(account, 404, "not_found");
+      atomic(db, () => {
+        db.prepare("INSERT INTO phone_accounts(user_id,phone) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET phone=excluded.phone").run(account.id, phone);
+        db.prepare("DELETE FROM sessions WHERE user_id=?").run(account.id);
+        db.prepare("DELETE FROM otp_challenges WHERE user_id=?").run(account.id);
+        audit(db, account.id, account.id, "phone_provisioned");
+      });
+      console.log("Phone registered for:", username);
+    } finally { db.close(); }
   } else {
     const port = Number(process.env.TRANSIT_PORT || 8100);
     const host = process.env.TRANSIT_HOST || "127.0.0.1";
@@ -497,7 +512,7 @@ if (require.main === module) {
     if (!secure && !["localhost", "127.0.0.1", "[::1]"].includes(new URL(origin).hostname)) {
       throw Error("A non-loopback public origin requires HTTPS");
     }
-    const server = createServer({filename, origin, secure});
+    const server = createServer({filename, origin, secure, authMode: process.env.TRANSIT_AUTH_MODE || "password"});
     server.listen(port, host, () => console.log(`Transit Fuel V1.0.0 on ${host}:${port}`));
     for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => server.close());
   }
