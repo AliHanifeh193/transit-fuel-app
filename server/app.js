@@ -7,6 +7,7 @@ const {isDeepStrictEqual} = require("node:util");
 const {randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash} = require("node:crypto");
 const {DatabaseSync} = require("node:sqlite");
 const {normalizePhone,maskPhone,newChallenge,verifyCode,webhookSms} = require("./sms-auth");
+const {providerSms,assertSmsSettings} = require("./sms-providers");
 const {calculate, fields, currencies} = require("../calculations");
 const root = path.resolve(__dirname, "..");
 const assets = new Map(Object.entries({
@@ -196,8 +197,15 @@ function createServer({filename, origin, secure = true, authMode = "password", s
   const db = openDatabase(filename);
   requireCondition(["password","sms"].includes(authMode),500,"invalid_auth_mode");
   if (authMode === "sms" && sendSms === webhookSms) {
-    requireCondition(/^https:\/\//i.test(process.env.TRANSIT_SMS_WEBHOOK_URL || "") &&
-      Boolean(process.env.TRANSIT_SMS_WEBHOOK_TOKEN),500,"sms_not_configured");
+    const provider = process.env.TRANSIT_SMS_PROVIDER || "webhook";
+    requireCondition(["webhook","smsir"].includes(provider),500,"sms_provider_invalid");
+    if (provider === "webhook") {
+      requireCondition(/^https:\/\//i.test(process.env.TRANSIT_SMS_WEBHOOK_URL || "") &&
+        Boolean(process.env.TRANSIT_SMS_WEBHOOK_TOKEN),500,"sms_not_configured");
+    } else {
+      try {assertSmsSettings();} catch {throw new RequestError(500,"smsir_not_configured");}
+      sendSms = providerSms;
+    }
   }
   // Sessions granted under password-only mode must never survive an SMS-MFA cutover.
   const previousMode=db.prepare("SELECT value FROM auth_settings WHERE key='mode'").get()?.value;
