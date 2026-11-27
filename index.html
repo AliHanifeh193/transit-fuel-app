@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</title>
   <meta name="description" content="اپلیکیشن قابل نصب برای اندروید و آیفون جهت مدیریت سوخت، تسویه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو" />
   <meta name="theme-color" content="#090d16" />
@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="سوخت ترانزیت" />
-  <link rel="apple-touch-icon" href="./icon-192.svg" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
   <link rel="icon" type="image/svg+xml" href="./icon-192.svg" />
 
   <style>
@@ -714,6 +714,16 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+    #companyPanel input, #companyPanel select, #companyPanel textarea {
+      max-width: 100%;
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+      margin: 4px;
+    }
+    #companyPanel button { margin: 4px; }
   </style>
 
     <style id="scrollFixStyle">
@@ -791,10 +801,10 @@
         <div id="installHintText" class="install-banner-sub">در اندروید با دکمه نصب یا منوی مرورگر «Add to Home Screen» و در آیفون از منوی Share گزینه «Add to Home Screen» را بزنید.</div>
       </div>
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button id="btnInstallApp" type="button" class="btn btn-success" onclick="triggerInstallPrompt()">
+        <button id="btnInstallApp" type="button" class="btn btn-success" data-action="triggerInstallPrompt">
           ⬇ نصب روی گوشی
         </button>
-        <button type="button" class="btn" onclick="openInstallGuideModal()">
+        <button type="button" class="btn" data-action="openInstallGuideModal">
           راهنمای اندروید و اپل
         </button>
       </div>
@@ -805,18 +815,18 @@
         <div class="brand-box">
           <div class="brand-icon">🚛</div>
           <div>
-            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه v1795536704</span>
+            <h1 class="brand-title">سامانه هوشمند مدیریت سوخت و هزینه‌های ترانزیت</h1><span id="live-build-tag" style="font-size:0.72rem;padding:2px 8px;border-radius:999px;background:#1e293b;color:#38bdf8;border:1px solid #334155;margin-right:8px;">نسخه V1.0.0</span>
             <p class="brand-sub">محاسبه لحظه‌ای مصرف، سهمیه شرکت و راننده، جرایم مرزی، هزینه‌های سفر و آرشیو کامل</p>
           </div>
         </div>
         <div class="header-actions">
-          <button type="button" class="btn btn-primary" onclick="openArchiveModal()">
+          <button type="button" class="btn btn-primary" data-action="openArchiveModal">
             📂 آرشیو سفرها (<span id="archiveCountBadge">0</span>)
           </button>
-          <button type="button" class="btn btn-amber" onclick="saveCurrentTripToArchive()">
+          <button type="button" class="btn btn-amber" data-action="saveCurrentTripToArchive">
             💾 ذخیره سفر در آرشیو
           </button>
-          <button type="button" class="btn btn-danger-soft" onclick="resetDefaultTrip()">
+          <button type="button" class="btn btn-danger-soft" data-action="resetDefaultTrip">
             ↺ بازنشانی سفر پیش‌فرض
           </button>
         </div>
@@ -859,13 +869,13 @@
     </section>
 
     <div id="sectionNavBar" class="section-nav-bar" role="tablist" aria-label="انتخاب بخش‌های برنامه">
-      <button type="button" class="section-nav-btn active" data-sec-btn="all" onclick="switchAppSection('all')">همه بخش‌ها</button>
-      <button type="button" class="section-nav-btn" data-sec-btn="fuel" onclick="switchAppSection('fuel')">⛽ سوخت و مسیر</button>
-      <button type="button" class="section-nav-btn" data-sec-btn="rates" onclick="switchAppSection('rates')">💱 نرخ ارزها</button>
-      <button type="button" class="section-nav-btn" data-sec-btn="expenses" onclick="switchAppSection('expenses')">🧾 هزینه‌ها و اسناد</button>
-      <button type="button" class="section-nav-btn" data-sec-btn="export" onclick="switchAppSection('export')">📤 ارسال و خروجی</button>
-      <button type="button" class="section-nav-btn" data-sec-btn="approval" onclick="switchAppSection('approval')">✅ تأیید نهایی و خالص</button>
-      <button type="button" class="section-nav-btn" data-sec-btn="feedback" onclick="switchAppSection('feedback')">💬 انتقادات و پیشنهادات</button>
+      <button type="button" class="section-nav-btn active" data-sec-btn="all" data-action="section">همه بخش‌ها</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="fuel" data-action="section">⛽ سوخت و مسیر</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="rates" data-action="section">💱 نرخ ارزها</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="expenses" data-action="section">🧾 هزینه‌ها و اسناد</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="export" data-action="section">📤 ارسال و خروجی</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="approval" data-action="section">✅ تأیید نهایی و خالص</button>
+      <button type="button" class="section-nav-btn" data-sec-btn="feedback" data-action="section">💬 انتقادات و پیشنهادات</button>
     </div>
 
     <section class="section-card" data-app-section="fuel">
@@ -878,22 +888,22 @@
       <div class="grid-3">
         <div class="field-group">
           <label class="field-label" for="tripNumber">شماره سفر</label>
-          <input id="tripNumber" type="text" class="input-control input-ltr" placeholder="مثلاً 1405-012" oninput="handleInputChange()" />
+          <input id="tripNumber" type="text" class="input-control input-ltr" placeholder="مثلاً 1405-012" data-input="draft" />
           <div class="field-hint">کد یکتای سفر برای پیگیری سریع در گزارش‌ها و آرشیو.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="tripTitle">عنوان / مسیر سفر</label>
-          <input id="tripTitle" type="text" class="input-control" oninput="handleInputChange()" />
+          <input id="tripTitle" type="text" class="input-control" data-input="draft" />
           <div class="field-hint">مبدأ، مسیر ترانزیت و مقصد سفر را کوتاه بنویسید.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="plateNo">شماره پلاک کشنده / تریلر</label>
-          <input id="plateNo" type="text" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="plateNo" type="text" class="input-control input-ltr" data-input="draft" />
           <div class="field-hint">پلاک کشنده و در صورت نیاز تریلر را وارد کنید.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="tripDate">تاریخ شروع / ثبت سفر</label>
-          <input id="tripDate" type="text" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="tripDate" type="text" class="input-control input-ltr" data-input="draft" />
           <div class="field-hint">تاریخ شروع یا ثبت سفر برای نظم در آرشیو.</div>
         </div>
       </div>
@@ -901,27 +911,27 @@
       <div class="grid-3" style="margin-top: 12px;">
         <div class="field-group">
           <label class="field-label" for="initialFuel">کل گازوئیل موجود در باک (لیتر)</label>
-          <input id="initialFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="initialFuel" type="number" min="0" max="1000000000000" step="0.01" class="input-control input-ltr" data-input="draft" />
           <div class="field-hint">موجودی کل گازوئیل داخل باک در ابتدای حرکت.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="companyQuota">سهمیه سوخت شرکت برای کل مسیر (لیتر)</label>
-          <input id="companyQuota" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="companyQuota" type="number" min="0" max="1000000000000" step="0.01" class="input-control input-ltr" data-input="draft" />
           <div class="field-hint">سهمیه مصوب شرکت برای کل مسیر رفت و برگشت.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="extraOutboundFuel">سوخت اضافی مسیر رفت (لیتر)</label>
-          <input id="extraOutboundFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="extraOutboundFuel" type="number" min="0" max="1000000000000" step="0.01" class="input-control input-ltr" data-input="draft" />
           <div class="field-hint">سوخت اضافی خریداری‌شده در مسیر رفت.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="extraReturnFuel">سوخت اضافی مسیر برگشت (لیتر)</label>
-          <input id="extraReturnFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="extraReturnFuel" type="number" min="0" max="1000000000000" step="0.01" class="input-control input-ltr" data-input="draft" />
           <div class="field-hint">سوخت اضافی خریداری‌شده در مسیر برگشت.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="fuelSellPriceTry">نرخ فروش هر لیتر سوخت (لیر)</label>
-          <input id="fuelSellPriceTry" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="fuelSellPriceTry" type="number" min="0" max="1000000000000" step="0.01" class="input-control input-ltr" data-input="draft" />
           <div class="field-hint">نرخ هر لیتر سوخت به لیر برای تسویه و ارزش‌گذاری.</div>
         </div>
       </div>
@@ -934,17 +944,17 @@
         <div class="grid-3">
           <div class="field-group">
             <label class="field-label" for="outboundKm">مسافت رفت (کیلومتر)</label>
-            <input id="outboundKm" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <input id="outboundKm" type="number" min="0" max="1000000000000" step="0.1" class="input-control input-ltr" data-input="draft" />
             <div class="field-hint">مسافت طی‌شده در مسیر رفت (کیلومتر).</div>
           </div>
           <div class="field-group">
             <label class="field-label" for="outboundWeight">وزن بار رفت (تن)</label>
-            <input id="outboundWeight" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <input id="outboundWeight" type="number" min="0" max="1000000000000" step="0.1" class="input-control input-ltr" data-input="draft" />
             <div class="field-hint">تناژ بار حمل‌شده در مسیر رفت.</div>
           </div>
           <div class="field-group">
             <label class="field-label" for="outboundRate">ضریب مصرف رفت (لیتر / ۱۰۰ کم)</label>
-            <input id="outboundRate" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <input id="outboundRate" type="number" min="0" max="1000000000000" step="0.1" class="input-control input-ltr" data-input="draft" />
             <div class="field-hint">مصرف استاندارد در هر ۱۰۰ کیلومتر مسیر رفت.</div>
           </div>
         </div>
@@ -958,17 +968,17 @@
         <div class="grid-3">
           <div class="field-group">
             <label class="field-label" for="returnKm">مسافت برگشت (کیلومتر)</label>
-            <input id="returnKm" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <input id="returnKm" type="number" min="0" max="1000000000000" step="0.1" class="input-control input-ltr" data-input="draft" />
             <div class="field-hint">مسافت طی‌شده در مسیر برگشت (کیلومتر).</div>
           </div>
           <div class="field-group">
             <label class="field-label" for="returnWeight">وزن بار برگشت (تن)</label>
-            <input id="returnWeight" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <input id="returnWeight" type="number" min="0" max="1000000000000" step="0.1" class="input-control input-ltr" data-input="draft" />
             <div class="field-hint">تناژ بار یا وضعیت خالی/پر در مسیر برگشت.</div>
           </div>
           <div class="field-group">
             <label class="field-label" for="returnRate">ضریب مصرف برگشت (لیتر / ۱۰۰ کم)</label>
-            <input id="returnRate" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <input id="returnRate" type="number" min="0" max="1000000000000" step="0.1" class="input-control input-ltr" data-input="draft" />
           </div>
         </div>
       </div>
@@ -981,15 +991,15 @@
         <div class="grid-3">
           <div class="field-group">
             <label class="field-label" for="emptyKm">مسافت خالی جهت بارگیری (کیلومتر)</label>
-            <input id="emptyKm" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <input id="emptyKm" type="number" min="0" max="1000000000000" step="0.1" class="input-control input-ltr" data-input="draft" />
           </div>
           <div class="field-group">
             <label class="field-label" for="emptyRate">ضریب مصرف خالی (لیتر / ۱۰۰ کم)</label>
-            <input id="emptyRate" type="number" step="0.1" class="input-control input-ltr" oninput="handleInputChange()" />
+            <input id="emptyRate" type="number" min="0" max="1000000000000" step="0.1" class="input-control input-ltr" data-input="draft" />
           </div>
           <div class="field-group">
             <label class="field-label" for="idleFuel">مصرف کارکرد درجا / آمپر (لیتر)</label>
-            <input id="idleFuel" type="number" step="0.01" class="input-control input-ltr" oninput="handleInputChange()" />
+            <input id="idleFuel" type="number" min="0" max="1000000000000" step="0.01" class="input-control input-ltr" data-input="draft" />
           </div>
         </div>
       </div>
@@ -1003,22 +1013,22 @@
       <div class="grid-5">
         <div class="field-group">
           <label class="field-label" for="rateTRY">هر ۱ لیر (TRY)</label>
-          <input id="rateTRY" type="number" step="1" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="rateTRY" type="number" min="0" max="1000000000000" step="1" class="input-control input-ltr" data-input="draft" />
           <span class="field-hint">تومان</span>
         </div>
         <div class="field-group">
           <label class="field-label" for="rateUSD">هر ۱ دلار (USD)</label>
-          <input id="rateUSD" type="number" step="1" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="rateUSD" type="number" min="0" max="1000000000000" step="1" class="input-control input-ltr" data-input="draft" />
           <span class="field-hint">تومان</span>
         </div>
         <div class="field-group">
           <label class="field-label" for="rateEUR">هر ۱ یورو (EUR)</label>
-          <input id="rateEUR" type="number" step="1" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="rateEUR" type="number" min="0" max="1000000000000" step="1" class="input-control input-ltr" data-input="draft" />
           <span class="field-hint">تومان</span>
         </div>
         <div class="field-group">
           <label class="field-label" for="rateAZN">هر ۱ مانات (AZN)</label>
-          <input id="rateAZN" type="number" step="1" class="input-control input-ltr" oninput="handleInputChange()" />
+          <input id="rateAZN" type="number" min="0" max="1000000000000" step="1" class="input-control input-ltr" data-input="draft" />
           <span class="field-hint">تومان</span>
         </div>
         <div class="field-group">
@@ -1092,7 +1102,7 @@
       <div class="grid-3" style="margin-top: 12px;">
         <div class="field-group">
           <label class="field-label" for="bfAmount">مبلغ پرداختی</label>
-          <input id="bfAmount" type="number" step="0.01" class="input-control input-ltr" placeholder="0" />
+          <input id="bfAmount" type="number" min="0" max="1000000000000" step="0.01" class="input-control input-ltr" placeholder="0" />
         </div>
         <div class="field-group">
           <label class="field-label" for="bfCurrency">واحد ارز</label>
@@ -1106,12 +1116,12 @@
         </div>
         <div class="field-group">
           <label class="field-label" for="bfLiters">مقدار سوخت / لیتر (اختیاری)</label>
-          <input id="bfLiters" type="number" step="0.01" class="input-control input-ltr" placeholder="0" />
+          <input id="bfLiters" type="number" min="0" max="1000000000000" step="0.01" class="input-control input-ltr" placeholder="0" />
         </div>
       </div>
 
       <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
-        <button type="button" class="btn btn-primary" onclick="addBorderFuelItem()">
+        <button type="button" class="btn btn-primary" data-action="addBorderFuelItem">
           ＋ افزودن خرید / جریمه مرزی
         </button>
       </div>
@@ -1167,24 +1177,24 @@
       <div class="grid-2" style="margin-top: 12px;">
         <div class="field-group">
           <label class="field-label" for="expAmount">مبلغ هزینه</label>
-          <input id="expAmount" type="number" step="0.01" class="input-control input-ltr" placeholder="0" />
+          <input id="expAmount" type="number" min="0" max="1000000000000" step="0.01" class="input-control input-ltr" placeholder="0" />
           <div class="field-hint">مبلغ را بر اساس ارز انتخاب‌شده همان هزینه وارد کنید.</div>
         </div>
         <div class="field-group">
           <label class="field-label" for="expReceiptInput">عکس رسید / سند (اختیاری)</label>
           <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-            <button type="button" class="btn btn-primary" style="padding: 8px 12px; font-size: 0.8rem;" onclick="document.getElementById('cameraReceiptInput').click()">
+            <button type="button" class="btn btn-primary" style="padding: 8px 12px; font-size: 0.8rem;" data-action="camera">
               📷 عکس مستقیم با دوربین
             </button>
-            <input id="cameraReceiptInput" type="file" accept="image/*" capture="environment" style="display: none;" onchange="handleReceiptUpload(event)" />
-            <input id="expReceiptInput" type="file" accept="image/*" class="input-control" style="flex: 1; min-width: 170px;" onchange="handleReceiptUpload(event)" />
+            <input id="cameraReceiptInput" type="file" accept="image/*" capture="environment" style="display: none;" data-change="receipt" />
+            <input id="expReceiptInput" type="file" accept="image/*" class="input-control" style="flex: 1; min-width: 170px;" data-change="receipt" />
           </div>
           <div id="pendingReceiptPreview" class="receipt-preview-box"></div>
         </div>
       </div>
 
       <div style="margin-top: 12px; display: flex; justify-content: flex-end;">
-        <button type="button" class="btn btn-success" onclick="addTripExpenseItem()">
+        <button type="button" class="btn btn-success" data-action="addTripExpenseItem">
           ＋ ثبت هزینه سفر
         </button>
       </div>
@@ -1280,32 +1290,32 @@
 
   <div class="bottom-bar" data-app-section="export">
     <div class="bottom-bar-inner">
-      <button type="button" class="btn btn-success" onclick="copyFullReport()">
+      <button type="button" class="btn btn-success" data-action="copyFullReport">
         📋 کپی گزارش کامل تسویه
       </button>
-      <button type="button" class="btn btn-primary" onclick="shareOrDownloadTxtReport()">
+      <button type="button" class="btn btn-primary" data-action="shareOrDownloadTxtReport">
         📄 فایل متنی (.txt)
       </button>
-      <button type="button" class="btn btn-primary" onclick="shareOrDownloadCsvReport()">
+      <button type="button" class="btn btn-primary" data-action="shareOrDownloadCsvReport">
         📊 فایل اکسل (.csv)
       </button>
-      <button type="button" class="btn btn-amber" onclick="shareOrDownloadPngReport()">
+      <button type="button" class="btn btn-amber" data-action="shareOrDownloadPngReport">
         🖼️ تصویر گزارش (.png)
       </button>
-      <button type="button" class="btn btn-amber" onclick="saveCurrentTripToArchive()">
+      <button type="button" class="btn btn-amber" data-action="saveCurrentTripToArchive">
         💾 ذخیره در آرشیو
       </button>
-      <button type="button" class="btn btn-primary" onclick="openArchiveModal()">
+      <button type="button" class="btn btn-primary" data-action="openArchiveModal">
         📂 مشاهده سفرهای ذخیره‌شده
       </button>
     </div>
   </div>
 
-  <div id="installGuideModal" class="modal-backdrop" onclick="if(event.target===this)closeInstallGuideModal()">
+  <div id="installGuideModal" class="modal-backdrop" data-backdrop="closeInstallGuideModal">
     <div class="modal-card">
       <div class="modal-head">
         <h3 class="modal-title">📲 راهنمای نصب روی گوشی اندروید و اپل (iOS)</h3>
-        <button type="button" class="close-btn" onclick="closeInstallGuideModal()">✕</button>
+        <button type="button" class="close-btn" data-action="closeInstallGuideModal">✕</button>
       </div>
       <div style="font-size: 0.85rem; color: #e2e8f0; display: flex; flex-direction: column; gap: 12px;">
         <div class="sub-box" style="margin-top: 0;">
@@ -1324,23 +1334,24 @@
     </div>
   </div>
 
-  <div id="archiveModal" class="modal-backdrop" onclick="if(event.target===this)closeArchiveModal()">
+  <div id="archiveModal" class="modal-backdrop" data-backdrop="closeArchiveModal">
     <div class="modal-card">
       <div class="modal-head">
         <h3 class="modal-title">📂 آرشیو سفرهای ذخیره‌شده</h3>
-        <button type="button" class="close-btn" onclick="closeArchiveModal()">✕</button>
+        <button type="button" class="close-btn" data-action="closeArchiveModal">✕</button>
       </div>
-      <div id="archiveListContainer"></div>
+      <input id="archiveSearch" class="input-control" placeholder="جستجوی عنوان، پلاک یا تاریخ" aria-label="جستجوی آرشیو" data-input="archive">
+        <div id="archiveListContainer"></div>
     </div>
   </div>
 
-  <div id="imageModal" class="modal-backdrop" onclick="if(event.target===this)closeImageModal()">
+  <div id="imageModal" class="modal-backdrop" data-backdrop="closeImageModal">
     <div class="modal-card">
       <div class="modal-head">
         <h3 id="imageModalTitle" class="modal-title">تصویر سند / رسید</h3>
-        <button type="button" class="close-btn" onclick="closeImageModal()">✕</button>
+        <button type="button" class="close-btn" data-action="closeImageModal">✕</button>
       </div>
-      <img id="imageModalImg" src="" alt="سند هزینه" class="modal-img" />
+      <img id="imageModalImg" alt="سند هزینه" class="modal-img" />
     </div>
   </div>
 
@@ -1355,7 +1366,7 @@
         <div class="grid-3">
           <div class="field-group">
             <label class="field-label" for="approvalStatus">وضعیت تأیید نهایی</label>
-            <select id="approvalStatus" class="input-control" onchange="handleInputChange()">
+            <select id="approvalStatus" class="input-control" data-change="draft">
               <option value="در انتظار بازبینی">در انتظار بازبینی</option>
               <option value="تأیید نهایی شده">تأیید نهایی شده</option>
               <option value="نیازمند اصلاح">نیازمند اصلاح</option>
@@ -1363,16 +1374,16 @@
           </div>
           <div class="field-group">
             <label class="field-label" for="approvedBy">تأییدکننده (مدیر / حسابدار)</label>
-            <input id="approvedBy" type="text" class="input-control" placeholder="نام مسئول بازبینی" oninput="handleInputChange()" />
+            <input id="approvedBy" type="text" class="input-control" placeholder="نام مسئول بازبینی" data-input="draft" />
           </div>
           <div class="field-group">
             <label class="field-label" for="approvedAt">تاریخ تأیید نهایی</label>
-            <input id="approvedAt" type="text" class="input-control input-ltr" placeholder="مثلاً 1405/09/03" oninput="handleInputChange()" />
+            <input id="approvedAt" type="text" class="input-control input-ltr" placeholder="مثلاً 1405/09/03" data-input="draft" />
           </div>
         </div>
         <div class="field-group" style="margin-top: 10px;">
           <label class="field-label" for="approvalNote">توضیحات بازبینی و تسویه برای راننده</label>
-          <input id="approvalNote" type="text" class="input-control" placeholder="توضیح مسئول حسابداری یا مدیریت درباره خالص دریافتی سفر" oninput="handleInputChange()" />
+          <input id="approvalNote" type="text" class="input-control" placeholder="توضیح مسئول حسابداری یا مدیریت درباره خالص دریافتی سفر" data-input="draft" />
           <div class="field-hint">نکات کسورات، پاداش یا اصلاحات تسویه برای اطلاع راننده.</div>
         </div>
         <div id="driverNetPayoutBanner" style="margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(148, 163, 184, 0.25); font-size: 0.86rem; color: #e2e8f0;">
@@ -1410,1457 +1421,49 @@
           <div class="field-hint">ایرادهای محاسباتی، پیشنهاد صفحه‌ها یا نکات تسویه را ثبت کنید.</div>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
-          <button type="button" class="btn btn-primary" onclick="submitUserFeedback()">ثبت انتقاد / پیشنهاد</button>
-          <button type="button" class="btn btn-ghost" onclick="exportFeedbacksTxt()">خروجی TXT پیام‌ها</button>
+          <button type="button" class="btn btn-primary" data-action="submitUserFeedback">ثبت انتقاد / پیشنهاد</button>
+          <button type="button" class="btn btn-ghost" data-action="exportFeedbacksTxt">خروجی TXT پیام‌ها</button>
         </div>
         <div id="feedbackListContainer" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;"></div>
       </div>
     </div>
 
-    <script>
-    const STORAGE_CURRENT_KEY = "transit_fuel_app_current_v5";
-    const STORAGE_ARCHIVE_KEY = "transit_fuel_app_archive_v5";
-
-    const CURRENCY_LABELS = {
-      IRT: "تومان",
-      TRY: "لیر",
-      USD: "دلار",
-      EUR: "یورو",
-      AZN: "مانات"
-    };
-
-    let deferredInstallPrompt = null;
-    let pendingReceiptDataUrl = "";
-    let pendingReceiptName = "";
-
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(() => {});
-      });
-    }
-
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
-      document.getElementById("installHintText").textContent =
-        "امکان نصب مستقیم روی دستگاه آماده است. دکمه «نصب روی گوشی» را بزنید.";
-    });
-
-    window.addEventListener("appinstalled", () => {
-      deferredInstallPrompt = null;
-      const hint = document.getElementById("installHintText");
-      if (hint) {
-        hint.textContent = "اپلیکیشن با موفقیت روی دستگاه نصب شد.";
-      }
-      if (typeof showToast === "function") {
-        showToast("اپلیکیشن نصب شد");
-      }
-    });
-
-    function triggerInstallPrompt() {
-      if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        deferredInstallPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult && choiceResult.outcome === "accepted" && typeof showToast === "function") {
-            showToast("نصب برنامه آغاز شد");
-          }
-          deferredInstallPrompt = null;
-        }).catch(() => {
-          deferredInstallPrompt = null;
-          openInstallGuideModal();
-        });
-      } else {
-        if (typeof showToast === "function") {
-          showToast("در صورت عدم نمایش پنجره نصب، از منوی مرورگر گزینه نصب را بزنید");
-        }
-        openInstallGuideModal();
-      }
-    }
-
-    function openInstallGuideModal() {
-      document.getElementById("installGuideModal").classList.add("open");
-    }
-
-    function closeInstallGuideModal() {
-      document.getElementById("installGuideModal").classList.remove("open");
-    }
-
-
-      <div class="card" style="margin-top: 12px; border-color: rgba(248, 113, 113, 0.35);">
+      <div data-app-section="export" class="card" style="margin-top: 12px; border-color: rgba(248, 113, 113, 0.35);">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
           <div>
             <div style="font-weight: 800; font-size: 0.9rem; color: #fff;">حریم خصوصی اطلاعات راننده هنگام ارسال گزارش</div>
             <div style="font-size: 0.78rem; color: #94a3b8; margin-top: 2px;">مقدار اضافه سوخت و درآمد/سهم از فروش فقط در صورت موافقت راننده ارسال می‌شوند.</div>
           </div>
           <label style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.84rem; color: #fca5a5;">
-            <input id="hidePrivateDriverData" type="checkbox" checked onchange="handleInputChange()" />
+            <input id="hidePrivateDriverData" type="checkbox" checked data-change="draft" />
             <span>عدم ارسال بخش‌های خصوصی (در صورت عدم موافقت ارسال نشود)</span>
           </label>
         </div>
       </div>
 
-    function getDefaultState() {
-      return {
-        tripTitle: "بازرگان ➔ مرسین ➔ رازی",
-        plateNo: "36 AA 285 / 36 AA 286",
-        tripDate: "21.11.2026",
-        initialFuel: 1240,
-        companyQuota: 1100,
-        extraOutboundFuel: 20,
-        extraReturnFuel: 0,
-        fuelSellPriceTry: 55,
-        outboundKm: 1220,
-        outboundWeight: 23,
-        outboundRate: 34,
-        returnKm: 1100,
-        returnWeight: 24,
-        returnRate: 35,
-        emptyKm: 60,
-        emptyRate: 24,
-        idleFuel: 17,
-        rates: {
-          IRT: 1,
-          TRY: 5300,
-          USD: 195000,
-          EUR: 210000,
-          AZN: 115000
-        },
-        borderFuelItems: [],
-        tripExpenses: []
-      };
-    }
+    <section class="card" aria-label="مدیریت داده">
+      <strong>V1.0.0</strong>
+      <button type="button" class="btn btn-ghost" data-action="exportWorkspace">پشتیبان کامل</button>
+      <label>بازیابی پشتیبان <input type="file" accept=".json" data-change="restore"></label>
+      <button type="button" class="btn btn-ghost" data-action="printTripReport">چاپ گزارش</button>
+      <a href="privacy.html">حریم خصوصی و راهنمای کاربر</a>
+      <p id="storageStatus" role="status"></p>
+      <p id="rateStatus" role="status"></p>
+    </section>
+    <section class="card" id="companyPanel" aria-label="سامانه شرکت">
+      <h2>سامانه شرکت</h2>
+      <p id="companyStatus" role="status"></p>
+      <form id="companyLogin">
+        <label>نام کاربری <input name="username" autocomplete="username" required></label>
+        <label>رمز عبور <input name="password" type="password" autocomplete="current-password" required></label>
+        <button>ورود</button>
+      </form>
+      <div id="companyWorkspace" hidden></div>
+    </section>
+    <script src="calculations.js"></script>
+    <script src="storage.js"></script>
+    <script src="app.js" defer></script>
+    <script src="company.js" defer></script>
 
-    let state = loadCurrentState();
-
-    function loadCurrentState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_CURRENT_KEY);
-        if (!raw) return getDefaultState();
-        const parsed = JSON.parse(raw);
-        const def = getDefaultState();
-        return {
-          ...def,
-          ...parsed,
-          rates: { ...def.rates, ...(parsed.rates || {}) },
-          borderFuelItems: Array.isArray(parsed.borderFuelItems) ? parsed.borderFuelItems : [],
-          tripExpenses: Array.isArray(parsed.tripExpenses) ? parsed.tripExpenses : []
-        };
-      } catch (e) {
-        return getDefaultState();
-      }
-    }
-
-    function loadArchive() {
-      try {
-        const raw = localStorage.getItem(STORAGE_ARCHIVE_KEY);
-        return raw ? JSON.parse(raw) : [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveArchive(list) {
-      localStorage.setItem(STORAGE_ARCHIVE_KEY, JSON.stringify(list));
-      updateArchiveCountBadge();
-    }
-
-    function updateArchiveCountBadge() {
-      const list = loadArchive();
-      document.getElementById("archiveCountBadge").textContent = toPersianDigits(list.length);
-    }
-
-    function toPersianDigits(val) {
-      return String(val).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
-    }
-
-    function formatNum(num, decimals = 2) {
-      const n = Number(num) || 0;
-      const fixed = Number.isInteger(n) && decimals === 0
-        ? n.toString()
-        : n.toLocaleString("en-US", {
-            minimumFractionDigits: decimals,
-            maximumFractionDigits: decimals
-          });
-      return toPersianDigits(fixed);
-    }
-
-    function formatToman(amount) {
-      return formatNum(Math.round(Number(amount) || 0), 0) + " تومان";
-    }
-
-    function convertToToman(amount, currency) {
-      const a = Number(amount) || 0;
-      if (currency === "IRT") return a;
-      const rate = Number(state.rates[currency]) || 0;
-      return a * rate;
-    }
-
-    function getNowSystemDateTime() {
-      try {
-        return new Date().toLocaleString("fa-IR", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit"
-        });
-      } catch (e) {
-        return new Date().toLocaleString();
-      }
-    }
-
-
-    let editingTarget = null;
-
-    function applyEditedRecordIfAny(type, newItem) {
-      if (!editingTarget || editingTarget.type !== type) return false;
-      const arr = type === "border" ? state.borderFuelItems : type === "expense" ? state.tripExpenses : null;
-      if (!Array.isArray(arr) || !arr[editingTarget.index]) {
-        editingTarget = null;
-        return false;
-      }
-      const oldItem = arr[editingTarget.index];
-      arr[editingTarget.index] = {
-        ...oldItem,
-        ...newItem,
-        id: oldItem.id,
-        createdAt: oldItem.createdAt || getNowSystemDateTime(),
-        updatedAt: getNowSystemDateTime()
-      };
-      editingTarget = null;
-      persistCurrentState();
-      renderAll();
-      showToast("آیتم با موفقیت ویرایش شد");
-      return true;
-    }
-
-    function editRecordByType(type, index) {
-      if (type === "border" && Array.isArray(state.borderFuelItems) && state.borderFuelItems[index]) {
-        const it = state.borderFuelItems[index];
-        editingTarget = { type, index };
-        if (document.getElementById("bfZone")) document.getElementById("bfZone").value = it.zone || "exit";
-        if (document.getElementById("bfType")) document.getElementById("bfType").value = it.type || "official";
-        if (document.getElementById("bfBorderName")) document.getElementById("bfBorderName").value = it.borderName || "";
-        if (document.getElementById("bfLiters")) document.getElementById("bfLiters").value = it.liters || "";
-        if (document.getElementById("bfAmount")) document.getElementById("bfAmount").value = it.amount || "";
-        if (document.getElementById("bfCurrency")) document.getElementById("bfCurrency").value = it.currency || "IRT";
-        showToast("مورد سوخت مرزی در فرم قرار گرفت؛ پس از اصلاح ثبت کنید");
-      } else if (type === "expense" && Array.isArray(state.tripExpenses) && state.tripExpenses[index]) {
-        const it = state.tripExpenses[index];
-        editingTarget = { type, index };
-        if (document.getElementById("expScope")) document.getElementById("expScope").value = it.scope || "driver";
-        if (document.getElementById("expTitle")) document.getElementById("expTitle").value = it.title || "";
-        if (document.getElementById("expAmount")) document.getElementById("expAmount").value = it.amount || "";
-        if (document.getElementById("expCurrency")) document.getElementById("expCurrency").value = it.currency || "IRT";
-        showToast("مورد هزینه در فرم قرار گرفت؛ پس از اصلاح ثبت کنید");
-      }
-    }
-
-    function cancelEditMode() {
-      editingTarget = null;
-      showToast("حالت ویرایش لغو شد");
-    }
-
-
-
-    function getCurrencyRateToToman(currency) {
-      if (!currency || currency === "IRT") return 1;
-      const r = (state && state.rates) || {};
-      return Number(r[currency]) || 1;
-    }
-
-    function toTomanAmount(amount, currency) {
-      const amt = Number(amount) || 0;
-      if (!currency || currency === "IRT") return amt;
-      return amt * getCurrencyRateToToman(currency);
-    }
-
-    function computeDriverNetPayoutToman(m, expTotalToman) {
-      const personalVal = Number((m && (m.personalValueToman ?? m.personalFuelValueToman)) || 0);
-      const expensesVal = Number(expTotalToman ?? (m && m.totalExpensesToman) ?? 0);
-      return personalVal - expensesVal;
-    }
-
-    function updateApprovalAndPayoutBanner() {
-      const m = typeof calculateMetrics === "function" ? calculateMetrics() : {};
-      const expTotal = typeof state !== "undefined" && Array.isArray(state.tripExpenses)
-        ? state.tripExpenses.reduce((sum, x) => sum + (typeof convertToToman === "function" ? convertToToman(x.amount, x.currency) : (Number(x.amount) || 0)), 0)
-        : (Number(m.totalExpensesToman) || 0);
-      const netToman = computeDriverNetPayoutToman(m, expTotal);
-      const tripNo = (state && state.tripNumber) ? state.tripNumber : "---";
-      const status = (state && state.approvalStatus) || "در انتظار بازبینی";
-      const approver = (state && state.approvedBy) ? " | تأییدکننده: " + state.approvedBy : "";
-      const appDate = (state && state.approvedAt) ? " | تاریخ: " + state.approvedAt : "";
-      const note = (state && state.approvalNote) ? " | یادداشت: " + state.approvalNote : "";
-
-      const badge = document.getElementById("approvalBadge");
-      if (badge) badge.textContent = status;
-
-      const banner = document.getElementById("driverNetPayoutBanner");
-      if (banner) {
-        const formattedNet = typeof formatToman === "function" ? formatToman(netToman) : String(Math.round(netToman)) + " تومان";
-        banner.innerHTML =
-          "<strong>خالص دریافتی سفر شماره " + escapeHtml(tripNo) + ":</strong> " +
-          "<span style='color:#34d399; font-weight:800;'>" + formattedNet + "</span>" +
-          " — وضعیت: <strong>" + escapeHtml(status) + "</strong>" +
-          escapeHtml(approver + appDate + note);
-      }
-    }
-
-    function askDriverPrivateDataPermission() {
-      const cb = document.getElementById("hidePrivateDriverData");
-      const currentlyHidden = cb ? Boolean(cb.checked) : Boolean(state && state.hidePrivateDriverData);
-      if (!currentlyHidden) {
-        return true;
-      }
-      const allowPrivate = confirm(
-        "آیا مایل هستید بخش‌های خصوصی راننده (مقدار اضافه سوخت و درآمد / سهم از فروش) در گزارش ارسالی گنجانده شوند؟\n\n" +
-        "• تأیید (OK): اطلاعات خصوصی در گزارش ارسال می‌شوند.\n" +
-        "• لغو (Cancel): اطلاعات خصوصی ارسال نمی‌شوند و محرمانه می‌مانند."
-      );
-      if (cb) cb.checked = !allowPrivate;
-      if (typeof state !== "undefined" && state) state.hidePrivateDriverData = !allowPrivate;
-      return allowPrivate;
-    }
-
-    function getSanitizedTextForPrivacy(rawText, allowPrivate) {
-      if (allowPrivate) return rawText;
-      return rawText
-        .split("\n")
-        .map(line => {
-          if (
-            line.includes("سوخت اضافی") ||
-            line.includes("اضافه سوخت") ||
-            line.includes("سهم شخصی") ||
-            line.includes("درآمد") ||
-            line.includes("خالص دریافتی")
-          ) {
-            const labelPart = line.split(":")[0] || "بخش خصوصی راننده";
-            return labelPart + ": [محرمانه - عدم ارسال به درخواست راننده]";
-          }
-          return line;
-        })
-        .join("\n");
-    }
-
-    function getReportTextContent() {
-      const m = typeof calculateMetrics === "function" ? calculateMetrics() : {};
-      const title = (state && state.tripTitle) || "سفر ترانزیتی";
-      const dateStr = (state && state.tripDate) || "نامشخص";
-      const nowStr = typeof getNowSystemDateTime === "function" ? getNowSystemDateTime() : new Date().toLocaleString("fa-IR");
-      const rates = (state && state.rates) || {};
-
-      const lines = [
-        "========================================",
-        "🚛 گزارش کامل تسویه و سوخت ترانزیت",
-        "========================================",
-        "📌 عنوان سفر: " + title,
-        "📅 تاریخ سفر: " + dateStr,
-        "🕒 زمان تهیه گزارش: " + nowStr,
-        "----------------------------------------",
-        "⛽ خلاصه وضعیت سوخت:",
-        "• مصرف کل سوخت: " + formatNum(m.totalConsumed || 0, 2) + " لیتر",
-        "• سهمیه کل شرکت: " + formatNum(state.companyQuota || 0, 2) + " لیتر",
-        "• سوخت اضافی مسیر (رفت: " + formatNum(m.extraOutboundFuel || 0, 1) + "L | برگشت: " + formatNum(m.extraReturnFuel || 0, 1) + "L | جمع: " + formatNum(m.extraRouteFuel || 0, 1) + "L)",
-        "• سهمیه محاسباتی شرکت: " + formatNum(m.effectiveCompanyQuota ?? state.companyQuota ?? 0, 2) + " لیتر",
-        "• مازاد / کسری سوخت: " + formatNum(m.diffFuel || 0, 2) + " لیتر",
-        "----------------------------------------",
-        "💰 خلاصه مالی و هزینه‌ها:",
-        "• جمع هزینه‌های سفر (تومان): " + formatToman(m.totalExpensesToman || 0),
-        "• نرخ ارزها (تومان): لیر=" + formatNum(rates.TRY || 0, 0) + " | دلار=" + formatNum(rates.USD || 0, 0) + " | یورو=" + formatNum(rates.EUR || 0, 0) + " | منات=" + formatNum(rates.AZN || 0, 0),
-        "----------------------------------------"
-      ];
-
-      const borders = Array.isArray(state.borderFuelItems) ? state.borderFuelItems : [];
-      lines.push("🛂 سوخت‌های مرزی (" + borders.length + " مورد):");
-      if (!borders.length) {
-        lines.push("  موردی ثبت نشده است.");
-      } else {
-        borders.forEach((it, i) => {
-          const cur = it.currency || "IRT";
-          const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-          const tomanVal = toTomanAmount(it.amount, cur);
-          const timePart = it.createdAt ? " [" + it.createdAt + "]" : "";
-          lines.push(`  ${i + 1}. ${it.borderName || "مرز"} | ${formatNum(it.liters || 0, 2)} لیتر | ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel} (${formatToman(tomanVal)})${timePart}`);
-        });
-      }
-
-      const expenses = Array.isArray(state.tripExpenses) ? state.tripExpenses : [];
-      lines.push("----------------------------------------");
-      lines.push("🧾 هزینه‌های سفر (" + expenses.length + " مورد):");
-      if (!expenses.length) {
-        lines.push("  موردی ثبت نشده است.");
-      } else {
-        expenses.forEach((it, i) => {
-          const cur = it.currency || "IRT";
-          const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-          const tomanVal = toTomanAmount(it.amount, cur);
-          const timePart = it.createdAt ? " [" + it.createdAt + "]" : "";
-          lines.push(`  ${i + 1}. ${it.title || "هزینه"} | ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel} (${formatToman(tomanVal)})${timePart}`);
-        });
-      }
-
-      lines.push("========================================");
-      return lines.join("\n");
-    }
-
-    async function shareOrDownloadFile(blob, filename) {
-      try {
-        const file = new File([blob], filename, { type: blob.type });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({
-            title: filename,
-            text: "گزارش تسویه سفر ترانزیتی",
-            files: [file]
-          });
-          showToast("فایل برای اشتراک‌گذاری آماده شد");
-          return;
-        }
-      } catch (e) {
-        if (e && e.name === "AbortError") return;
-      }
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1500);
-      showToast("فایل " + filename + " دانلود شد");
-    }
-
-    function shareOrDownloadTxtReport() {
-      const allowPrivate = askDriverPrivateDataPermission();
-      const txt = getReportTextContent();
-      const blob = new Blob(["\ufeff" + txt], { type: "text/plain;charset=utf-8" });
-      shareOrDownloadFile(blob, "gozaresh-tasviye.txt");
-    }
-
-    function shareOrDownloadCsvReport() {
-      const rows = [
-        ["ردیف", "بخش", "شرح / مرز", "مقدار (لیتر)", "مبلغ اصلی", "واحد ارز", "نرخ به تومان", "معادل تومان", "زمان ثبت"]
-      ];
-      let rowNum = 1;
-      (state.borderFuelItems || []).forEach(it => {
-        const cur = it.currency || "IRT";
-        const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-        const rate = getCurrencyRateToToman(cur);
-        const tomanVal = toTomanAmount(it.amount, cur);
-        rows.push([
-          rowNum++,
-          "سوخت مرزی",
-          it.borderName || "",
-          Number(it.liters) || 0,
-          Number(it.amount) || 0,
-          curLabel,
-          rate,
-          Math.round(tomanVal),
-          it.createdAt || ""
-        ]);
-      });
-      (state.tripExpenses || []).forEach(it => {
-        const cur = it.currency || "IRT";
-        const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-        const rate = getCurrencyRateToToman(cur);
-        const tomanVal = toTomanAmount(it.amount, cur);
-        rows.push([
-          rowNum++,
-          "هزینه سفر",
-          it.title || "",
-          "",
-          Number(it.amount) || 0,
-          curLabel,
-          rate,
-          Math.round(tomanVal),
-          it.createdAt || ""
-        ]);
-      });
-      const csv = rows.map(r => r.map(v => '"' + String(v ?? "").replace(/"/g, '""') + '"').join(",")).join("\n");
-      const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
-      shareOrDownloadFile(blob, "gozaresh-tasviye.csv");
-    }
-
-    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
-      const words = String(text || "").split(" ");
-      let line = "";
-      let curY = y;
-      for (let i = 0; i < words.length; i++) {
-        const testLine = line ? line + " " + words[i] : words[i];
-        if (ctx.measureText(testLine).width > maxWidth && line) {
-          ctx.fillText(line, x, curY);
-          line = words[i];
-          curY += lineHeight;
-        } else {
-          line = testLine;
-        }
-      }
-      if (line) {
-        ctx.fillText(line, x, curY);
-        curY += lineHeight;
-      }
-      return curY;
-    }
-
-    function shareOrDownloadPngReport() {
-      const m = typeof calculateMetrics === "function" ? calculateMetrics() : {};
-      const title = (state && state.tripTitle) || "سفر ترانزیتی";
-      const dateStr = (state && state.tripDate) || "نامشخص";
-      const nowStr = typeof getNowSystemDateTime === "function" ? getNowSystemDateTime() : new Date().toLocaleString("fa-IR");
-
-      const canvas = document.createElement("canvas");
-      canvas.width = 960;
-      canvas.height = 1280;
-      const ctx = canvas.getContext("2d");
-
-      ctx.fillStyle = "#0b1220";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.fillStyle = "#132038";
-      ctx.fillRect(36, 36, canvas.width - 72, 140);
-      ctx.strokeStyle = "#1e3a5f";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(36, 36, canvas.width - 72, 140);
-
-      ctx.textAlign = "right";
-      ctx.fillStyle = "#38bdf8";
-      ctx.font = "bold 34px sans-serif";
-      ctx.fillText("گزارش کامل تسویه و سوخت ترانزیت", canvas.width - 64, 92);
-
-      ctx.fillStyle = "#cbd5e1";
-      ctx.font = "21px sans-serif";
-      ctx.fillText("سفر: " + title + "   |   تاریخ سفر: " + dateStr, canvas.width - 64, 138);
-
-      const cards = [
-        { label: "مصرف کل سوخت", val: formatNum(m.totalConsumed || 0, 2) + " L", color: "#38bdf8" },
-        { label: "سهمیه شرکت", val: formatNum(m.companyQuota || 0, 2) + " L", color: "#34d399" },
-        { label: "مازاد / کسری", val: formatNum(m.diffFuel || 0, 2) + " L", color: "#fbbf24" },
-        { label: "جمع هزینه‌ها", val: formatToman(m.totalExpensesToman || 0), color: "#f87171" }
-      ];
-      const cardW = 204;
-      const gap = 16;
-      cards.forEach((c, idx) => {
-        const xRight = canvas.width - 36 - idx * (cardW + gap);
-        const xLeft = xRight - cardW;
-        ctx.fillStyle = "#111c30";
-        ctx.fillRect(xLeft, 200, cardW, 120);
-        ctx.strokeStyle = "#243b5a";
-        ctx.strokeRect(xLeft, 200, cardW, 120);
-
-        ctx.fillStyle = "#94a3b8";
-        ctx.font = "18px sans-serif";
-        ctx.fillText(c.label, xRight - 16, 236);
-
-        ctx.fillStyle = c.color;
-        ctx.font = "bold 22px sans-serif";
-        ctx.fillText(c.val, xRight - 16, 286);
-      });
-
-      let y = 370;
-      ctx.fillStyle = "#e2e8f0";
-      ctx.font = "bold 25px sans-serif";
-      ctx.fillText("ریز آیتم‌های ثبت‌شده", canvas.width - 44, y);
-      y += 42;
-
-      const allItems = [];
-      (state.borderFuelItems || []).forEach(it => {
-        const cur = it.currency || "IRT";
-        const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-        allItems.push(`[مرز] ${it.borderName || "مرز"} — ${formatNum(it.liters || 0, 1)}L — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel}`);
-      });
-      (state.tripExpenses || []).forEach(it => {
-        const cur = it.currency || "IRT";
-        const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-        allItems.push(`[هزینه] ${it.title || "هزینه"} — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel}`);
-      });
-
-      ctx.font = "21px sans-serif";
-      if (!allItems.length) {
-        ctx.fillStyle = "#94a3b8";
-        ctx.fillText("هیچ آیتم سوخت مرزی یا هزینه سفری ثبت نشده است.", canvas.width - 44, y);
-        y += 36;
-      } else {
-        for (let i = 0; i < allItems.length && y < 1160; i++) {
-          ctx.fillStyle = i % 2 === 0 ? "#101a2d" : "#0e1728";
-          ctx.fillRect(36, y - 24, canvas.width - 72, 38);
-          ctx.fillStyle = "#f1f5f9";
-          y = wrapCanvasText(ctx, `${i + 1}. ${allItems[i]}`, canvas.width - 52, y, canvas.width - 104, 34);
-          y += 8;
-        }
-      }
-
-      ctx.fillStyle = "#64748b";
-      ctx.font = "18px sans-serif";
-      ctx.fillText("ایجاد شده در: " + nowStr, canvas.width - 44, canvas.height - 32);
-
-      canvas.toBlob(blob => {
-        if (blob) shareOrDownloadFile(blob, "gozaresh-tasviye.png");
-      }, "image/png");
-    }
-
-    function showToast(msg) {
-      const toast = document.getElementById("toast");
-      toast.textContent = msg;
-      toast.classList.add("show");
-      clearTimeout(window.__toastTimer);
-      window.__toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-      }, 2400);
-    }
-
-    function populateFormFromState() {
-      document.getElementById("tripTitle").value = state.tripTitle;
-      document.getElementById("plateNo").value = state.plateNo;
-      document.getElementById("tripDate").value = state.tripDate;
-      document.getElementById("initialFuel").value = state.initialFuel;
-      document.getElementById("companyQuota").value = state.companyQuota;
-      document.getElementById("fuelSellPriceTry").value = state.fuelSellPriceTry;
-      document.getElementById("outboundKm").value = state.outboundKm;
-      document.getElementById("outboundWeight").value = state.outboundWeight;
-      document.getElementById("outboundRate").value = state.outboundRate;
-      document.getElementById("returnKm").value = state.returnKm;
-      document.getElementById("returnWeight").value = state.returnWeight;
-      document.getElementById("returnRate").value = state.returnRate;
-      document.getElementById("emptyKm").value = state.emptyKm;
-      document.getElementById("emptyRate").value = state.emptyRate;
-      document.getElementById("idleFuel").value = state.idleFuel;
-
-      document.getElementById("rateTRY").value = state.rates.TRY;
-      document.getElementById("rateUSD").value = state.rates.USD;
-      document.getElementById("rateEUR").value = state.rates.EUR;
-      document.getElementById("rateAZN").value = state.rates.AZN;
-    }
-
-    function readFormIntoState() {
-      state.tripTitle = document.getElementById("tripTitle").value.trim() || "سفر بدون عنوان";
-      state.plateNo = document.getElementById("plateNo").value.trim();
-      state.tripDate = document.getElementById("tripDate").value.trim();
-      state.initialFuel = parseFloat(document.getElementById("initialFuel").value) || 0;
-      state.extraOutboundFuel = parseFloat(document.getElementById("extraOutboundFuel")?.value) || 0;
-      state.extraReturnFuel = parseFloat(document.getElementById("extraReturnFuel")?.value) || 0;
-      state.extraRouteFuel = state.extraOutboundFuel + state.extraReturnFuel;
-      state.companyQuota = parseFloat(document.getElementById("companyQuota").value) || 0;
-      state.fuelSellPriceTry = parseFloat(document.getElementById("fuelSellPriceTry").value) || 0;
-      state.outboundKm = parseFloat(document.getElementById("outboundKm").value) || 0;
-      state.outboundWeight = parseFloat(document.getElementById("outboundWeight").value) || 0;
-      state.outboundRate = parseFloat(document.getElementById("outboundRate").value) || 0;
-      state.returnKm = parseFloat(document.getElementById("returnKm").value) || 0;
-      state.returnWeight = parseFloat(document.getElementById("returnWeight").value) || 0;
-      state.returnRate = parseFloat(document.getElementById("returnRate").value) || 0;
-      state.emptyKm = parseFloat(document.getElementById("emptyKm").value) || 0;
-      state.emptyRate = parseFloat(document.getElementById("emptyRate").value) || 0;
-      state.idleFuel = parseFloat(document.getElementById("idleFuel").value) || 0;
-
-      state.rates.TRY = parseFloat(document.getElementById("rateTRY").value) || 0;
-      state.rates.USD = parseFloat(document.getElementById("rateUSD").value) || 0;
-      state.rates.EUR = parseFloat(document.getElementById("rateEUR").value) || 0;
-      state.rates.AZN = parseFloat(document.getElementById("rateAZN").value) || 0;
-      state.rates.IRT = 1;
-    }
-
-    function persistCurrentState() {
-      try {
-        localStorage.setItem(STORAGE_CURRENT_KEY, JSON.stringify(state));
-        const nowTime = new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" });
-        document.getElementById("lastSavedLabel").textContent = "آخرین ذخیره خودکار: " + toPersianDigits(nowTime);
-      } catch (e) {
-        showToast("هشدار: حجم تصاویر ذخیره شده زیاد است؛ عکس سبک‌تری انتخاب کنید.");
-      }
-    }
-
-    function calculateMetrics() {
-      const outboundFuel = (state.outboundKm * state.outboundRate) / 100;
-      const returnFuel = (state.returnKm * state.returnRate) / 100;
-      const emptyFuel = (state.emptyKm * state.emptyRate) / 100;
-      const idleFuel = state.idleFuel;
-      const totalConsumed = outboundFuel + returnFuel + emptyFuel + idleFuel;
-
-      const rawCompanyQuota = Number(state.companyQuota) || 0;
-      const extraOutboundFuel = Math.max(0, Number(state.extraOutboundFuel) || 0);
-      const extraReturnFuel = Math.max(0, Number(state.extraReturnFuel) || 0);
-      const extraRouteFuel = extraOutboundFuel + extraReturnFuel;
-      const effectiveCompanyQuota = Math.max(0, rawCompanyQuota - extraRouteFuel);
-
-      const remainingFuel = state.initialFuel - totalConsumed;
-      const personalQuota = Math.max(0, state.initialFuel - effectiveCompanyQuota);
-      const companySurplus = effectiveCompanyQuota - totalConsumed;
-
-      const sellableCompanyLiters = Math.max(0, companySurplus);
-      const companyValueTry = sellableCompanyLiters * state.fuelSellPriceTry;
-      const companyValueToman = convertToToman(companyValueTry, "TRY");
-
-      const effectivePersonalLiters = Math.max(0, remainingFuel - sellableCompanyLiters);
-      const personalValueTry = effectivePersonalLiters * state.fuelSellPriceTry;
-      const personalValueToman = convertToToman(personalValueTry, "TRY");
-
-      const totalRemainingValueToman = convertToToman(Math.max(0, remainingFuel) * state.fuelSellPriceTry, "TRY");
-
-      return {
-        outboundFuel,
-        returnFuel,
-        emptyFuel,
-        idleFuel,
-        totalConsumed,
-        extraOutboundFuel,
-        extraReturnFuel,
-        extraRouteFuel,
-        effectiveCompanyQuota,
-        remainingFuel,
-        personalQuota,
-        companySurplus,
-        sellableCompanyLiters,
-        companyValueTry,
-        companyValueToman,
-        effectivePersonalLiters,
-        personalValueTry,
-        personalValueToman,
-        totalRemainingValueToman
-      };
-    }
-
-    function summarizeCurrencyMap(items) {
-      const map = {};
-      items.forEach(it => {
-        const c = it.currency || "IRT";
-        map[c] = (map[c] || 0) + (Number(it.amount) || 0);
-      });
-      const parts = Object.entries(map)
-        .filter(([, amt]) => amt > 0)
-        .map(([curr, amt]) => `${formatNum(amt, curr === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[curr] || curr}`);
-      return parts.length ? parts.join(" + ") : "—";
-    }
-
-    function renderAll() {
-      const m = calculateMetrics();
-
-      document.getElementById("kpiTotalConsumed").textContent = formatNum(m.totalConsumed, 2) + " لیتر";
-      document.getElementById("kpiConsumedBreakdown").textContent =
-        `رفت ${formatNum(m.outboundFuel, 1)} + خالی ${formatNum(m.emptyFuel, 1)} + درجا ${formatNum(m.idleFuel, 1)} + برگشت ${formatNum(m.returnFuel, 1)}`;
-
-      document.getElementById("kpiCompanySurplus").textContent = formatNum(m.companySurplus, 2) + " لیتر";
-      document.getElementById("kpiCompanyValue").textContent =
-        `${formatNum(m.companyValueTry, 0)} لیر | ${formatToman(m.companyValueToman)}`;
-
-      document.getElementById("kpiPersonalFuel").textContent = formatNum(m.effectivePersonalLiters, 2) + " لیتر";
-      document.getElementById("kpiPersonalValue").textContent =
-        `${formatNum(m.personalValueTry, 0)} لیر | ${formatToman(m.personalValueToman)}`;
-
-      document.getElementById("kpiRemainingFuel").textContent = formatNum(m.remainingFuel, 2) + " لیتر";
-      document.getElementById("kpiRemainingValue").textContent =
-        `ارزش کل باقیمانده: ${formatToman(m.totalRemainingValueToman)}`;
-
-      const baseTank = Math.max(state.initialFuel, m.totalConsumed, 1);
-      const usedPct = Math.min(100, Math.max(0, (m.totalConsumed / baseTank) * 100));
-      const compPct = Math.min(100 - usedPct, Math.max(0, (m.sellableCompanyLiters / baseTank) * 100));
-      const persPct = Math.min(100 - usedPct - compPct, Math.max(0, (m.effectivePersonalLiters / baseTank) * 100));
-
-      document.getElementById("barUsed").style.width = usedPct + "%";
-      document.getElementById("barCompany").style.width = compPct + "%";
-      document.getElementById("barPersonal").style.width = persPct + "%";
-
-      document.getElementById("tankSummaryText").textContent = `مانده باک: ${formatNum(m.remainingFuel, 2)} لیتر`;
-      document.getElementById("legUsed").textContent = formatNum(m.totalConsumed, 2);
-      document.getElementById("legCompany").textContent = formatNum(m.sellableCompanyLiters, 2);
-      document.getElementById("legPersonal").textContent = formatNum(m.effectivePersonalLiters, 2);
-      document.getElementById("legRemaining").textContent = formatNum(m.remainingFuel, 2);
-
-      const alertBox = document.getElementById("fuelAlertBox");
-      alertBox.className = "alert-box";
-      if (m.remainingFuel < 0) {
-        alertBox.classList.add("alert-danger");
-        alertBox.textContent = `⚠️ هشدار کسری سوخت: مصرف کل (${formatNum(m.totalConsumed, 2)} لیتر) از کل گازوئیل موجود (${formatNum(state.initialFuel, 2)} لیتر) بیشتر شده است!`;
-      } else if (m.companySurplus < 0) {
-        alertBox.classList.add("alert-warn");
-        alertBox.textContent = `⚠️ توجه: مصرف کل از سهمیه شرکت (${formatNum(state.companyQuota, 2)} لیتر) فراتر رفته و ${formatNum(Math.abs(m.companySurplus), 2)} لیتر از ذخیره باک برداشت شده است.`;
-      }
-
-      renderBorderFuelTable();
-      renderTripExpenseTable();
-      renderSeparateSummaries(m);
-    }
-
-    function handleInputChange() {
-      readFormIntoState();
-      persistCurrentState();
-      renderAll();
-    }
-
-    function addBorderFuelItem() {
-      const zone = document.getElementById("bfZone").value;
-      const type = document.getElementById("bfType").value;
-      const borderName = document.getElementById("bfBorderName").value.trim() || (zone === "IRAN" ? "مرز ایران" : "مرز خارج");
-      const amount = parseFloat(document.getElementById("bfAmount").value);
-      const currency = document.getElementById("bfCurrency").value;
-      const liters = parseFloat(document.getElementById("bfLiters").value) || 0;
-
-      if (!amount || amount <= 0) {
-        showToast("لطفاً مبلغ معتبر وارد کنید");
-        return;
-      }
-
-      if (applyEditedRecordIfAny('border', {
-        zone,
-        type,
-        borderName,
-        amount,
-        currency,
-        liters
-      })) {
-        document.getElementById("bfLiters").value = "";
-        document.getElementById("bfAmount").value = "";
-        return;
-      }
-      state.borderFuelItems.push({
-        id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
-        zone,
-        type,
-        borderName,
-        amount,
-        currency,
-        liters,
-        createdAt: getNowSystemDateTime()
-      });
-
-      document.getElementById("bfBorderName").value = "";
-      document.getElementById("bfAmount").value = "";
-      document.getElementById("bfLiters").value = "";
-
-      persistCurrentState();
-      renderAll();
-      showToast("مورد مرزی ثبت شد");
-    }
-
-    function deleteBorderFuelItem(id) {
-      state.borderFuelItems = state.borderFuelItems.filter(x => x.id !== id);
-      persistCurrentState();
-      renderAll();
-      showToast("مورد حذف شد");
-    }
-
-    function renderBorderFuelTable() {
-      const tbody = document.getElementById("borderFuelTableBody");
-      if (!state.borderFuelItems.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-state">هنوز خرید سوخت یا جریمه مرزی ثبت نشده است.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = state.borderFuelItems.map((item, idx) => {
-        const tomanVal = convertToToman(item.amount, item.currency);
-        const zoneBadge = item.zone === "IRAN"
-          ? `<span class="tag tag-iran">مرز ایران</span>`
-          : `<span class="tag tag-foreign">مرز خارج</span>`;
-        const typeBadge = item.type === "FINE"
-          ? `<span class="tag tag-fine">جریمه گازوئیل</span>`
-          : `<span class="tag tag-buy">خرید سوخت</span>`;
-
-        return `
-          <tr>
-            <td>${zoneBadge}</td>
-            <td>${typeBadge}</td>
-            <td>${escapeHtml(item.borderName)} <button type="button" onclick="editRecordByType('border', ${idx})" style="margin-right:6px;padding:2px 6px;font-size:0.72rem;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#38bdf8;cursor:pointer;">✏️ ویرایش</button>${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
-            <td class="num-ltr">${item.liters > 0 ? formatNum(item.liters, 2) + " L" : "—"}</td>
-            <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
-            <td class="num-ltr">${formatToman(tomanVal)}</td>
-            <td><button type="button" class="btn btn-danger-soft" style="padding: 4px 8px; font-size: 0.74rem;" onclick="deleteBorderFuelItem('${item.id}')">حذف</button></td>
-          </tr>
-        `;
-      }).join("");
-    }
-
-    function handleReceiptUpload(event) {
-      const file = event.target.files && event.target.files[0];
-      const previewBox = document.getElementById("pendingReceiptPreview");
-      if (!file) {
-        pendingReceiptDataUrl = "";
-        pendingReceiptName = "";
-        previewBox.innerHTML = "";
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const img = new Image();
-        img.onload = function() {
-          const maxDim = 960;
-          let { width, height } = img;
-          if (width > maxDim || height > maxDim) {
-            if (width > height) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            } else {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
-          const canvas = document.createElement("canvas");
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height);
-          pendingReceiptDataUrl = canvas.toDataURL("image/jpeg", 0.72);
-          pendingReceiptName = file.name;
-
-          previewBox.innerHTML = `
-            <img src="${pendingReceiptDataUrl}" class="receipt-thumb" alt="پیش‌نمایش سند" onclick="openImageModal('${escapeAttr(pendingReceiptName)}', '${pendingReceiptDataUrl}')" />
-            <span style="font-size: 0.75rem; color: #6ee7b7;">سند آماده ثبت است</span>
-            <button type="button" class="btn btn-danger-soft" style="padding: 3px 8px; font-size: 0.72rem;" onclick="clearPendingReceipt()">حذف عکس</button>
-          `;
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function clearPendingReceipt() {
-      pendingReceiptDataUrl = "";
-      pendingReceiptName = "";
-      const expInp = document.getElementById("expReceiptInput");
-      const camInp = document.getElementById("cameraReceiptInput");
-      if (expInp) expInp.value = "";
-      if (camInp) camInp.value = "";
-      document.getElementById("pendingReceiptPreview").innerHTML = "";
-    }
-
-    function addTripExpenseItem() {
-      const scope = document.getElementById("expScope").value;
-      const title = document.getElementById("expTitle").value.trim() || (scope === "INSIDE_IRAN" ? "هزینه داخل ایران" : "هزینه خارج از ایران");
-      const currency = document.getElementById("expCurrency").value;
-      const amount = parseFloat(document.getElementById("expAmount").value);
-
-      if (!amount || amount <= 0) {
-        showToast("لطفاً مبلغ هزینه را وارد کنید");
-        return;
-      }
-
-      if (applyEditedRecordIfAny('expense', {
-        scope,
-        title,
-        currency,
-        amount
-      })) {
-        document.getElementById("expTitle").value = "";
-        document.getElementById("expAmount").value = "";
-        return;
-      }
-      state.tripExpenses.push({
-        id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
-        scope,
-        title,
-        currency,
-        amount,
-        createdAt: getNowSystemDateTime(),
-        receiptImage: pendingReceiptDataUrl || "",
-        receiptName: pendingReceiptName || "سند هزینه"
-      });
-
-      document.getElementById("expTitle").value = "";
-      document.getElementById("expAmount").value = "";
-      clearPendingReceipt();
-
-      persistCurrentState();
-      renderAll();
-      showToast("هزینه سفر ثبت شد");
-    }
-
-    function deleteTripExpenseItem(id) {
-      state.tripExpenses = state.tripExpenses.filter(x => x.id !== id);
-      persistCurrentState();
-      renderAll();
-      showToast("هزینه حذف شد");
-    }
-
-    function renderTripExpenseTable() {
-      const tbody = document.getElementById("tripExpenseTableBody");
-      if (!state.tripExpenses.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="empty-state">هنوز هزینه سفر دستی ثبت نشده است.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = state.tripExpenses.map((item, idx) => {
-        const tomanVal = convertToToman(item.amount, item.currency);
-        const scopeBadge = item.scope === "INSIDE_IRAN"
-          ? `<span class="tag tag-iran">داخل ایران</span>`
-          : `<span class="tag tag-foreign">خارج از ایران</span>`;
-
-        const receiptHtml = item.receiptImage
-          ? `<img src="${item.receiptImage}" class="receipt-thumb" alt="سند" onclick="openImageModal('${escapeAttr(item.title)}', '${item.receiptImage}')" />`
-          : `<span style="color: var(--text-dim); font-size: 0.74rem;">بدون عکس</span>`;
-
-        return `
-          <tr>
-            <td>${scopeBadge}</td>
-            <td>${escapeHtml(item.title)} <button type="button" onclick="editRecordByType('expense', ${idx})" style="margin-right:6px;padding:2px 6px;font-size:0.72rem;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#38bdf8;cursor:pointer;">✏️ ویرایش</button>${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
-            <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
-            <td class="num-ltr">${formatToman(tomanVal)}</td>
-            <td>${receiptHtml}</td>
-            <td><button type="button" class="btn btn-danger-soft" style="padding: 4px 8px; font-size: 0.74rem;" onclick="deleteTripExpenseItem('${item.id}')">حذف</button></td>
-          </tr>
-        `;
-      }).join("");
-    }
-
-    function renderSeparateSummaries(m) {
-      const metrics = m || calculateMetrics();
-      const bfIran = state.borderFuelItems.filter(x => x.zone === "IRAN");
-      const bfForeign = state.borderFuelItems.filter(x => x.zone === "FOREIGN");
-
-      const bfIranToman = bfIran.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-      const bfForeignToman = bfForeign.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-      const bfTotalToman = bfIranToman + bfForeignToman;
-      const bfTotalLiters = state.borderFuelItems.reduce((s, x) => s + (Number(x.liters) || 0), 0);
-
-      document.getElementById("sumBfIranToman").textContent = formatToman(bfIranToman);
-      document.getElementById("sumBfIranCurrencies").textContent = "ارزها: " + summarizeCurrencyMap(bfIran);
-
-      document.getElementById("sumBfForeignToman").textContent = formatToman(bfForeignToman);
-      document.getElementById("sumBfForeignCurrencies").textContent = "ارزها: " + summarizeCurrencyMap(bfForeign);
-
-      document.getElementById("sumBfTotalToman").textContent = formatToman(bfTotalToman);
-      document.getElementById("sumBfTotalCurrencies").textContent =
-        `کل لیتر ثبت‌شده: ${formatNum(bfTotalLiters, 2)} لیتر | ارزها: ${summarizeCurrencyMap(state.borderFuelItems)}`;
-
-      const expInside = state.tripExpenses.filter(x => x.scope === "INSIDE_IRAN");
-      const expOutside = state.tripExpenses.filter(x => x.scope === "OUTSIDE_IRAN");
-
-      const expInsideToman = expInside.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-      const expOutsideToman = expOutside.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-      const expTotalToman = expInsideToman + expOutsideToman;
-      const receiptsCount = state.tripExpenses.filter(x => !!x.receiptImage).length;
-
-      document.getElementById("sumExpInsideToman").textContent = formatToman(expInsideToman);
-      document.getElementById("sumExpInsideCurrencies").textContent = "ارزها: " + summarizeCurrencyMap(expInside);
-
-      document.getElementById("sumExpOutsideToman").textContent = formatToman(expOutsideToman);
-      document.getElementById("sumExpOutsideCurrencies").textContent = "ارزها: " + summarizeCurrencyMap(expOutside);
-
-      document.getElementById("sumExpTotalToman").textContent = formatToman(expTotalToman);
-      document.getElementById("sumExpTotalCurrencies").textContent =
-        `تعداد اسناد تصویری: ${toPersianDigits(receiptsCount)} عکس | ارزها: ${summarizeCurrencyMap(state.tripExpenses)}`;
-
-      document.getElementById("sumGrandCostsToman").textContent = formatToman(bfTotalToman + expTotalToman);
-      document.getElementById("sumGrandCostsSub").textContent =
-        `مرزها: ${formatToman(bfTotalToman)} + هزینه‌ها: ${formatToman(expTotalToman)}`;
-
-      document.getElementById("sumCompanySettlementToman").textContent = formatToman(metrics.companyValueToman);
-      document.getElementById("sumCompanySettlementSub").textContent =
-        `${formatNum(metrics.companyValueTry, 0)} لیر (${formatNum(metrics.sellableCompanyLiters, 2)} لیتر قابل فروش)`;
-    }
-
-    function resetFormForNextTrip() {
-      const fresh = typeof getDefaultState === "function" ? getDefaultState() : {};
-      fresh.tripTitle = "";
-      fresh.plateNo = "";
-      fresh.tripDate = "";
-      fresh.initialFuel = 0;
-      fresh.companyQuota = 0;
-      fresh.extraOutboundFuel = 0;
-      fresh.extraReturnFuel = 0;
-      fresh.extraRouteFuel = 0;
-      fresh.fuelSellPriceTry = 0;
-      fresh.outboundKm = 0;
-      fresh.outboundWeight = 0;
-      fresh.outboundRate = 0;
-      fresh.returnKm = 0;
-      fresh.returnWeight = 0;
-      fresh.returnRate = 0;
-      fresh.emptyKm = 0;
-      fresh.emptyRate = 0;
-      fresh.idleFuel = 0;
-      fresh.borderFuelItems = [];
-      fresh.tripExpenses = [];
-      if (fresh.rates && typeof fresh.rates === "object") {
-        Object.keys(fresh.rates).forEach(k => { fresh.rates[k] = 0; });
-      } else {
-        fresh.rates = { TRY: 0, USD: 0, EUR: 0, AZN: 0 };
-      }
-
-      state = fresh;
-      if (typeof editingTarget !== "undefined") {
-        editingTarget = null;
-      }
-
-      const idsToClear = [
-        "tripTitle", "plateNo", "tripDate", "initialFuel", "companyQuota",
-        "extraOutboundFuel", "extraReturnFuel", "fuelSellPriceTry",
-        "outboundKm", "outboundWeight", "outboundRate",
-        "returnKm", "returnWeight", "returnRate",
-        "emptyKm", "emptyRate", "idleFuel",
-        "rateTRY", "rateUSD", "rateEUR", "rateAZN",
-        "bfBorderName", "bfLiters", "bfAmount",
-        "expTitle", "expAmount"
-      ];
-      idsToClear.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = "";
-      });
-      document.querySelectorAll('.grid-5 input[id^="rate"]').forEach(el => {
-        el.value = "";
-      });
-      const receiptEl = document.getElementById("expReceiptInput");
-      if (receiptEl) receiptEl.value = "";
-
-      if (typeof persistCurrentState === "function") persistCurrentState();
-      if (typeof renderAll === "function") renderAll();
-    }
-
-    function saveCurrentTripToArchive() {
-      readFormIntoState();
-      const m = calculateMetrics();
-      const bfTotalToman = state.borderFuelItems.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-      const expTotalToman = state.tripExpenses.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-
-      const archive = loadArchive();
-      const snapshot = {
-        archiveId: "trip_" + Date.now(),
-        savedAt: new Date().toLocaleString("fa-IR"),
-        summary: {
-          totalConsumed: m.totalConsumed,
-          companySurplus: m.companySurplus,
-          companyValueTry: m.companyValueTry,
-          companyValueToman: m.companyValueToman,
-          personalFuel: m.effectivePersonalLiters,
-          personalValueToman: m.personalValueToman,
-          bfTotalToman,
-          expTotalToman
-        },
-        data: JSON.parse(JSON.stringify(state))
-      };
-
-      archive.unshift(snapshot);
-      try {
-        saveArchive(archive);
-        resetFormForNextTrip();
-        showToast("سفر در آرشیو ذخیره شد و فرم برای سفر بعدی آماده است");
-      } catch (e) {
-        showToast("حافظه آرشیو پر شد؛ یک سفر قدیمی یا عکس را حذف کنید.");
-      }
-    }
-
-    function finalizeArchivedTripApproval(archiveId) {
-      const list = typeof loadArchive === "function" ? loadArchive() : [];
-      const idx = list.findIndex(item => String(item.archiveId) === String(archiveId));
-      if (idx === -1) return;
-      const approver = prompt("نام مسئول بازبینی / حسابداری تأییدکننده:", list[idx].data?.approvedBy || "");
-      if (approver === null) return;
-      list[idx].data = list[idx].data || {};
-      list[idx].data.approvalStatus = "تأیید نهایی شده";
-      list[idx].data.approvedBy = approver.trim() || "مسئول حسابداری";
-      list[idx].data.approvedAt = new Date().toLocaleDateString("fa-IR");
-      saveArchive(list);
-      if (typeof showToast === "function") {
-        showToast("تأیید نهایی سفر شماره " + (list[idx].data.tripNumber || "---") + " ثبت شد");
-      }
-      openArchiveModal();
-    }
-
-    function openArchiveModal() {
-      const container = document.getElementById("archiveListContainer");
-      const list = loadArchive();
-
-      if (!list.length) {
-        container.innerHTML = `<div class="empty-state">هنوز هیچ سفری در آرشیو ذخیره نشده است.</div>`;
-      } else {
-        container.innerHTML = list.map(entry => {
-          const d = entry.data || {};
-          const s = entry.summary || {};
-          return `
-            <div class="archive-item">
-              <div>
-                <div style="font-weight: 800; font-size: 0.94rem; color: #fff;">
-                  ${escapeHtml(d.tripTitle || "سفر")} <span style="font-size: 0.76rem; color: #94a3b8;">(${escapeHtml(d.plateNo || "")})</span>
-                </div>
-                <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 3px;">
-                  تاریخ ثبت: ${escapeHtml(entry.savedAt || "")} | مصرف: ${formatNum(s.totalConsumed || 0, 2)} لیتر
-                </div>
-                <div style="font-size: 0.78rem; color: #7dd3fc; margin-top: 3px;">
-                  تسویه شرکت: ${formatNum(s.companyValueTry || 0, 0)} لیر (${formatToman(s.companyValueToman || 0)}) | سهم شخصی: ${formatNum(s.personalFuel || 0, 2)} لیتر
-                </div>
-                <div style="font-size: 0.76rem; color: #fcd34d; margin-top: 2px;">
-                  مرزها: ${formatToman(s.bfTotalToman || 0)} | هزینه‌های سفر: ${formatToman(s.expTotalToman || 0)}
-                </div>
-              </div>
-              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <button type="button" class="btn btn-primary" style="padding: 6px 10px; font-size: 0.78rem;" onclick="loadArchivedTrip('${entry.archiveId}')">بارگذاری</button>
-                <button type="button" class="btn btn-ghost" style="padding: 6px 10px; font-size: 0.78rem;" onclick="exportArchivedTrip('${entry.archiveId}', 'txt')">TXT</button>
-                <button type="button" class="btn btn-ghost" style="padding: 6px 10px; font-size: 0.78rem;" onclick="exportArchivedTrip('${entry.archiveId}', 'csv')">CSV</button>
-                <button type="button" class="btn btn-ghost" style="padding: 6px 10px; font-size: 0.78rem;" onclick="finalizeArchivedTripApproval('${entry.archiveId}')">تأیید نهایی</button>
-                <button type="button" class="btn btn-danger-soft" style="padding: 6px 10px; font-size: 0.78rem;" onclick="deleteArchivedTrip('${entry.archiveId}')">حذف</button>
-              </div>
-            </div>
-          `;
-        }).join("");
-      }
-
-      document.getElementById("archiveModal").classList.add("open");
-    }
-
-    function closeArchiveModal() {
-      document.getElementById("archiveModal").classList.remove("open");
-    }
-
-    function exportArchivedTrip(archiveId, format) {
-      const list = typeof loadArchive === "function" ? loadArchive() : [];
-      const found = list.find(item => String(item.archiveId) === String(archiveId));
-      if (!found || !found.data) {
-        if (typeof showToast === "function") showToast("اطلاعات سفر آرشیوشده یافت نشد");
-        return;
-      }
-      const prevState = state;
-      try {
-        state = JSON.parse(JSON.stringify(found.data));
-        if (format === "csv" && typeof shareOrDownloadCsvReport === "function") {
-          shareOrDownloadCsvReport();
-        } else if (typeof shareOrDownloadTxtReport === "function") {
-          shareOrDownloadTxtReport();
-        }
-      } finally {
-        state = prevState;
-      }
-    }
-
-    function loadArchivedTrip(archiveId) {
-      const list = loadArchive();
-      const found = list.find(x => x.archiveId === archiveId);
-      if (!found || !found.data) return;
-      const def = getDefaultState();
-      state = {
-        ...def,
-        ...found.data,
-        rates: { ...def.rates, ...(found.data.rates || {}) },
-        borderFuelItems: Array.isArray(found.data.borderFuelItems) ? found.data.borderFuelItems : [],
-        tripExpenses: Array.isArray(found.data.tripExpenses) ? found.data.tripExpenses : []
-      };
-      populateFormFromState();
-      persistCurrentState();
-      renderAll();
-      closeArchiveModal();
-      showToast("سفر از آرشیو بارگذاری شد");
-    }
-
-    function deleteArchivedTrip(archiveId) {
-      const list = loadArchive().filter(x => x.archiveId !== archiveId);
-      saveArchive(list);
-      openArchiveModal();
-      showToast("سفر از آرشیو حذف شد");
-    }
-
-    function resetDefaultTrip() {
-      if (!confirm("آیا مطمئن هستید که می‌خواهید اطلاعات سفر فعلی را به حالت پیش‌فرض بازنشانی کنید؟")) return;
-      state = getDefaultState();
-      populateFormFromState();
-      persistCurrentState();
-      renderAll();
-      showToast("اطلاعات به حالت پیش‌فرض بازگشت");
-    }
-
-    function openImageModal(title, src) {
-      document.getElementById("imageModalTitle").textContent = title || "تصویر سند";
-      document.getElementById("imageModalImg").src = src;
-      document.getElementById("imageModal").classList.add("open");
-    }
-
-    function closeImageModal() {
-      document.getElementById("imageModal").classList.remove("open");
-    }
-
-    function copyFullReport() {
-      readFormIntoState();
-      const m = calculateMetrics();
-      const bfIranToman = state.borderFuelItems.filter(x => x.zone === "IRAN").reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-      const bfForeignToman = state.borderFuelItems.filter(x => x.zone === "FOREIGN").reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-      const expInsideToman = state.tripExpenses.filter(x => x.scope === "INSIDE_IRAN").reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-      const expOutsideToman = state.tripExpenses.filter(x => x.scope === "OUTSIDE_IRAN").reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
-
-      const lines = [
-        `🚛 گزارش تسویه سفر: ${state.tripTitle}`,
-        `پلاک: ${state.plateNo} | تاریخ: ${state.tripDate}`,
-        `────────────────────`,
-        `⛽ سوخت اولیه: ${formatNum(state.initialFuel, 2)} لیتر | سهمیه شرکت: ${formatNum(state.companyQuota, 2)} لیتر`,
-        `📉 مصرف کل: ${formatNum(m.totalConsumed, 2)} لیتر (رفت ${formatNum(m.outboundFuel, 1)} + خالی ${formatNum(m.emptyFuel, 1)} + درجا ${formatNum(m.idleFuel, 1)} + برگشت ${formatNum(m.returnFuel, 1)})`,
-        `💼 اضافه‌سوخت شرکت: ${formatNum(m.companySurplus, 2)} لیتر ➔ ${formatNum(m.companyValueTry, 0)} لیر (${formatToman(m.companyValueToman)})`,
-        `👤 سهم سوخت شخصی: ${formatNum(m.effectivePersonalLiters, 2)} لیتر (${formatToman(m.personalValueToman)})`,
-        `🛢️ کل باقیمانده باک: ${formatNum(m.remainingFuel, 2)} لیتر`,
-        `────────────────────`,
-        `🚧 خرید و جرایم مرزی: مرز ایران ${formatToman(bfIranToman)} | مرز خارج ${formatToman(bfForeignToman)} | جمع: ${formatToman(bfIranToman + bfForeignToman)}`,
-        `🧾 هزینه‌های سفر: داخل ایران ${formatToman(expInsideToman)} | خارج از ایران ${formatToman(expOutsideToman)} | جمع: ${formatToman(expInsideToman + expOutsideToman)}`
-      ];
-
-      const text = lines.join("\n");
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => showToast("گزارش کامل کپی شد")).catch(() => fallbackCopy(text));
-      } else {
-        fallbackCopy(text);
-      }
-    }
-
-    function fallbackCopy(text) {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      showToast("گزارش کامل کپی شد");
-    }
-
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
-    }
-
-    function escapeAttr(str) {
-      return String(str).replace(/'/g, "\\'").replace(/"/g, "&quot;");
-    }
-
-    populateFormFromState();
-    updateArchiveCountBadge();
-    renderAll();
-    persistCurrentState();
-      const FEEDBACK_STORAGE_KEY = "transit_fuel_user_feedbacks_v1";
-
-    function loadUserFeedbacks() {
-      try {
-        const raw = localStorage.getItem(FEEDBACK_STORAGE_KEY);
-        const parsed = raw ? JSON.parse(raw) : [];
-        return Array.isArray(parsed) ? parsed : [];
-      } catch (e) {
-        return [];
-      }
-    }
-
-    function saveUserFeedbacks(items) {
-      localStorage.setItem(FEEDBACK_STORAGE_KEY, JSON.stringify(items));
-    }
-
-    function renderUserFeedbacks() {
-      const list = loadUserFeedbacks();
-      const badge = document.getElementById("feedbackCountBadge");
-      if (badge) badge.textContent = list.length + " مورد";
-
-      const container = document.getElementById("feedbackListContainer");
-      if (!container) return;
-
-      if (!list.length) {
-        container.innerHTML = `<div class="empty-state">هنوز انتقاد یا پیشنهادی ثبت نشده است.</div>`;
-        return;
-      }
-
-      container.innerHTML = list.map(item => `
-        <div class="archive-item">
-          <div>
-            <div style="font-weight: 800; font-size: 0.9rem; color: #fff;">
-              [${escapeHtml(item.type || "پیشنهاد")}] ${escapeHtml(item.author || "کاربر")}
-              ${item.tripNo ? `<span style="font-size: 0.76rem; color: #7dd3fc;">(سفر: ${escapeHtml(item.tripNo)})</span>` : ""}
-            </div>
-            <div style="font-size: 0.84rem; color: #e2e8f0; margin-top: 4px; white-space: pre-wrap;">${escapeHtml(item.message || "")}</div>
-            <div style="font-size: 0.74rem; color: #94a3b8; margin-top: 4px;">${escapeHtml(item.createdAt || "")}</div>
-          </div>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button type="button" class="btn btn-danger-soft" style="padding: 6px 10px; font-size: 0.78rem;" onclick="deleteUserFeedback('${item.id}')">حذف</button>
-          </div>
-        </div>
-      `).join("");
-    }
-
-    function submitUserFeedback() {
-      const typeEl = document.getElementById("fbType");
-      const authorEl = document.getElementById("fbAuthor");
-      const tripNoEl = document.getElementById("fbTripNo");
-      const msgEl = document.getElementById("fbMessage");
-      const message = (msgEl && msgEl.value ? msgEl.value : "").trim();
-
-      if (!message) {
-        if (typeof showToast === "function") showToast("لطفاً متن انتقاد یا پیشنهاد را وارد کنید");
-        return;
-      }
-
-      const list = loadUserFeedbacks();
-      list.unshift({
-        id: "fb_" + Date.now(),
-        type: (typeEl && typeEl.value) || "پیشنهاد",
-        author: ((authorEl && authorEl.value) || "").trim() || "کاربر برنامه",
-        tripNo: ((tripNoEl && tripNoEl.value) || "").trim(),
-        message,
-        createdAt: new Date().toLocaleString("fa-IR")
-      });
-      saveUserFeedbacks(list);
-      if (msgEl) msgEl.value = "";
-      if (tripNoEl) tripNoEl.value = "";
-      renderUserFeedbacks();
-      if (typeof showToast === "function") showToast("انتقاد یا پیشنهاد شما ثبت شد");
-    }
-
-    function deleteUserFeedback(id) {
-      const next = loadUserFeedbacks().filter(x => String(x.id) !== String(id));
-      saveUserFeedbacks(next);
-      renderUserFeedbacks();
-      if (typeof showToast === "function") showToast("مورد انتخاب‌شده حذف شد");
-    }
-
-    function exportFeedbacksTxt() {
-      const list = loadUserFeedbacks();
-      if (!list.length) {
-        if (typeof showToast === "function") showToast("موردی برای خروجی وجود ندارد");
-        return;
-      }
-      const lines = ["گزارش انتقادات و پیشنهادات کاربران", "========================================"];
-      list.forEach((it, idx) => {
-        lines.push(`${idx + 1}. [${it.type}] ${it.author} | سفر: ${it.tripNo || "-"} | زمان: ${it.createdAt}`);
-        lines.push(`   متن: ${it.message}`);
-        lines.push("----------------------------------------");
-      });
-      const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "user-feedbacks.txt";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      renderUserFeedbacks();
-      if (typeof updateApprovalAndPayoutBanner === "function") updateApprovalAndPayoutBanner();
-    });
-
-    let currentActiveAppSection = "all";
-
-    function switchAppSection(sectionKey) {
-      if (typeof handleInputChange === "function") {
-        handleInputChange();
-      } else if (typeof persistCurrentState === "function") {
-        persistCurrentState();
-      }
-
-      currentActiveAppSection = sectionKey || "all";
-      const targets = document.querySelectorAll("[data-app-section]");
-      targets.forEach(el => {
-        const key = el.getAttribute("data-app-section");
-        if (currentActiveAppSection === "all" || key === currentActiveAppSection) {
-          el.classList.remove("section-hidden-by-nav");
-        } else {
-          el.classList.add("section-hidden-by-nav");
-        }
-      });
-
-      document.querySelectorAll("[data-sec-btn]").forEach(btn => {
-        const isMatch = btn.getAttribute("data-sec-btn") === currentActiveAppSection;
-        btn.classList.toggle("active", isMatch);
-      });
-
-      const navBar = document.getElementById("sectionNavBar");
-      if (navBar) {
-        navBar.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      switchAppSection(currentActiveAppSection);
-    });
-
-</script>
 </body>
 </html>
