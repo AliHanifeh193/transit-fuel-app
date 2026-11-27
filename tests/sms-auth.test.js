@@ -9,6 +9,8 @@ const {normalizePhone} = require("../server/sms-auth");
 
 test("Iran and Turkey mobiles are normalized without accepting unrelated numbers", () => {
   assert.equal(normalizePhone("09121234567"), "+989121234567");
+  assert.equal(normalizePhone("۰۹۱۲۱۲۳۴۵۶۷"), "+989121234567");
+  assert.equal(normalizePhone("+٩٨٩١٢١٢٣٤٥٦٧"), "+989121234567");
   assert.equal(normalizePhone("00989121234567"), "+989121234567");
   assert.equal(normalizePhone("+989121234567"), "+989121234567");
   assert.equal(normalizePhone("05321234567"), "+905321234567");
