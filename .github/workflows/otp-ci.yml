@@ -6,7 +6,7 @@ on:
     branches: [feature/iran-turkey-sms-2fa]
 jobs:
   node-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -23,7 +23,7 @@ jobs:
       - name: Unit and API tests
         run: node --test tests/*.test.js
   firefox-otp:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
