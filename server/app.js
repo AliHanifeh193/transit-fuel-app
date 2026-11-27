@@ -3,6 +3,7 @@
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
+const {isDeepStrictEqual} = require("node:util");
 const {randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash} = require("node:crypto");
 const {DatabaseSync} = require("node:sqlite");
 const {calculate, fields, currencies} = require("../calculations");
@@ -46,6 +47,7 @@ function openDatabase(filename) {
       id INTEGER PRIMARY KEY, actor TEXT NOT NULL, entity TEXT NOT NULL, action TEXT NOT NULL,
       revision INTEGER, at TEXT NOT NULL, note TEXT NOT NULL DEFAULT ''
     );
+    CREATE INDEX IF NOT EXISTS audit_trip_events ON audit (entity, action, id);
     CREATE TABLE IF NOT EXISTS feedback (
       id TEXT PRIMARY KEY, actor TEXT NOT NULL REFERENCES users(id), message TEXT NOT NULL, at TEXT NOT NULL
     );
@@ -96,9 +98,9 @@ function insertUser(db, entry) {
   return id;
 }
 
-function audit(db, actor, entity, action, revision = null, note = "") {
+function audit(db, actor, entity, action, revision = null, note = "", at = new Date().toISOString()) {
   db.prepare("INSERT INTO audit (actor,entity,action,revision,at,note) VALUES (?,?,?,?,?,?)")
-    .run(actor, entity, action, revision, new Date().toISOString(), note);
+    .run(actor, entity, action, revision, at, note);
 }
 
 function atomic(db, work) {
@@ -113,12 +115,22 @@ function atomic(db, work) {
   }
 }
 
+function canonicalTimestamp(value) {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(value)) {
+    const date = new Date(value);
+    const expected = value.length === 20 ? value.replace(/Z$/, ".000Z") : value;
+    if (Number.isFinite(date.getTime()) && date.toISOString() === expected) return expected;
+  }
+  throw new RequestError(400, "invalid_timestamp");
+}
+
 function validatedTrip(data) {
   const validAmount = n => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 1e12;
   requireCondition(data && fields.every(field => validAmount(data[field])), 400, "invalid_amount");
   const clean = Object.fromEntries(fields.map(field => [field, data[field]]));
   clean.tripTitle = text(data.tripTitle, 250, true);
-  clean.tripDate = text(data.tripDate || "", 40);
+  clean.tripDate = textLength(data.tripDate ?? "", 40);
+  if (data.createdAt != null) clean.createdAt = canonicalTimestamp(data.createdAt);
   clean.rates = {IRT: 1};
   for (const currency of currencies.slice(1)) {
     requireCondition(validAmount(data.rates?.[currency]) && data.rates[currency] > 0, 400, "invalid_rate");
@@ -144,9 +156,17 @@ function validatedTrip(data) {
   return clean;
 }
 
-function visibleTrip(row) {
+function visibleTrip(db, row) {
   const data = JSON.parse(row.data);
-  return {...row, data, totals: calculate(data)};
+  const eventTime = db.prepare("SELECT at FROM audit WHERE entity=? AND action=? ORDER BY id DESC LIMIT 1");
+  return {
+    ...row, data, totals: calculate(data),
+    createdAt: data.createdAt ?? null,
+    submissionRequestedAt: data.submissionRequestedAt ?? null,
+    submittedAt: eventTime.get(row.id, "submitted")?.at ?? null,
+    approvedAt: eventTime.get(row.id, "approved")?.at ?? null,
+    settledAt: eventTime.get(row.id, "settled")?.at ?? null
+  };
 }
 
 async function getBody(req) {
@@ -288,31 +308,36 @@ function createServer({filename, origin, secure = true}) {
         requireCondition(user.role !== "admin", 403, "forbidden");
         const row = db.prepare("SELECT * FROM trips WHERE id=? AND (? != 'driver' OR driver_id=?)").get(id, user.role, user.id);
         requireCondition(row, 404, "not_found");
-        return visibleTrip(row);
+        return visibleTrip(db, row);
       }
       if (method === "PUT") {
         requireCondition(user.role === "driver", 403, "forbidden");
         const body = await getBody(req);
-        const data = JSON.stringify(validatedTrip(body.data));
+        const draft = validatedTrip(body.data);
+        if (body.requestedAt != null) draft.submissionRequestedAt = canonicalTimestamp(body.requestedAt);
         const vehicle = text(body.vehicleId, 36, true);
         return atomic(db, () => {
           const row = db.prepare("SELECT * FROM trips WHERE id=?").get(id);
           if (row) {
             requireCondition(row.driver_id === user.id, 404, "not_found");
-            if (row.status === "submitted" && row.revision === body.revision + 1 && row.vehicle_id === vehicle && row.data === data) {
-              return visibleTrip(row);
+            const original = JSON.parse(row.data);
+            if (original.createdAt == null) delete draft.createdAt;
+            else draft.createdAt = original.createdAt;
+            if (row.status === "submitted" && row.revision === body.revision + 1 && row.vehicle_id === vehicle && isDeepStrictEqual(original, draft)) {
+              return visibleTrip(db, row);
             }
           }
           requireCondition((row?.revision || 0) === body.revision && (!row || row.status === "rejected"), 409, "trip_conflict");
           requireCondition(db.prepare("SELECT id FROM vehicles WHERE id=? AND active=1").get(vehicle), 400, "invalid_vehicle");
           const revision = body.revision + 1;
           const now = new Date().toISOString();
+          const data = JSON.stringify(draft);
           if (row) db.prepare("UPDATE trips SET vehicle_id=?,revision=?,status='submitted',data=?,updated=? WHERE id=?")
             .run(vehicle, revision, data, now, id);
           else db.prepare("INSERT INTO trips (id,driver_id,vehicle_id,revision,status,data,updated) VALUES (?,?,?,?,'submitted',?,?)")
             .run(id, user.id, vehicle, revision, data, now);
-          audit(db, user.id, id, "submitted", revision);
-          return visibleTrip(db.prepare("SELECT * FROM trips WHERE id=?").get(id));
+          audit(db, user.id, id, "submitted", revision, "", now);
+          return visibleTrip(db, db.prepare("SELECT * FROM trips WHERE id=?").get(id));
         });
       }
       if (method === "PATCH") {
@@ -327,10 +352,11 @@ function createServer({filename, origin, secure = true}) {
           requireCondition(row, 404, "not_found");
           requireCondition(row.revision === body.revision && row.status === next[0], 409, "trip_conflict");
           const revision = row.revision + 1;
+          const now = new Date().toISOString();
           db.prepare("UPDATE trips SET status=?,revision=?,updated=?,note=? WHERE id=?")
-            .run(next[1], revision, new Date().toISOString(), note, id);
-          audit(db, user.id, id, next[1], revision, note);
-          return visibleTrip(db.prepare("SELECT * FROM trips WHERE id=?").get(id));
+            .run(next[1], revision, now, note, id);
+          audit(db, user.id, id, next[1], revision, note, now);
+          return visibleTrip(db, db.prepare("SELECT * FROM trips WHERE id=?").get(id));
         });
       }
     }

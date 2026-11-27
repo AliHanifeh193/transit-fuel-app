@@ -119,7 +119,7 @@
     addingSubmission = true;
     try {
       await storeLocal({...local, pending: [...pending, {id, userId: activeUser.id, payload: {
-        vehicleId: vehicle, revision: existing?.revision || 0, data
+        vehicleId: vehicle, revision: existing?.revision || 0, data, requestedAt: new Date().toISOString()
       }}]});
     } finally { addingSubmission = false; }
     status.textContent = "سفر برای ارسال ذخیره شد";
@@ -132,6 +132,16 @@
       element("p", "مصرف کل: " + formatNum(trip.totals.totalConsumed) + " لیتر"),
       element("p", "جمع خرید و جریمه مرزی: " + formatToman(trip.totals.borderCostsToman)),
       element("p", "جمع هزینه سفر: " + formatToman(trip.totals.totalExpensesToman)));
+    for (const [label, value] of [
+      ["تاریخ شروع سفر", formatTripDate(trip.data.tripDate)],
+      ["زمان ایجاد سفر", formatTimestamp(trip.createdAt)],
+      ["زمان درخواست ارسال از دستگاه", formatTimestamp(trip.submissionRequestedAt)],
+      ["زمان دریافت ارسال", formatTimestamp(trip.submittedAt)],
+      ["زمان تأیید حسابداری", formatTimestamp(trip.approvedAt)],
+      ["زمان ثبت تسویه", formatTimestamp(trip.settledAt)]
+    ]) {
+      if (value) view.append(element("p", label + " • " + value));
+    }
     for (const item of [...trip.data.borderFuelItems, ...trip.data.tripExpenses]) {
       const row = element("p", (item.title || item.borderName) + " | " + item.amount + " " + item.currency);
       if (item.receiptImage) row.append(button("تصویر سند", () => openImageModal(item.title, item.receiptImage)));
@@ -154,7 +164,7 @@
     if (activeUser.role === "driver" && trip.status === "rejected") {
       view.append(button("بارگذاری برای اصلاح", () => {
         if (!confirm("فرم محلی با نسخه ارسالی جایگزین شود؟")) return;
-        state = {...getDefaultState(), ...trip.data};
+        state = normalizeDraft(trip.data);
         state.plateNo = "";
         for (const entry of [...state.borderFuelItems, ...state.tripExpenses]) entry.id = crypto.randomUUID();
         editedArchiveId = null;
@@ -260,7 +270,7 @@
     if (activeUser.role === "admin") workspace.append(await administration(vehicles));
     const details = element("section", "");
     for (const trip of trips) {
-      const label = [trip.plate, trip.driver, states[trip.status], new Date(trip.updated).toLocaleString("fa-IR")].join(" | ");
+      const label = [trip.plate, trip.driver, states[trip.status], formatTimestamp(trip.updated)].join(" | ");
       workspace.append(activeUser.role === "admin" ? element("p", label) : button(label, async () =>
         describeTrip(details, await api("trips/" + trip.id))));
     }
@@ -270,7 +280,7 @@
       let after = 0;
       workspace.append(button("نمایش رویدادهای حسابرسی", async () => {
         for (const entry of await api("audit?after=" + after)) {
-          log.append(element("p", [entry.at, entry.action, entry.entity, entry.note].join(" | ")));
+          log.append(element("p", [formatTimestamp(entry.at), entry.action, entry.entity, entry.note].join(" | ")));
           after = entry.id;
         }
       }), log);

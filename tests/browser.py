@@ -128,6 +128,8 @@ def exercise(browser, origin, password, tmp):
     expect(submitted).to_be_visible()
     submitted.click()
     expect(company("تصویر سند")).to_be_visible()
+    expect(page.locator("#companyWorkspace")).to_contain_text("زمان درخواست ارسال از دستگاه")
+    expect(page.locator("#companyWorkspace")).to_contain_text("زمان دریافت ارسال")
     company("تصویر سند").click()
     expect(page.locator("#imageModal")).to_have_class("modal-backdrop open")
     page.evaluate("closeImageModal()")
@@ -137,10 +139,69 @@ def exercise(browser, origin, password, tmp):
     page.locator("#companyWorkspace").get_by_role("button", name="تأییدشده", exact=False).click()
     page.get_by_text("یادداشت حسابداری", exact=False).locator("input").fill("شماره رسید آزمون")
     company("ثبت تسویه").click()
-    expect(page.locator("#companyWorkspace").get_by_role("button", name="تسویه‌شده", exact=False)).to_be_visible()
+    settled = page.locator("#companyWorkspace").get_by_role("button", name="تسویه‌شده", exact=False)
+    expect(settled).to_be_visible()
+    settled.click()
+    expect(page.locator("#companyWorkspace")).to_contain_text("زمان تأیید حسابداری")
+    expect(page.locator("#companyWorkspace")).to_contain_text("زمان ثبت تسویه")
     assert not errors, errors
     unexpected = [entry for entry in console if not any(ok in entry for ok in ("ERR_INTERNET_DISCONNECTED", "ERR_FAILED"))]
     assert not unexpected, unexpected
+    context.close()
+
+
+def dates(browser, origin, tmp):
+    context = browser.new_context(timezone_id="Asia/Tehran", accept_downloads=True)
+    page = context.new_page()
+    page.on("dialog", lambda dialog: dialog.accept())
+    page.clock.set_fixed_time("2026-11-27T20:29:59.000Z")
+    page.goto(origin)
+    eventually(page, "storageReady")
+    expect(page.locator("#tripDate")).to_have_value("2026-11-27")
+    assert page.evaluate("state.createdAt") == "2026-11-27T20:29:59.000Z"
+    assert "۵۹" in page.locator("#tripCreatedAt").inner_text()
+    page.clock.set_fixed_time("2026-11-27T20:30:07.000Z")
+    page.reload()
+    eventually(page, "storageReady")
+    expect(page.locator("#tripDate")).to_have_value("2026-11-27")
+    assert page.evaluate("state.createdAt") == "2026-11-27T20:29:59.000Z"
+    page.locator("#tripDate").fill("2026-10-12")
+    page.evaluate("saveCurrentTripToArchive()")
+    eventually(page, "loadArchive().length === 1 && !workspaceBusy")
+    expect(page.locator("#tripDate")).to_have_value("2026-11-28")
+    tehran_display = page.evaluate("formatTimestamp(state.createdAt)")
+    archived = page.evaluate("loadArchive()[0]")
+    assert archived["savedAt"] == "2026-11-27T20:30:07.000Z"
+    assert archived["data"]["tripDate"] == "2026-10-12"
+    assert archived["data"]["createdAt"] == "2026-11-27T20:29:59.000Z"
+    assert page.evaluate("state.createdAt") == "2026-11-27T20:30:07.000Z"
+    with page.expect_download() as export:
+        page.evaluate("exportWorkspace()")
+    backup = Path(tmp) / "date-backup.json"
+    export.value.save_as(backup)
+    page.clock.set_fixed_time("2026-12-01T10:00:01.000Z")
+    page.evaluate("loadArchivedTrip(loadArchive()[0].archiveId)")
+    expect(page.locator("#tripDate")).to_have_value("2026-10-12")
+    page.locator("#tripTitle").fill("ویرایش تاریخچه")
+    page.evaluate("saveCurrentTripToArchive()")
+    eventually(page, "loadArchive()[0].data.tripTitle === 'ویرایش تاریخچه' && !workspaceBusy")
+    assert page.evaluate("loadArchive()[0].savedAt") == archived["savedAt"]
+    assert page.evaluate("loadArchive()[0].data.createdAt") == archived["data"]["createdAt"]
+    page.locator("input[accept='.json']").set_input_files(backup)
+    eventually(page, "loadArchive()[0].data.tripTitle !== 'ویرایش تاریخچه' && !workspaceBusy")
+    assert page.evaluate("loadArchive()[0]") == archived
+    context.close()
+
+    context = browser.new_context(timezone_id="America/Los_Angeles")
+    page = context.new_page()
+    page.clock.set_fixed_time("2026-11-27T20:30:07.000Z")
+    page.goto(origin)
+    eventually(page, "storageReady")
+    expect(page.locator("#tripDate")).to_have_value("2026-11-27")
+    assert page.evaluate("state.createdAt") == "2026-11-27T20:30:07.000Z"
+    assert page.evaluate("formatTimestamp(state.createdAt)") != tehran_display
+    assert page.evaluate("""formatTripDate('2026-11-27') ===
+      new Intl.DateTimeFormat('fa-IR', {dateStyle:'medium', timeZone:'UTC'}).format(new Date('2026-11-27T00:00:00Z'))""")
     context.close()
 
 
@@ -150,13 +211,17 @@ def migration(browser, origin):
     page.add_init_script("""if (!localStorage.getItem('legacy-test')) {
         localStorage.setItem('legacy-test','1');
         localStorage.setItem('transit_fuel_app_current_v5', JSON.stringify({tripTitle:'سفر قدیمی',initialFuel:950}));
-        localStorage.setItem('transit_fuel_app_archive_v5', JSON.stringify([{archiveId:'legacy',data:{tripTitle:'آرشیو قدیمی'}}]));
+        localStorage.setItem('transit_fuel_app_archive_v5', JSON.stringify([{archiveId:'legacy',savedAt:'۱۴۰۵/۹/۵، ۰۸:۱۲',data:{tripTitle:'آرشیو قدیمی',tripDate:'21.11.2026', approvedAt:'۱۴۰۵/۹/۵'}}]));
         localStorage.setItem('transit_fuel_user_feedbacks_v1', JSON.stringify([{id:'old',message:'بازخورد قدیمی'}]));
     }""")
     page.goto(origin)
     eventually(page, "storageReady")
     expect(page.locator("#tripTitle")).to_have_value("سفر قدیمی")
-    assert page.evaluate("loadArchive()[0].archiveId") == "legacy"
+    archived = page.evaluate("loadArchive()[0]")
+    assert archived["savedAt"] == "۱۴۰۵/۹/۵، ۰۸:۱۲"
+    assert archived["data"]["tripDate"] == "21.11.2026"
+    assert archived["data"]["approvedAt"] == "۱۴۰۵/۹/۵"
+    assert archived["data"]["createdAt"] is None
     assert page.evaluate("loadUserFeedbacks()[0].id") == "old"
     page.locator("#tripTitle").fill("پس از مهاجرت")
     eventually(page, "document.getElementById('lastSavedLabel').textContent.includes('ذخیره خودکار')")
@@ -201,6 +266,8 @@ if __name__ == "__main__":
                 browser = playwright.chromium.launch(executable_path=chromium, args=["--no-proxy-server"])
                 migration(browser, origin)
                 print("PASS: localStorage migration and IndexedDB precedence", flush=True)
+                dates(browser, origin, temp)
+                print("PASS: local date, manual entry, midnight, refresh, archive edit/restore and timezone display", flush=True)
                 exercise(browser, origin, password, temp)
                 print("PASS: RTL viewports, receipts, reports, archive, backup/restore, offline queue and settlement", flush=True)
         finally:

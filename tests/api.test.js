@@ -60,19 +60,31 @@ test("company workflow with isolated accounts, idempotent submission, conflict d
   const id = randomUUID(), route = "trips/" + id;
   const data = Object.fromEntries(fields.map(field => [field, 0]));
   Object.assign(data, {initialFuel: 100, companyQuota: 60, idleFuel: 20, fuelSellPriceTry: 10,
-    tripTitle: "آزمایش", tripDate: "", rates: {TRY: 100, USD: 200, EUR: 300, AZN: 50},
+    tripTitle: "آزمایش", tripDate: "2026-11-27", createdAt: "2026-11-26T21:00:05.000Z", rates: {TRY: 100, USD: 200, EUR: 300, AZN: 50},
     borderFuelItems: [{type: "FINE", zone: "IRAN", amount: 1, currency: "TRY", liters: 0, borderName: "مرز"}],
     tripExpenses: [{scope: "INSIDE_IRAN", title: "رسید", amount: 5, currency: "TRY", receiptImage: "data:image/png;base64,AAAA"}]});
+  const requestedAt = "2026-11-26T21:30:27.000Z";
   const put = (revision, status = 200, input = data, cookie = driver) =>
-    call(route, status, {method: "PUT", cookie, data: {revision, data: input, vehicleId}});
+    call(route, status, {method: "PUT", cookie, data: {revision, data: input, vehicleId, requestedAt}});
   const action = (action, revision, status = 200, cookie = accounts, note = "") =>
     call(route, status, {method: "PATCH", cookie, data: {action, revision, note}});
   await put(0, 400, {...data, idleFuel: -1});
   await put(0, 400, {...data, rates: {...data.rates, TRY: 0}});
+  await put(0, 400, {...data, createdAt: "2026-02-30T21:00:05Z"});
+  await put(0, 400, {...data, createdAt: "2026-11-26T21:00:05"});
   const submitted = (await put(0)).value;
+  assert.equal(submitted.data.tripDate, "2026-11-27");
+  assert.equal(submitted.createdAt, data.createdAt);
+  assert.equal(submitted.submissionRequestedAt, requestedAt);
+  assert.equal(submitted.submittedAt, submitted.updated);
+  assert.notEqual(submitted.submittedAt, requestedAt);
+  assert.equal(submitted.approvedAt, null);
+  assert.equal(submitted.settledAt, null);
   assert.equal(submitted.totals.netPayoutToman, 39_500);
   assert.match(submitted.data.tripExpenses[0].receiptImage, /^data:image\/png/);
-  assert.equal((await put(0)).value.revision, 1);
+  const retried = (await put(0)).value;
+  assert.equal(retried.revision, 1);
+  assert.equal(retried.submittedAt, submitted.submittedAt);
   await put(0, 404, data, other);
   assert.deepEqual((await call("trips", 200, {cookie: other})).value, []);
   await call(route, 404, {cookie: other});
@@ -81,14 +93,21 @@ test("company workflow with isolated accounts, idempotent submission, conflict d
   await action("review", 1);
   await action("approve", 1, 409);
   await action("reject", 2, 200, accounts, "اصلاح");
-  await put(3);
+  const resubmitted = (await put(3, 200, {...data, createdAt: "2000-01-01T00:00:00Z"})).value;
+  assert.equal(resubmitted.createdAt, submitted.createdAt);
   await action("review", 4);
-  await action("approve", 5);
+  const approved = (await action("approve", 5)).value;
   await action("settle", 6, 400);
-  assert.equal((await action("settle", 6, 200, accounts, "مرجع ۱۲۳")).value.status, "settled");
+  const settled = (await action("settle", 6, 200, accounts, "مرجع ۱۲۳")).value;
+  assert.equal(settled.status, "settled");
+  assert.equal(settled.approvedAt, approved.updated);
+  assert.equal(settled.settledAt, settled.updated);
+  assert.equal(settled.submittedAt, resubmitted.submittedAt);
   await put(7, 409);
   const audit = (await call("audit", 200, {cookie: accounts})).value.filter(row => row.entity === id);
   assert.deepEqual(audit.map(row => row.revision), [1, 2, 3, 4, 5, 6, 7]);
+  assert.deepEqual([settled.submittedAt, settled.approvedAt, settled.settledAt], [audit[3].at, audit[5].at, audit[6].at]);
+  assert.ok(audit.every(({at}) => new Date(at).toISOString() === at));
   await call("audit", 403, {cookie: driver});
   await post("feedback", {message: "آزمایش بازخورد"}, driver);
   assert.equal((await call("feedback", 200, {cookie: admin})).value.length, 1);

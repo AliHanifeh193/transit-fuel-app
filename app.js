@@ -69,11 +69,21 @@ function closeInstallGuideModal() {
 }
 
 
-function getDefaultState() {
+function localTripDate(now) {
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+function newTripDates(now = new Date()) {
+  return {tripDate: localTripDate(now), createdAt: now.toISOString()};
+}
+
+function getDefaultState(dates = newTripDates()) {
   return {
     tripTitle: "نمونه آموزشی: بازرگان ➔ مرسین ➔ رازی",
     plateNo: "نمونه آموزشی",
-    tripDate: "21.11.2026",
+    ...dates,
     initialFuel: 1240,
     companyQuota: 1100,
     extraOutboundFuel: 20,
@@ -110,7 +120,7 @@ const FEEDBACK_STORAGE_KEY = "transit_fuel_user_feedbacks_v1";
 
 function normalizeDraft(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) throw Error("Invalid draft");
-  const defaults = getDefaultState();
+  const defaults = getDefaultState({tripDate: "", createdAt: null});
   const draft = {...defaults, ...data, rates: {...defaults.rates, ...data.rates}};
   for (const key of ["borderFuelItems", "tripExpenses"]) {
     if (!Array.isArray(draft[key]) || draft[key].some(item => !item || typeof item !== "object")) {
@@ -252,20 +262,25 @@ function convertToToman(amount, currency) {
   return TransitCalc.convert(state, amount, currency);
 }
 
-function getNowSystemDateTime() {
-  try {
-    return new Date().toLocaleString("fa-IR", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  } catch (e) {
-    return new Date().toLocaleString();
-  }
+const persianTimestamp = new Intl.DateTimeFormat("fa-IR", {
+  dateStyle: "medium", timeStyle: "medium"
+});
+const persianTripDate = new Intl.DateTimeFormat("fa-IR", {
+  dateStyle: "medium", timeZone: "UTC"
+});
+
+function formatTimestamp(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}T.*(?:Z|[+-]\d{2}:\d{2})$/.test(value)) return value || "";
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? persianTimestamp.format(date) : value;
 }
 
+function formatTripDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return value || "";
+  const date = new Date(value + "T00:00:00Z");
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value
+    ? persianTripDate.format(date) : value;
+}
 
 let editingTarget = null;
 
@@ -281,8 +296,8 @@ function applyEditedRecordIfAny(type, newItem) {
     ...oldItem,
     ...newItem,
     id: oldItem.id,
-    createdAt: oldItem.createdAt || getNowSystemDateTime(),
-    updatedAt: getNowSystemDateTime()
+    createdAt: oldItem.createdAt,
+    updatedAt: new Date().toISOString()
   };
   editingTarget = null;
   persistCurrentState();
@@ -334,7 +349,7 @@ function updateApprovalAndPayoutBanner(metrics) {
   const tripNo = (state && state.tripNumber) ? state.tripNumber : "---";
   const status = state.approvalStatus ? "سابقه محلی: " + state.approvalStatus : "پیش‌نویس محلی";
   const approver = (state && state.approvedBy) ? " | تأییدکننده: " + state.approvedBy : "";
-  const appDate = (state && state.approvedAt) ? " | تاریخ: " + state.approvedAt : "";
+  const appDate = (state && state.approvedAt) ? " | تاریخ: " + formatTimestamp(state.approvedAt) : "";
   const note = (state && state.approvalNote) ? " | یادداشت: " + state.approvalNote : "";
 
   const badge = document.getElementById("approvalBadge");
@@ -388,8 +403,8 @@ function getSanitizedTextForPrivacy(rawText, allowPrivate) {
 function getReportTextContent() {
   const m = calculateMetrics();
   const title = (state && state.tripTitle) || "سفر ترانزیتی";
-  const dateStr = (state && state.tripDate) || "نامشخص";
-  const nowStr = typeof getNowSystemDateTime === "function" ? getNowSystemDateTime() : new Date().toLocaleString("fa-IR");
+  const dateStr = formatTripDate(state.tripDate) || "نامشخص";
+  const nowStr = formatTimestamp(new Date().toISOString());
   const rates = (state && state.rates) || {};
 
   const lines = [
@@ -398,6 +413,7 @@ function getReportTextContent() {
     "========================================",
     "📌 عنوان سفر: " + title,
     "📅 تاریخ سفر: " + dateStr,
+    "زمان ایجاد سفر: " + (formatTimestamp(state.createdAt) || "ثبت نشده"),
     "🕒 زمان تهیه گزارش: " + nowStr,
     "----------------------------------------",
     "⛽ خلاصه وضعیت سوخت:",
@@ -422,7 +438,7 @@ function getReportTextContent() {
       const cur = it.currency || "IRT";
       const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
       const tomanVal = toTomanAmount(it.amount, cur);
-      const timePart = it.createdAt ? " [" + it.createdAt + "]" : "";
+      const timePart = it.createdAt ? " [" + formatTimestamp(it.createdAt) + "]" : "";
       lines.push(`  ${i + 1}. ${it.borderName || "مرز"} | ${formatNum(it.liters || 0, 2)} لیتر | ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel} (${formatToman(tomanVal)})${timePart}`);
     });
   }
@@ -437,7 +453,7 @@ function getReportTextContent() {
       const cur = it.currency || "IRT";
       const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
       const tomanVal = toTomanAmount(it.amount, cur);
-      const timePart = it.createdAt ? " [" + it.createdAt + "]" : "";
+      const timePart = it.createdAt ? " [" + formatTimestamp(it.createdAt) + "]" : "";
       lines.push(`  ${i + 1}. ${it.title || "هزینه"} | ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel} (${formatToman(tomanVal)})${timePart}`);
     });
   }
@@ -548,8 +564,8 @@ function shareOrDownloadPngReport() {
   const includePrivate = askDriverPrivateDataPermission();
   const m = calculateMetrics();
   const title = (state && state.tripTitle) || "سفر ترانزیتی";
-  const dateStr = (state && state.tripDate) || "نامشخص";
-  const nowStr = typeof getNowSystemDateTime === "function" ? getNowSystemDateTime() : new Date().toLocaleString("fa-IR");
+  const dateStr = formatTripDate(state.tripDate) || "نامشخص";
+  const nowStr = formatTimestamp(new Date().toISOString());
 
   const canvas = document.createElement("canvas");
   canvas.width = 960;
@@ -657,7 +673,7 @@ function showToast(msg) {
 function populateFormFromState() {
   document.getElementById("tripTitle").value = state.tripTitle;
   document.getElementById("plateNo").value = state.plateNo;
-  document.getElementById("tripDate").value = state.tripDate;
+  document.getElementById("tripDate").value = state.tripDate ?? "";
   document.getElementById("initialFuel").value = state.initialFuel;
   document.getElementById("companyQuota").value = state.companyQuota;
   document.getElementById("fuelSellPriceTry").value = state.fuelSellPriceTry;
@@ -680,7 +696,7 @@ function populateFormFromState() {
 function readFormIntoState() {
   state.tripTitle = document.getElementById("tripTitle").value.trim() || "سفر بدون عنوان";
   state.plateNo = document.getElementById("plateNo").value.trim();
-  state.tripDate = document.getElementById("tripDate").value.trim();
+  state.tripDate = document.getElementById("tripDate").value;
   state.initialFuel = TransitCalc.amount(document.getElementById("initialFuel").value);
   state.extraOutboundFuel = TransitCalc.amount(document.getElementById("extraOutboundFuel")?.value);
   state.extraReturnFuel = TransitCalc.amount(document.getElementById("extraReturnFuel")?.value);
@@ -707,7 +723,7 @@ function readFormIntoState() {
 function persistCurrentState() {
   if (!storageReady || workspaceBusy) return;
   TransitStorage.save({draft: state, editedArchiveId}).then(() => {
-    const time = new Date().toLocaleTimeString("fa-IR", {hour: "2-digit", minute: "2-digit"});
+    const time = new Date().toLocaleTimeString("fa-IR", {hour: "2-digit", minute: "2-digit", second: "2-digit"});
     document.getElementById("lastSavedLabel").textContent = "آخرین ذخیره خودکار: " + time;
   }).catch(storageError);
 }
@@ -729,6 +745,8 @@ function summarizeCurrencyMap(items) {
 }
 
 function renderAll() {
+  document.getElementById("tripDateDisplay").textContent = formatTripDate(state.tripDate);
+  document.getElementById("tripCreatedAt").textContent = formatTimestamp(state.createdAt) || "ثبت نشده";
   const m = calculateMetrics();
   const missingRates = TransitCalc.currencies.slice(1).filter(currency => !TransitCalc.rate(state, currency));
   document.getElementById("rateStatus").textContent = missingRates.length ? "نرخ وارد نشده: " + missingRates.join("، ") : "";
@@ -820,7 +838,7 @@ function addBorderFuelItem() {
     amount,
     currency,
     liters,
-    createdAt: getNowSystemDateTime()
+    createdAt: new Date().toISOString()
   });
 
   document.getElementById("bfBorderName").value = "";
@@ -860,7 +878,7 @@ function renderBorderFuelTable() {
       <tr>
         <td>${zoneBadge}</td>
         <td>${typeBadge}</td>
-        <td>${escapeHtml(item.borderName)} <button type="button" data-action="editRecordByType" data-arg0="border" data-arg1="${idx}" style="margin-right:6px;padding:2px 6px;font-size:0.72rem;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#38bdf8;cursor:pointer;">✏️ ویرایش</button>${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
+        <td>${escapeHtml(item.borderName)} <button type="button" data-action="editRecordByType" data-arg0="border" data-arg1="${idx}" style="margin-right:6px;padding:2px 6px;font-size:0.72rem;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#38bdf8;cursor:pointer;">✏️ ویرایش</button>${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(formatTimestamp(item.createdAt))}</div>` : ""}</td>
         <td class="num-ltr">${item.liters > 0 ? formatNum(item.liters, 2) + " L" : "—"}</td>
         <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
         <td class="num-ltr">${formatToman(tomanVal)}</td>
@@ -963,7 +981,7 @@ function addTripExpenseItem() {
     title,
     currency,
     amount,
-    createdAt: getNowSystemDateTime(),
+    createdAt: new Date().toISOString(),
     receiptImage: pendingReceiptDataUrl || "",
     receiptName: pendingReceiptName || "سند هزینه"
   });
@@ -1005,7 +1023,7 @@ function renderTripExpenseTable() {
     return `
       <tr>
         <td>${scopeBadge}</td>
-        <td>${escapeHtml(item.title)} <button type="button" data-action="editRecordByType" data-arg0="expense" data-arg1="${idx}" style="margin-right:6px;padding:2px 6px;font-size:0.72rem;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#38bdf8;cursor:pointer;">✏️ ویرایش</button>${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(item.createdAt)}</div>` : ""}</td>
+        <td>${escapeHtml(item.title)} <button type="button" data-action="editRecordByType" data-arg0="expense" data-arg1="${idx}" style="margin-right:6px;padding:2px 6px;font-size:0.72rem;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#38bdf8;cursor:pointer;">✏️ ویرایش</button>${item.createdAt ? `<div style="font-size:0.7rem;color:#94a3b8;">🕒 ${escapeHtml(formatTimestamp(item.createdAt))}</div>` : ""}</td>
         <td class="num-ltr">${formatNum(item.amount, item.currency === "IRT" ? 0 : 2)} ${CURRENCY_LABELS[item.currency]}</td>
         <td class="num-ltr">${formatToman(tomanVal)}</td>
         <td>${receiptHtml}</td>
@@ -1065,7 +1083,7 @@ function renderSeparateSummaries(m) {
 function emptyDraft() {
   return {
     ...Object.fromEntries(TransitCalc.fields.map(field => [field, 0])),
-    tripTitle: "", plateNo: "", tripDate: "",
+    tripTitle: "", plateNo: "", ...newTripDates(),
     rates: {IRT: 1, TRY: 0, USD: 0, EUR: 0, AZN: 0},
     borderFuelItems: [], tripExpenses: []
   };
@@ -1080,9 +1098,12 @@ async function saveCurrentTripToArchive() {
   const expTotalToman = state.tripExpenses.reduce((s, x) => s + convertToToman(x.amount, x.currency), 0);
 
   const archive = loadArchive();
+  const index = archive.findIndex(entry => entry.archiveId === editedArchiveId);
+  const previous = archive[index];
   const snapshot = {
+    ...previous,
     archiveId: editedArchiveId || crypto.randomUUID(),
-    savedAt: new Date().toLocaleString("fa-IR"),
+    savedAt: previous ? previous.savedAt : new Date().toISOString(),
     summary: {
       totalConsumed: m.totalConsumed,
       companySurplus: m.companySurplus,
@@ -1096,7 +1117,6 @@ async function saveCurrentTripToArchive() {
     data: JSON.parse(JSON.stringify(state))
   };
 
-  const index = archive.findIndex(entry => entry.archiveId === editedArchiveId);
   if (index === -1) archive.unshift(snapshot);
   else archive.splice(index, 1, snapshot);
   workspaceBusy = true;
@@ -1128,7 +1148,7 @@ function openArchiveModal() {
               ${escapeHtml(d.tripTitle || "سفر")} <span style="font-size: 0.76rem; color: #94a3b8;">(${escapeHtml(d.plateNo || "")})</span>
             </div>
             <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 3px;">
-              تاریخ ثبت: ${escapeHtml(entry.savedAt || "")} | مصرف: ${formatNum(s.totalConsumed || 0, 2)} لیتر
+              تاریخ آرشیو: ${escapeHtml(formatTimestamp(entry.savedAt))} | مصرف: ${formatNum(s.totalConsumed || 0, 2)} لیتر
             </div>
             <div style="font-size: 0.78rem; color: #7dd3fc; margin-top: 3px;">
               تسویه شرکت: ${formatNum(s.companyValueTry || 0, 0)} لیر (${formatToman(s.companyValueToman || 0)}) | سهم شخصی: ${formatNum(s.personalFuel || 0, 2)} لیتر
@@ -1235,7 +1255,7 @@ function copyFullReport() {
 
   const lines = [
     `🚛 گزارش تسویه سفر: ${state.tripTitle}`,
-    `پلاک: ${state.plateNo} | تاریخ: ${state.tripDate}`,
+    `پلاک: ${state.plateNo} | تاریخ: ${formatTripDate(state.tripDate)}`,
     `────────────────────`,
     `⛽ سوخت اولیه: ${formatNum(state.initialFuel, 2)} لیتر | سهمیه شرکت: ${formatNum(state.companyQuota, 2)} لیتر`,
     `📉 مصرف کل: ${formatNum(m.totalConsumed, 2)} لیتر (رفت ${formatNum(m.outboundFuel, 1)} + خالی ${formatNum(m.emptyFuel, 1)} + درجا ${formatNum(m.idleFuel, 1)} + برگشت ${formatNum(m.returnFuel, 1)})`,
@@ -1327,7 +1347,7 @@ function renderUserFeedbacks() {
           ${item.tripNo ? `<span style="font-size: 0.76rem; color: #7dd3fc;">(سفر: ${escapeHtml(item.tripNo)})</span>` : ""}
         </div>
         <div style="font-size: 0.84rem; color: #e2e8f0; margin-top: 4px; white-space: pre-wrap;">${escapeHtml(item.message || "")}</div>
-        <div style="font-size: 0.74rem; color: #94a3b8; margin-top: 4px;">${escapeHtml(item.createdAt || "")}</div>
+        <div style="font-size: 0.74rem; color: #94a3b8; margin-top: 4px;">${escapeHtml(formatTimestamp(item.createdAt))}</div>
       </div>
       <div style="display: flex; gap: 6px; flex-wrap: wrap;">
         <button type="button" class="btn btn-danger-soft" style="padding: 6px 10px; font-size: 0.78rem;" data-action="deleteUserFeedback" data-arg0="${actionArg(item.id)}">حذف</button>
@@ -1355,7 +1375,7 @@ async function submitUserFeedback() {
     author: ((authorEl && authorEl.value) || "").trim() || "کاربر برنامه",
     tripNo: ((tripNoEl && tripNoEl.value) || "").trim(),
     message,
-    createdAt: new Date().toLocaleString("fa-IR")
+    createdAt: new Date().toISOString()
   });
   try { await saveUserFeedbacks(list); } catch (error) { storageError(error); return; }
   if (msgEl) msgEl.value = "";
@@ -1380,7 +1400,7 @@ function exportFeedbacksTxt() {
   }
   const lines = ["گزارش انتقادات و پیشنهادات کاربران", "========================================"];
   list.forEach((it, idx) => {
-    lines.push(`${idx + 1}. [${it.type}] ${it.author} | سفر: ${it.tripNo || "-"} | زمان: ${it.createdAt}`);
+    lines.push(`${idx + 1}. [${it.type}] ${it.author} | سفر: ${it.tripNo || "-"} | زمان: ${formatTimestamp(it.createdAt)}`);
     lines.push(`   متن: ${it.message}`);
     lines.push("----------------------------------------");
   });
