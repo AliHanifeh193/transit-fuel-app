@@ -67,7 +67,12 @@ test("SMS login for drivers and mandatory password-plus-SMS for staff", async t 
   const adminChallenge=await request("login","POST",{username:"admin",password});
   assert.equal(adminChallenge.body.mfaRequired,true);
   assert.equal((await request("auth/verify","POST",{challengeId:adminChallenge.body.challengeId,code:sent.at(-1).code})).body.role,"admin");
-  assert.equal((await request("auth/request","POST",{phone:"+905321234567"})).body.challengeId,undefined,"staff cannot use driver OTP");
+  const previousSent = sent.length;
+  const unknown = await request("auth/request","POST",{phone:"+905321234567"});
+  assert.equal(unknown.status,200);
+  assert.match(unknown.body.challengeId,/^[a-f0-9]{64}$/);
+  assert.equal(sent.length,previousSent,"staff cannot receive a driver OTP");
+  assert.equal((await request("auth/verify","POST",{challengeId:unknown.body.challengeId,code:"123456"})).status,401);
 });
 
 test("SMS delivery failure does not create a session or reveal an OTP",async t=>{
