@@ -1,7 +1,7 @@
 "use strict";
 
 const PREFIX = "transit-fuel-pwa-";
-const CACHE_NAME = PREFIX + "1.0.0-dates";
+const CACHE_NAME = PREFIX + "1.0.1-sms-mfa";
 const ASSETS = [
   "./", "./index.html", "./manifest.json", "./calculations.js", "./storage.js",
   "./company.js", "./app.js", "./privacy.html", "./icon-192.png", "./icon-512.png",
