@@ -1459,6 +1459,22 @@
         <label>رمز عبور <input name="password" type="password" autocomplete="current-password" required></label>
         <button>ورود</button>
       </form>
+      <form id="driverPhoneLogin" hidden>
+        <h3>ورود راننده با پیامک</h3>
+        <label>شماره موبایل ایران یا ترکیه
+          <input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+989121234567 یا +905321234567" required>
+        </label>
+        <button type="submit">ارسال کد ورود</button>
+      </form>
+      <form id="companyOtp" hidden>
+        <h3>تأیید کد یک‌بارمصرف</h3>
+        <p id="otpHint"></p>
+        <label>کد شش‌رقمی
+          <input name="code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
+        </label>
+        <button type="submit">تأیید و ورود</button>
+        <button type="button" id="cancelOtp">بازگشت</button>
+      </form>
       <div id="companyWorkspace" hidden></div>
     </section>
     <script src="calculations.js"></script>
