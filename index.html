@@ -724,6 +724,24 @@
       margin: 4px;
     }
     #companyPanel button { margin: 4px; }
+    /* Accessible, wrapped login layout: prevents clipped fields on narrow screens. */
+    #companyPanel #companyLogin,
+    #companyPanel #driverPhoneLogin,
+    #companyPanel #companyOtp {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+      align-items: end;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    #companyPanel #companyLogin[hidden],
+    #companyPanel #driverPhoneLogin[hidden],
+    #companyPanel #companyOtp[hidden] { display: none; }
+    #companyPanel form > h3, #companyPanel form > p { grid-column: 1 / -1; }
+    #companyPanel form > label { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    #companyPanel form > label > input { width: 100%; margin: 0; box-sizing: border-box; }
+    #companyPanel form > button { min-height: 42px; justify-self: start; }
+    #companyPanel #companyStatus { min-height: 1.5em; line-height: 1.8; }
   </style>
 
     <style id="scrollFixStyle">
