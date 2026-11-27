@@ -15,6 +15,14 @@ function assertSmsSettings(env = process.env) {
       || !/^[A-Za-z][A-Za-z0-9_]{0,49}$/.test(param)) {
     throw Error("smsir_not_configured");
   }
+  // Sandbox template 123456 must only run with an explicitly declared test environment.
+  // Rejecting it by default prevents accidental activation on a real installation.
+  if (templateId === 123456 && env.TRANSIT_SMS_ENV !== "sandbox") {
+    throw Error("smsir_sandbox_requires_explicit_mode");
+  }
+  if (env.TRANSIT_SMS_ENV === "sandbox" && templateId !== 123456) {
+    throw Error("smsir_sandbox_template_mismatch");
+  }
   // Turkey is intentionally independent. Never silently send Turkish OTPs to SMS.ir.
   return {apiKey, templateId, param};
 }
