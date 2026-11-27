@@ -33,6 +33,7 @@ function openDatabase(filename) {
       role TEXT NOT NULL CHECK(role IN ('driver','admin','accounting')),
       credential TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1
     );
+    CREATE TABLE IF NOT EXISTS auth_settings (key TEXT PRIMARY KEY,value TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS phone_accounts (user_id TEXT PRIMARY KEY REFERENCES users(id),phone TEXT UNIQUE NOT NULL);
     CREATE TABLE IF NOT EXISTS otp_challenges (id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),purpose TEXT NOT NULL,salt TEXT NOT NULL,code_hash TEXT NOT NULL,expires INTEGER NOT NULL,attempts INTEGER NOT NULL,created INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (
@@ -194,6 +195,12 @@ async function getBody(req) {
 function createServer({filename, origin, secure = true, authMode = "password", sendSms = webhookSms}) {
   const db = openDatabase(filename);
   requireCondition(["password","sms"].includes(authMode),500,"invalid_auth_mode");
+  // Sessions granted under password-only mode must never survive an SMS-MFA cutover.
+  const previousMode=db.prepare("SELECT value FROM auth_settings WHERE key='mode'").get()?.value;
+  if(previousMode!==authMode) atomic(db,()=>{
+    db.prepare("DELETE FROM sessions").run();
+    db.prepare("INSERT INTO auth_settings(key,value) VALUES('mode',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(authMode);
+  });
   const attempts=new Map(), otpRequests=new Map();
   const hash = token => createHash("sha256").update(token).digest("hex");
   const cookie = secure ? "__Host-transit" : "transit";
@@ -259,7 +266,7 @@ function createServer({filename, origin, secure = true, authMode = "password", s
       requireCondition(phone,400,"invalid_phone");
       throttle("driver:"+req.socket.remoteAddress+":"+phone);
       const account=db.prepare(`SELECT u.id,u.name,u.role FROM users u JOIN phone_accounts p ON p.user_id=u.id WHERE p.phone=? AND u.role='driver' AND u.active=1`).get(phone);
-      if(!account)return{requested:true};
+      if(!account)return{requested:true,challengeId:randomBytes(32).toString("hex"),phoneMasked:maskPhone(phone),expiresIn:180};
       return{...(await issueOtp(account,"driver")),requested:true};
     }
     if(authMode==="sms"&&method==="POST"&&route==="/api/auth/verify"){
