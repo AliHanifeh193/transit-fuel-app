@@ -14,30 +14,55 @@
   }
   const lang=selected();
   const index=order.indexOf(lang);
-  const prefixKeys = ["📂 آرشیو سفرها (","مانده باک:","آخرین ذخیره خودکار:","مصرف کل سفر:","اضافه‌سوخت شرکت (قابل فروش):","سهم سوخت شخصی شما:","کل باقیمانده واقعی باک:"];
+  // Prefixes apply only to fixed interface messages followed by computed values.
+  const prefixKeys = ["📂 آرشیو سفرها (","مانده باک:","آخرین ذخیره خودکار:","مصرف کل سفر:","اضافه‌سوخت شرکت (قابل فروش):","سهم سوخت شخصی شما:","کل باقیمانده واقعی باک:","زمان ایجاد سفر:","کل لیتر ثبت‌شده:","تعداد اسناد تصویری:","جزئیات ارزها:","ارزها:","کد تأیید به ","خالص دریافتی راننده: ","در صف ارسال: "];
+  const digitsFa="۰۱۲۳۴۵۶۷۸۹", digitsAr="٠١٢٣٤٥٦٧٨٩";
+  function digits(value){
+    return String(value).replace(/[0-9۰-۹٠-٩]/g,ch=>{
+      const n=ch.charCodeAt(0);
+      const i=n>=0x06f0&&n<=0x06f9?n-0x06f0:n>=0x0660&&n<=0x0669?n-0x0660:n-48;
+      return lang==="fa"?digitsFa[i]:lang==="ar"?digitsAr[i]:String(i);
+    });
+  }
   function t(text){
     if(index<0 || typeof text!=="string")return text;
-    if(translations[text])return translations[text][index] || text;
+    if(Object.hasOwn(translations,text))return translations[text][index] || text;
     for(const key of prefixKeys){
-      if(text.startsWith(key))return translations[key]?.[index] + text.slice(key.length);
+      if(text.startsWith(key) && translations[key]?.[index])return translations[key][index] + text.slice(key.length);
     }
     return text;
   }
-  // Translate only complete static UI text nodes, never input values or financial content.
+  function translatedText(raw){
+    const trimmed=raw.trim();
+    if(!trimmed)return raw;
+    const changed=t(trimmed);
+    return digits(changed===trimmed?raw:raw.replace(trimmed,changed));
+  }
+  const attributeNames=["placeholder","title","aria-label"];
+  // Input values are never altered. Text selection, IDs, API payloads and financial storage remain unchanged.
   function translateTree(root){
-    if(lang==="fa") return;
+    if(lang==="fa" || !root)return;
+    const nodes=[];
+    if(root.nodeType===1)nodes.push(root,...root.querySelectorAll("*"));
+    for(const el of nodes){
+      if(el.closest("[data-no-translate]"))continue;
+      for(const name of attributeNames){
+        if(el.hasAttribute(name)){
+          const old=el.getAttribute(name),next=translatedText(old);
+          if(next!==old)el.setAttribute(name,next);
+        }
+      }
+    }
     const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
     const changes=[];
     while(walker.nextNode()){
-      const n=walker.currentNode;
-      const el=n.parentElement;
-      if(!el || /^(SCRIPT|STYLE|TEXTAREA|OPTION|CODE|PRE|INPUT)$/i.test(el.tagName) || el.closest("[data-no-translate]"))continue;
-      const raw=n.nodeValue,trimmed=raw.trim();
-      if(trimmed && t(trimmed)!==trimmed){
-        changes.push([n,raw.replace(trimmed,t(trimmed))]);
-      }
+      const node=walker.currentNode, el=node.parentElement;
+      if(!el || /^(SCRIPT|STYLE|TEXTAREA|CODE|PRE|INPUT)$/i.test(el.tagName) ||
+         el.closest("[data-no-translate]") || el.closest("[contenteditable]"))continue;
+      const value=translatedText(node.nodeValue);
+      if(value!==node.nodeValue)changes.push([node,value]);
     }
-    for(const [node,value] of changes) node.nodeValue=value;
+    for(const [node,value] of changes)node.nodeValue=value;
   }
   function showSelector(){
     if(document.getElementById("transitLanguageSelect"))return;
@@ -81,7 +106,7 @@
     }
     window.dispatchEvent(new CustomEvent("transit-language-ready",{detail:{language:lang}}));
   }
-  global.TransitI18n=Object.freeze({language:lang,languages,t});
+  global.TransitI18n=Object.freeze({language:lang,languages,t,digits});
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});
   else boot();
 })(window);
