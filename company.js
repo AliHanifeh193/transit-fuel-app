@@ -202,9 +202,10 @@
     const role = select(Object.entries(roles)), phone = input("tel", 20);
     phone.placeholder = "+989121234567 / +905321234567";
     const plate = input("text", 100);
-    section.append(element("h3", "مدیریت کاربران و ناوگان"),
+    section.append(element("h3", "مدیریت کاربران و ناوگان"));
+    controls.append(
       field("نام کاربری", username), field("نام", name), field("رمز اولیه مدیر/حسابدار", password),
-       field("نقش", role), field("شماره موبایل ثبت‌شده", phone),
+      field("نقش", role), field("شماره موبایل ثبت‌شده", phone),
       button("ایجاد کاربر", async () => {
         await api("users", "POST", {
            username: username.value, name: name.value, role: role.value, phone: phone.value,
@@ -216,6 +217,9 @@
         await api("vehicles", "POST", {plate: plate.value});
         await refresh();
       }));
+    section.append(controls);
+    const roster = element("div", "");
+    roster.className = "company-admin-roster";
     for (const [resource, entries] of [["users", await api("users")], ["vehicles", vehicles]]) {
       for (const entry of entries) {
         const line = element("div", entry.plate || entry.name + " (" + roles[entry.role] + ")" +
