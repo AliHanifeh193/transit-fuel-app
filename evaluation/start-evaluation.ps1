@@ -27,6 +27,6 @@ Write-Host "URL: $origin"
 Write-Host "DATA_DIRECTORY: $dataDir"
 Write-Host 'No SMS. Manager browser sign-in is not yet validated.'
 Write-Host 'Keep this window open; Ctrl+C stops the local server.'
-Start-Process $origin
+Write-Host 'Open the URL above manually in a browser on this computer.'
 & $node.Source (Join-Path $root 'server\app.js')
 if($LASTEXITCODE -ne 0){throw "EVALUATION_SERVER_EXITED: $LASTEXITCODE"}
