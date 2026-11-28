@@ -17,12 +17,22 @@ try {
     exit 1
   }
   Write-Host 'DATABASE_PASSWORD_MATCH: YES'
-  Set-Clipboard -Value $plain
+  # SetText uses exact Unicode characters; Set-Clipboard can append line breaks.
+  Add-Type -AssemblyName System.Windows.Forms
+  [System.Windows.Forms.Clipboard]::SetText($plain, [System.Windows.Forms.TextDataFormat]::UnicodeText)
+  $clipboardReadback=[System.Windows.Forms.Clipboard]::GetText([System.Windows.Forms.TextDataFormat]::UnicodeText)
+  if(-not [string]::Equals($clipboardReadback,$plain,[System.StringComparison]::Ordinal)) {
+    [System.Windows.Forms.Clipboard]::Clear()
+    throw 'CLIPBOARD_TEXT_NOT_IDENTICAL'
+  }
+  Write-Host 'CLIPBOARD_EXACT_MATCH: YES'
+  Write-Host ('VERIFIED_PASSWORD_LENGTH: '+$plain.Length)
   Write-Host 'PASSWORD_COPIED_TEMPORARILY. Paste into Firefox password field with Ctrl+V.'
+  Write-Host 'In Firefox, check password length shown by input diagnostics before pressing login.'
   Write-Host 'Do NOT copy, paste, or share this password anywhere else.'
   Read-Host 'After pasting into Firefox, return here and press Enter to CLEAR clipboard' | Out-Null
 } finally {
-  try { Set-Clipboard -Value '' } catch {}
+  try { [System.Windows.Forms.Clipboard]::Clear() } catch { try { Set-Clipboard -Value '' } catch {} }
   $plain=$null
   if($ptr -ne [IntPtr]::Zero){[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)}
   if($secure){$secure.Dispose()}
