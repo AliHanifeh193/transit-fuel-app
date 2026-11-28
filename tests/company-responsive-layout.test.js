@@ -1,0 +1,20 @@
+"use strict";
+const {test}=require("node:test");
+const assert=require("node:assert/strict");
+const fs=require("node:fs");
+const path=require("node:path");
+const vm=require("node:vm");
+const root=path.resolve(__dirname,"..");
+test("management workspace uses separated toolbar, responsive admin controls and roster",()=>{
+  const js=fs.readFileSync(path.join(root,"company.js"),"utf8");
+  const html=fs.readFileSync(path.join(root,"index.html"),"utf8");
+  new vm.Script(js);
+  assert.match(js,/controls\.className = "company-admin-controls"/);
+  assert.match(js,/section\.append\(controls\)/);
+  assert.match(js,/const roster = element\("div", ""\)/);
+  assert.match(js,/roster\.className = "company-admin-roster"/);
+  assert.match(js,/workspace\.replaceChildren\(toolbar\)/);
+  assert.match(html,/#companyWorkspace \.company-admin-controls/);
+  assert.match(html,/grid-template-columns:repeat\(auto-fit,minmax/);
+  assert.match(html,/#companyWorkspace \.company-admin-roster-row/);
+});
