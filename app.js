@@ -459,7 +459,8 @@ function getReportTextContent() {
   }
 
   lines.push("========================================");
-  return lines.join("\n");
+  const output = lines.join("\n");
+  return window.TransitI18n?.report(output) || output;
 }
 
 async function shareOrDownloadFile(blob, filename) {
@@ -496,8 +497,9 @@ function shareOrDownloadTxtReport() {
 }
 
 function shareOrDownloadCsvReport() {
+  const t = text => window.TransitI18n?.t(text) || text;
   const rows = [
-    ["ردیف", "بخش", "شرح / مرز", "مقدار (لیتر)", "مبلغ اصلی", "واحد ارز", "نرخ به تومان", "معادل تومان", "زمان ثبت"]
+    ["ردیف", "بخش", "شرح / مرز", "مقدار (لیتر)", "مبلغ اصلی", "واحد ارز", "نرخ به تومان", "معادل تومان", "زمان ثبت"].map(t)
   ];
   let rowNum = 1;
   (state.borderFuelItems || []).forEach(it => {
@@ -507,11 +509,11 @@ function shareOrDownloadCsvReport() {
     const tomanVal = toTomanAmount(it.amount, cur);
     rows.push([
       rowNum++,
-      "سوخت مرزی",
+      t("سوخت مرزی"),
       it.borderName || "",
       Number(it.liters) || 0,
       Number(it.amount) || 0,
-      curLabel,
+      t(curLabel),
       rate,
       Math.round(tomanVal),
       it.createdAt || ""
@@ -524,7 +526,7 @@ function shareOrDownloadCsvReport() {
     const tomanVal = toTomanAmount(it.amount, cur);
     rows.push([
       rowNum++,
-      "هزینه سفر",
+      t("هزینه سفر"),
       it.title || "",
       "",
       Number(it.amount) || 0,
@@ -1267,7 +1269,8 @@ function copyFullReport() {
     `🧾 هزینه‌های سفر: داخل ایران ${formatToman(expInsideToman)} | خارج از ایران ${formatToman(expOutsideToman)} | جمع: ${formatToman(expInsideToman + expOutsideToman)}`
   ];
 
-  const text = getSanitizedTextForPrivacy(lines.join("\n"), askDriverPrivateDataPermission());
+  const plain = getSanitizedTextForPrivacy(lines.join("\n"), askDriverPrivateDataPermission());
+  const text = window.TransitI18n?.report(plain) || plain;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => showToast("گزارش کامل کپی شد")).catch(() => fallbackCopy(text));
   } else {
@@ -1310,9 +1313,11 @@ function printTripReport() {
     frame.contentWindow.addEventListener("afterprint", () => frame.remove(), {once: true});
     frame.contentWindow.print();
   };
-  frame.srcdoc = '<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><title>گزارش تسویه</title>'
+  const locale = window.TransitI18n?.language || "fa";
+  const direction = (locale === "en" || locale === "tr") ? "ltr" : "rtl";
+  frame.srcdoc = '<!doctype html><html lang="' + locale + '" dir="' + direction + '"><meta charset="utf-8"><title>Transit Fuel Report</title>'
     + '<style>body{font:14px/1.8 sans-serif;margin:24px}pre{white-space:pre-wrap;font:inherit}</style>'
-    + '<h1>گزارش تسویه سفر ترانزیتی</h1><pre>' + escapeHtml(report) + '</pre></html>';
+    + '<h1>' + escapeHtml(window.TransitI18n?.t("گزارش تسویه سفر ترانزیتی") || "گزارش تسویه سفر ترانزیتی") + '</h1><pre>' + escapeHtml(report) + '</pre></html>';
   document.body.appendChild(frame);
 }
 
