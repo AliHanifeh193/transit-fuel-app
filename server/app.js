@@ -343,6 +343,10 @@ function createServer({filename, origin, secure = true, authMode = "password", s
       if (authMode === "sms") requireCondition(normalizePhone(body.phone), 400, "invalid_phone");
       return atomic(db, () => {
         const id = insertUser(db, body);
+        if (authMode === "sms") {
+          const phone = normalizePhone(body.phone);
+          db.prepare("INSERT INTO phone_accounts(user_id,phone) VALUES(?,?)").run(id, phone);
+        }
         audit(db, user.id, id, "user_created");
         return {id};
       });
