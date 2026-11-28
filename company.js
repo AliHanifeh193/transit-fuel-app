@@ -36,6 +36,7 @@
   };
 
   function translate(text) { return window.TransitI18n?.t(text) || text; }
+  function confirmLocalized(message) { return window.confirm(translate(message)); }
   for (const entries of [roles,states,errors]) {
     for (const key of Object.keys(entries)) entries[key] = translate(entries[key]);
   }
@@ -122,7 +123,7 @@
   }
 
   async function submit(vehicle, existing) {
-    if (!confirm("اطلاعات مالی، سوخت اضافی و تصاویر اسناد این سفر برای حسابداری شرکت ارسال شوند؟")) return;
+    if (!confirmLocalized("اطلاعات مالی، سوخت اضافی و تصاویر اسناد این سفر برای حسابداری شرکت ارسال شوند؟")) return;
     readFormIntoState();
     if ([...document.querySelectorAll("input[type=number]")].some(control => !control.validity.valid)) {
       throw Error("invalid_amount");
@@ -172,7 +173,7 @@
       if (actions.length) view.append(field("یادداشت حسابداری", note));
       for (const [action, label] of actions) {
         view.append(button(label, async () => {
-          if (!confirm(label + " این سفر؟")) return;
+          if (!confirmLocalized(label + " این سفر؟")) return;
           await api("trips/" + trip.id, "PATCH", {action, revision: trip.revision, note: note.value});
           await refresh();
         }));
@@ -180,7 +181,7 @@
     }
     if (activeUser.role === "driver" && trip.status === "rejected") {
       view.append(button("بارگذاری برای اصلاح", () => {
-        if (!confirm("فرم محلی با نسخه ارسالی جایگزین شود؟")) return;
+        if (!confirmLocalized("فرم محلی با نسخه ارسالی جایگزین شود؟")) return;
         state = normalizeDraft(trip.data);
         state.plateNo = "";
         for (const entry of [...state.borderFuelItems, ...state.tripExpenses]) entry.id = crypto.randomUUID();
@@ -220,13 +221,13 @@
           const newPhone = input("tel", 20);
           newPhone.placeholder = "+989121234567 / +905321234567";
           line.append(field("اصلاح شماره", newPhone), button("ثبت شماره جدید", async () => {
-            if (!confirm("شماره تلفن تغییر کند؟ تمام نشست‌های فعلی این کاربر خارج خواهند شد.")) return;
+            if (!confirmLocalized("شماره تلفن تغییر کند؟ تمام نشست‌های فعلی این کاربر خارج خواهند شد.")) return;
             await api("users/" + entry.id + "/phone", "PATCH", {phone: newPhone.value});
             await refresh();
           }));
         }
         if (entry.id !== activeUser.id) line.append(button(entry.active ? "غیرفعال" : "فعال", async () => {
-          if (!confirm("وضعیت تغییر کند؟")) return;
+          if (!confirmLocalized("وضعیت تغییر کند؟")) return;
           await api(resource + "/" + entry.id, "PATCH", {active: !entry.active});
           await refresh();
         }));
@@ -294,7 +295,7 @@
       for (const entry of (local.pending || []).filter(item => item.userId === activeUser.id)) {
         const row = element("p", "در صف ارسال: " + entry.payload.data.tripTitle);
         row.append(button("حذف از صف", async () => {
-          if (syncing || !confirm("درخواست از صف ارسال حذف شود؟")) return;
+          if (syncing || !confirmLocalized("درخواست از صف ارسال حذف شود؟")) return;
           await storeLocal({...local, pending: local.pending.filter(item => item.id !== entry.id)});
           await refresh();
         }));
