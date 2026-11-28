@@ -195,6 +195,9 @@
 
   async function administration(vehicles) {
     const section = element("section", "");
+    section.className = "company-admin-panel";
+    const controls = element("div", "");
+    controls.className = "company-admin-controls";
     const username = input("text", 64), name = input("text", 120), password = input("password", 128);
     const role = select(Object.entries(roles)), phone = input("tel", 20);
     phone.placeholder = "+989121234567 / +905321234567";
@@ -215,8 +218,9 @@
       }));
     for (const [resource, entries] of [["users", await api("users")], ["vehicles", vehicles]]) {
       for (const entry of entries) {
-        const line = element("p", entry.plate || entry.name + " (" + roles[entry.role] + ")" +
+        const line = element("div", entry.plate || entry.name + " (" + roles[entry.role] + ")" +
            (entry.phone ? " | " + entry.phone : ""));
+        line.className = "company-admin-roster-row";
         if (resource === "users" && entry.id !== activeUser.id) {
           const newPhone = input("tel", 20);
           newPhone.placeholder = "+989121234567 / +905321234567";
@@ -231,9 +235,10 @@
           await api(resource + "/" + entry.id, "PATCH", {active: !entry.active});
           await refresh();
         }));
-        section.append(line);
+        roster.append(line);
       }
     }
+    section.append(roster);
     const feedback = element("div", "");
     section.append(button("صندوق بازخورد", async () => {
       feedback.replaceChildren(...(await api("feedback")).map(entry => element("p", entry.at + " | " + entry.message)));
@@ -264,14 +269,18 @@
       trips = [];
     }
     const heading = element("h3", activeUser.name + " | " + roles[activeUser.role]);
-    workspace.replaceChildren(heading, button("به‌روزرسانی", refresh),
+    const toolbar = element("div", "");
+    toolbar.className = "company-workspace-toolbar";
+    toolbar.append(heading, button("به‌روزرسانی", refresh),
       button("خروج", async () => {
         await api("logout", "POST");
         activeUser = undefined;
         status.textContent = "";
         await refresh();
       }));
+    workspace.replaceChildren(toolbar);
     const credentials = element("details", "");
+    credentials.className = "company-password-details";
     const current = input("password", 128);
     const next = input("password", 128);
     current.autocomplete = "current-password";
