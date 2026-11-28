@@ -784,6 +784,33 @@
       border-radius:9px; background:#111c2d; color:#f1f5f9;
     }
     #companyWorkspace .company-admin-controls button { width:100%; min-height:43px; }
+
+    #companyWorkspace .company-fleet-controls {
+      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px;
+      align-items:end; max-width:600px;
+    }
+    #companyWorkspace .company-fleet-controls > label {
+      min-width:0; display:flex; flex-direction:column; gap:6px;
+    }
+    #companyWorkspace .company-fleet-controls input {
+      display:block; width:100%; box-sizing:border-box; padding:11px 12px; margin:0;
+      background:#111c2d; color:#f1f5f9; border:1px solid rgba(148,163,184,.32); border-radius:9px;
+    }
+    #companyWorkspace .company-action-row {display:flex; align-items:center; flex-wrap:wrap; gap:10px;}
+    #companyWorkspace .company-action-row button {width:auto; max-width:100%; padding:10px 18px;}
+    #companyWorkspace .company-feedback-compose {display:grid; gap:10px; max-width:760px;}
+    #companyWorkspace .company-feedback-compose > label {display:grid; gap:7px;}
+    #companyWorkspace .company-feedback-compose textarea {
+      min-height:100px; max-width:100%; width:100%; box-sizing:border-box; padding:12px;
+      background:#111c2d; color:#f1f5f9; border:1px solid rgba(148,163,184,.32); border-radius:9px;
+    }
+    #companyWorkspace .company-feedback-compose > button {justify-self:start; width:auto; padding:10px 20px;}
+    #companyWorkspace .company-admin-panel h4 {margin:2px 0 0; font-size:1rem; color:#dbeafe;}
+    @media(max-width:540px) {
+      #companyWorkspace .company-fleet-controls {grid-template-columns:minmax(0,1fr);}
+      #companyWorkspace .company-fleet-controls > button {width:100%;}
+    }
+
     #companyWorkspace .company-admin-roster { display:grid; gap:10px; min-width:0; }
     #companyWorkspace .company-admin-roster-row {
       display:flex; align-items:center; flex-wrap:wrap; gap:12px;
