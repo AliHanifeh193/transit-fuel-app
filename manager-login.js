@@ -84,6 +84,26 @@
    }catch(error){showError(error);otp.elements.code.value="";}
    finally{button.disabled=false;}
  });
+ // Local diagnostic handoff: first factor is verified by the local CLI.
+ // A challenge never creates a session without the existing six-digit OTP.
+ function acceptLocalDiagnosticChallenge(){
+   const params=new URLSearchParams(window.location.hash.slice(1));
+   const value=params.get("challenge");
+   if(!value)return;
+   // Clear the challenge from history immediately, including on malformed links.
+   history.replaceState(null,"",window.location.pathname+window.location.search);
+   if(!/^[a-f0-9]{64}$/.test(value)){
+     message.textContent="لینک کد تأیید نامعتبر است؛ دوباره درخواست ورود بدهید.";
+     return;
+   }
+   challenge=value;
+   staff.hidden=true;
+   otp.hidden=false;
+   hint.textContent="کد شش‌رقمی جدیدِ درخواست‌شده از PowerShell، با اعتبار ۳ دقیقه";
+   message.textContent="کد را فقط از پنجره PowerShell سرور آزمایشی بخوانید و اینجا وارد کنید.";
+   otp.elements.code.focus();
+ }
+ acceptLocalDiagnosticChallenge();
  document.getElementById("back").addEventListener("click",()=>{
    challenge=null;otp.reset();otp.hidden=true;staff.hidden=false;message.textContent="";staff.elements.password.focus();
  });
