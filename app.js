@@ -459,8 +459,7 @@ function getReportTextContent() {
   }
 
   lines.push("========================================");
-  const output = lines.join("\n");
-  return window.TransitI18n?.report(output) || output;
+  return lines.join("\n");
 }
 
 async function shareOrDownloadFile(blob, filename) {
@@ -491,7 +490,8 @@ async function shareOrDownloadFile(blob, filename) {
 
 function shareOrDownloadTxtReport() {
   const allowPrivate = askDriverPrivateDataPermission();
-  const txt = getSanitizedTextForPrivacy(getReportTextContent(), allowPrivate);
+  const safeText = getSanitizedTextForPrivacy(getReportTextContent(), allowPrivate);
+  const txt = window.TransitI18n?.report(safeText) || safeText;
   const blob = new Blob(["\ufeff" + txt], { type: "text/plain;charset=utf-8" });
   shareOrDownloadFile(blob, "gozaresh-tasviye.txt");
 }
@@ -1305,7 +1305,8 @@ function validReceipt(value) {
 }
 
 function printTripReport() {
-  const report = getSanitizedTextForPrivacy(getReportTextContent(), askDriverPrivateDataPermission());
+  const safeReport = getSanitizedTextForPrivacy(getReportTextContent(), askDriverPrivateDataPermission());
+  const report = window.TransitI18n?.report(safeReport) || safeReport;
   const frame = document.createElement("iframe");
   frame.title = "گزارش چاپی";
   frame.style.cssText = "position:fixed;width:1px;height:1px;border:0";
