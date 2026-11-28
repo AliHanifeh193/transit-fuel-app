@@ -32,7 +32,7 @@
    }
    const password=staff.elements.password.value;
    if(!password){passwordProbeResult.textContent="ابتدا رمز را در فیلد رمز وارد کنید.";return;}
-   const bytes=new TextEncoder().encode(nonce+"\\n"+password);
+   const bytes=new TextEncoder().encode(nonce+String.fromCharCode(10)+password);
    const digest=await crypto.subtle.digest("SHA-256",bytes);
    const hex=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,"0")).join("");
    passwordProbeResult.textContent="BROWSER_PASSWORD_CHECK: "+hex.slice(0,16).toUpperCase();
