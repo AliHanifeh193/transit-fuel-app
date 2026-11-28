@@ -14,6 +14,29 @@
    field.focus();
  });
 
+ const inputDiagnostics=document.getElementById("inputDiagnostics");
+ function safeInputSummary(){
+   const username=staff.elements.username.value;
+   const password=staff.elements.password.value;
+   const usernameExact=username==="transit-admin";
+   const passwordCodePoints=Array.from(password);
+   const asciiPrintable=passwordCodePoints.every(char=>/^[\x21-\x7e]$/.test(char));
+   const spaces=password!==password.trim();
+   const controls=passwordCodePoints.some(char=>/[\x00-\x1f\x7f]/.test(char));
+   return {usernameExact,passwordLength:passwordCodePoints.length,asciiPrintable,spaces,controls};
+ }
+ function showInputDiagnostics(){
+   const v=safeInputSummary();
+   inputDiagnostics.textContent=
+     "بررسی ورودی (بدون نمایش رمز): نام کاربری دقیق: "+(v.usernameExact?"بله":"خیر")+
+     " | طول رمز: "+v.passwordLength+
+     " | نویسه‌های انگلیسی قابل چاپ: "+(v.asciiPrintable?"بله":"خیر")+
+     " | فاصله ابتدا/انتها: "+(v.spaces?"دارد":"ندارد")+
+     " | نویسه کنترلی: "+(v.controls?"دارد":"ندارد");
+ }
+ staff.elements.username.addEventListener("input",showInputDiagnostics);
+ staff.elements.password.addEventListener("input",showInputDiagnostics);
+ showInputDiagnostics();
  let challenge=null;
  async function send(route,body){
    const response=await fetch("/api/"+route,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store",credentials:"same-origin"});
@@ -32,7 +55,8 @@
  function showError(error){message.textContent=errors[error.message]||"ورود انجام نشد ("+error.message+").";}
  staff.addEventListener("submit",async event=>{
    event.preventDefault();
-   const button=staff.querySelector("button");
+   const button=staff.querySelector('button[type="submit"]');
+   showInputDiagnostics();
    button.disabled=true;
    message.textContent="در حال بررسی رمز و درخواست کد...";
    try{
