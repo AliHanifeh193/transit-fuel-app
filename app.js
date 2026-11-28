@@ -566,6 +566,9 @@ function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
 
 function shareOrDownloadPngReport() {
   const includePrivate = askDriverPrivateDataPermission();
+  const uiText = text => window.TransitI18n?.t(text) || text;
+  const locale = window.TransitI18n?.language || "fa";
+  const isLtr = locale === "en" || locale === "tr";
   const m = calculateMetrics();
   const title = (state && state.tripTitle) || "سفر ترانزیتی";
   const dateStr = formatTripDate(state.tripDate) || "نامشخص";
@@ -585,26 +588,30 @@ function shareOrDownloadPngReport() {
   ctx.lineWidth = 2;
   ctx.strokeRect(36, 36, canvas.width - 72, 140);
 
-  ctx.textAlign = "right";
+  ctx.textAlign = isLtr ? "left" : "right";
+  ctx.direction = isLtr ? "ltr" : "rtl";
+  const edgeX = isLtr ? 44 : canvas.width - 44;
+  const headerX = isLtr ? 64 : canvas.width - 64;
   ctx.fillStyle = "#38bdf8";
   ctx.font = "bold 34px sans-serif";
-  ctx.fillText("گزارش کامل تسویه و سوخت ترانزیت", canvas.width - 64, 92);
+  ctx.fillText(uiText("گزارش کامل تسویه و سوخت ترانزیت"), headerX, 92);
 
   ctx.fillStyle = "#cbd5e1";
   ctx.font = "21px sans-serif";
-  ctx.fillText("سفر: " + title + "   |   تاریخ سفر: " + dateStr, canvas.width - 64, 138);
+  ctx.fillText(uiText("سفر: ") + title + uiText("   |   تاریخ سفر: ") + dateStr, headerX, 138);
 
   const cards = [
-    { label: "مصرف کل سوخت", val: formatNum(m.totalConsumed || 0, 2) + " L", color: "#38bdf8" },
-    { label: "سهمیه شرکت", val: formatNum(state.companyQuota || 0, 2) + " L", color: "#34d399" },
-    { label: "مازاد / کسری", val: includePrivate ? formatNum(m.companySurplus, 2) + " L" : "محرمانه", color: "#fbbf24" },
-    { label: "جمع هزینه‌ها", val: formatToman(m.totalExpensesToman || 0), color: "#f87171" }
+    { label: uiText("مصرف کل سوخت"), val: formatNum(m.totalConsumed || 0, 2) + " L", color: "#38bdf8" },
+    { label: uiText("سهمیه شرکت"), val: formatNum(state.companyQuota || 0, 2) + " L", color: "#34d399" },
+    { label: uiText("مازاد / کسری"), val: includePrivate ? formatNum(m.companySurplus, 2) + " L" : uiText("محرمانه"), color: "#fbbf24" },
+    { label: uiText("جمع هزینه‌ها"), val: formatToman(m.totalExpensesToman || 0), color: "#f87171" }
   ];
   const cardW = 204;
   const gap = 16;
   cards.forEach((c, idx) => {
-    const xRight = canvas.width - 36 - idx * (cardW + gap);
-    const xLeft = xRight - cardW;
+    const xLeft = isLtr ? 36 + idx * (cardW + gap) : canvas.width - 36 - (idx + 1) * cardW - idx * gap;
+    const xRight = xLeft + cardW;
+    const cardTextX = isLtr ? xLeft + 16 : xRight - 16;
     ctx.fillStyle = "#111c30";
     ctx.fillRect(xLeft, 200, cardW, 120);
     ctx.strokeStyle = "#243b5a";
@@ -612,42 +619,42 @@ function shareOrDownloadPngReport() {
 
     ctx.fillStyle = "#94a3b8";
     ctx.font = "18px sans-serif";
-    ctx.fillText(c.label, xRight - 16, 236);
+    ctx.fillText(c.label, cardTextX, 236);
 
     ctx.fillStyle = c.color;
     ctx.font = "bold 22px sans-serif";
-    ctx.fillText(c.val, xRight - 16, 286);
+    ctx.fillText(c.val, cardTextX, 286);
   });
 
   let y = 370;
   ctx.fillStyle = "#e2e8f0";
   ctx.font = "bold 25px sans-serif";
-  ctx.fillText("ریز آیتم‌های ثبت‌شده", canvas.width - 44, y);
+  ctx.fillText(uiText("ریز آیتم‌های ثبت‌شده"), edgeX, y);
   y += 42;
 
   const allItems = [];
   (state.borderFuelItems || []).forEach(it => {
     const cur = it.currency || "IRT";
     const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-    allItems.push(`[مرز] ${it.borderName || "مرز"} — ${formatNum(it.liters || 0, 1)}L — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel}`);
+    allItems.push(`[${uiText("مرز")}] ${it.borderName || uiText("مرز")} — ${formatNum(it.liters || 0, 1)}L — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${uiText(curLabel)}`);
   });
   (state.tripExpenses || []).forEach(it => {
     const cur = it.currency || "IRT";
     const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-    allItems.push(`[هزینه] ${it.title || "هزینه"} — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel}`);
+    allItems.push(`[${uiText("هزینه")}] ${it.title || uiText("هزینه")} — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${uiText(curLabel)}`);
   });
 
   ctx.font = "21px sans-serif";
   if (!allItems.length) {
     ctx.fillStyle = "#94a3b8";
-    ctx.fillText("هیچ آیتم سوخت مرزی یا هزینه سفری ثبت نشده است.", canvas.width - 44, y);
+    ctx.fillText(uiText("هیچ آیتم سوخت مرزی یا هزینه سفری ثبت نشده است."), edgeX, y);
     y += 36;
   } else {
     for (let i = 0; i < allItems.length && y < 1160; i++) {
       ctx.fillStyle = i % 2 === 0 ? "#101a2d" : "#0e1728";
       ctx.fillRect(36, y - 24, canvas.width - 72, 38);
       ctx.fillStyle = "#f1f5f9";
-      y = wrapCanvasText(ctx, `${i + 1}. ${allItems[i]}`, canvas.width - 52, y, canvas.width - 104, 34);
+      y = wrapCanvasText(ctx, `${i + 1}. ${allItems[i]}`, isLtr ? 52 : canvas.width - 52, y, canvas.width - 104, 34);
       y += 8;
     }
   }
@@ -655,9 +662,9 @@ function shareOrDownloadPngReport() {
   ctx.fillStyle = "#64748b";
   ctx.font = "18px sans-serif";
   if (allItems.length > 15) {
-    ctx.fillText("برای همه ردیف‌ها، گزارش متنی یا چاپی را بررسی کنید.", canvas.width - 44, canvas.height - 62);
+    ctx.fillText(uiText("برای همه ردیف‌ها، گزارش متنی یا چاپی را بررسی کنید."), edgeX, canvas.height - 62);
   }
-  ctx.fillText("ایجاد شده در: " + nowStr, canvas.width - 44, canvas.height - 32);
+  ctx.fillText(uiText("ایجاد شده در: ") + nowStr, edgeX, canvas.height - 32);
 
   canvas.toBlob(blob => {
     if (blob) shareOrDownloadFile(blob, "gozaresh-tasviye.png");
