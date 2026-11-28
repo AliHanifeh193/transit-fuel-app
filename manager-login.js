@@ -23,9 +23,11 @@
  const passwordProbeNonce=document.getElementById("passwordProbeNonce");
  const passwordProbeResult=document.getElementById("passwordProbeResult");
  passwordProbeButton.addEventListener("click",async()=>{
-   const nonce=passwordProbeNonce.value.trim().toLowerCase();
+   const raw=passwordProbeNonce.value.trim();
+   const normalized=raw.replace(/^NONCE\s*:\s*/i,"").replace(/[\s\u200e\u200f]/g,"").toLowerCase();
+   const nonce=normalized;
    if(!/^[a-f0-9]{32}$/.test(nonce)){
-     passwordProbeResult.textContent="کد تصادفی باید ۳۲ نویسه هگز باشد.";
+     passwordProbeResult.textContent="NONCE نامعتبر است (طول مقدار واردشده: "+normalized.length+" نویسه). فقط مقدار NONCE با طول ۳۲ را وارد کنید؛ PASSWORD_CHECK شانزده‌نویسه‌ای را اینجا نگذارید.";
      return;
    }
    const password=staff.elements.password.value;
