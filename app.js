@@ -196,7 +196,7 @@ async function restoreWorkspace(input) {
       || !Array.isArray(backup.feedback) || !backup.feedback.every(entry => entry && typeof entry.id === "string")) {
       throw Error("Invalid backup");
     }
-    if (!confirm("بازیابی، اطلاعات این دستگاه را جایگزین می‌کند. ابتدا از داده‌های فعلی پشتیبان بگیرید. ادامه می‌دهید؟")) return;
+    if (!confirmLocalized("بازیابی، اطلاعات این دستگاه را جایگزین می‌کند. ابتدا از داده‌های فعلی پشتیبان بگیرید. ادامه می‌دهید؟")) return;
     await TransitStorage.save({draft: backup.draft, archive: backup.archive, feedback: backup.feedback, editedArchiveId: backup.editedArchiveId || null});
     applyWorkspace(backup);
     showToast("پشتیبان بازیابی شد");
@@ -372,7 +372,7 @@ function askDriverPrivateDataPermission() {
   if (!currentlyHidden) {
     return true;
   }
-  const allowPrivate = confirm(
+  const allowPrivate = confirmLocalized(
     "آیا مایل هستید بخش‌های خصوصی راننده (مقدار اضافه سوخت و درآمد / سهم از فروش) در گزارش ارسالی گنجانده شوند؟\n\n" +
     "• تأیید (OK): اطلاعات خصوصی در گزارش ارسال می‌شوند.\n" +
     "• لغو (Cancel): اطلاعات خصوصی ارسال نمی‌شوند و محرمانه می‌مانند."
@@ -662,9 +662,13 @@ function shareOrDownloadPngReport() {
   }, "image/png");
 }
 
+function confirmLocalized(message) {
+  return window.confirm(window.TransitI18n?.t(message) || message);
+}
+
 function showToast(msg) {
   const toast = document.getElementById("toast");
-  toast.textContent = msg;
+  toast.textContent = window.TransitI18n?.t(msg) || msg;
   toast.classList.add("show");
   clearTimeout(window.__toastTimer);
   window.__toastTimer = setTimeout(() => {
@@ -853,7 +857,7 @@ function addBorderFuelItem() {
 }
 
 function deleteBorderFuelItem(id) {
-  if (!confirm("سطر انتخاب‌شده حذف شود؟")) return;
+  if (!confirmLocalized("سطر انتخاب‌شده حذف شود؟")) return;
   state.borderFuelItems = state.borderFuelItems.filter(x => x.id !== id);
   persistCurrentState();
   renderAll();
@@ -998,7 +1002,7 @@ function addTripExpenseItem() {
 }
 
 function deleteTripExpenseItem(id) {
-  if (!confirm("هزینه انتخاب‌شده حذف شود؟")) return;
+  if (!confirmLocalized("هزینه انتخاب‌شده حذف شود؟")) return;
   state.tripExpenses = state.tripExpenses.filter(x => x.id !== id);
   persistCurrentState();
   renderAll();
@@ -1200,7 +1204,7 @@ function exportArchivedTrip(archiveId, format) {
 function loadArchivedTrip(archiveId) {
   const list = loadArchive();
   const found = list.find(x => x.archiveId === archiveId);
-  if (!found || !found.data || !confirm("سفر انتخاب‌شده جایگزین فرم فعلی شود؟")) return;
+  if (!found || !found.data || !confirmLocalized("سفر انتخاب‌شده جایگزین فرم فعلی شود؟")) return;
   editedArchiveId = archiveId;
   state = normalizeDraft(found.data);
   editingTarget = null;
@@ -1213,7 +1217,7 @@ function loadArchivedTrip(archiveId) {
 }
 
 async function deleteArchivedTrip(archiveId) {
-  if (!storageReady || workspaceBusy || !confirm("سفر انتخاب‌شده حذف شود؟")) return;
+  if (!storageReady || workspaceBusy || !confirmLocalized("سفر انتخاب‌شده حذف شود؟")) return;
   workspaceBusy = true;
   try {
     const nextId = editedArchiveId === archiveId ? null : editedArchiveId;
@@ -1227,7 +1231,7 @@ async function deleteArchivedTrip(archiveId) {
 }
 
 function resetDefaultTrip() {
-  if (!confirm("آیا مطمئن هستید که می‌خواهید اطلاعات سفر فعلی را به حالت پیش‌فرض بازنشانی کنید؟")) return;
+  if (!confirmLocalized("آیا مطمئن هستید که می‌خواهید اطلاعات سفر فعلی را به حالت پیش‌فرض بازنشانی کنید؟")) return;
   editedArchiveId = null;
   state = getDefaultState();
   populateFormFromState();
@@ -1391,7 +1395,7 @@ async function submitUserFeedback() {
 }
 
 async function deleteUserFeedback(id) {
-  if (!confirm("بازخورد انتخاب‌شده حذف شود؟")) return;
+  if (!confirmLocalized("بازخورد انتخاب‌شده حذف شود؟")) return;
   const next = loadUserFeedbacks().filter(x => String(x.id) !== String(id));
   try { await saveUserFeedbacks(next); } catch (error) { storageError(error); return; }
   renderUserFeedbacks();
