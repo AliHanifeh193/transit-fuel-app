@@ -8,7 +8,8 @@ const env = {
   TRANSIT_SMSIR_TEMPLATE_ID: "723456",
   TRANSIT_SMSIR_PARAMETER: "Code",
   TRANSIT_TURKEY_SMS_WEBHOOK_URL: "https://sms-gateway.example/otp",
-  TRANSIT_TURKEY_SMS_WEBHOOK_TOKEN: "fake-test-token-not-real"
+  TRANSIT_TURKEY_SMS_WEBHOOK_TOKEN: "fake-test-token-not-real",
+  TRANSIT_COUNTRY_SCOPE: "iran-and-turkey"
 };
 test("SMS.ir verify endpoint accepts a correctly configured Iranian OTP", async () => {
   let calls = 0;
@@ -78,5 +79,9 @@ test("Iran-only rollout never contacts Turkish gateway", async () => {
     }),
     /turkey_deferred/
   );
+  assert.equal(called,0);
+  await assert.rejects(providerSms("+905321234567","123456",{
+    env:{...env,TRANSIT_COUNTRY_SCOPE:undefined},fetchFn:async()=>{ called++; return {ok:true}; }
+  }), /turkey_deferred/);
   assert.equal(called,0);
 });
