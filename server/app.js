@@ -20,6 +20,7 @@ const assets = new Map(Object.entries({
   "i18n-catalog.js": "text/javascript; charset=utf-8",
   "i18n-catalog-extra.js": "text/javascript; charset=utf-8",
   "i18n-catalog-dynamic.js": "text/javascript; charset=utf-8",
+  "i18n-catalog-app.js": "text/javascript; charset=utf-8",
   "app.js": "text/javascript; charset=utf-8",
   "sw.js": "text/javascript; charset=utf-8",
   "manifest.json": "application/manifest+json",
