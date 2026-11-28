@@ -35,9 +35,14 @@
     driver_otp_only: "رانندگان باید از ورود پیامکی استفاده کنند."
   };
 
+  function translate(text) { return window.TransitI18n?.t(text) || text; }
+  for (const entries of [roles,states,errors]) {
+    for (const key of Object.keys(entries)) entries[key] = translate(entries[key]);
+  }
+
   function element(tag, value) {
     const node = document.createElement(tag);
-    node.textContent = value;
+    node.textContent = translate(value);
     return node;
   }
 
@@ -72,7 +77,7 @@
   }
 
   function field(label, input) {
-    const wrapper = element("label", label + " ");
+    const wrapper = element("label", translate(label) + " ");
     wrapper.append(input);
     return wrapper;
   }
