@@ -11,7 +11,7 @@ function locale(lang){
   const document={readyState:"loading",addEventListener(){}};
   const localStorage={getItem(){return lang;}};
   const context=vm.createContext({window,document,localStorage});
-  for(const file of ["i18n-catalog.js","i18n-catalog-extra.js","i18n-catalog-dynamic.js","i18n.js"]){
+  for(const file of ["i18n-catalog.js","i18n-catalog-extra.js","i18n-catalog-dynamic.js","i18n-catalog-app.js","i18n.js"]){
     vm.runInContext(read(file),context,{filename:file});
   }
   return window.TransitI18n;
@@ -49,9 +49,23 @@ test("localized assets are served and cached",()=>{
   const index=read("index.html");
   const server=read("server/app.js");
   const worker=read("sw.js");
-  for(const asset of ["i18n.js","i18n-catalog.js","i18n-catalog-extra.js","i18n-catalog-dynamic.js"]){
+  for(const asset of ["i18n.js","i18n-catalog.js","i18n-catalog-extra.js","i18n-catalog-dynamic.js","i18n-catalog-app.js"]){
     assert.ok(index.includes('src="'+asset+'"'));
     assert.ok(server.includes('"'+asset+'":'));
     assert.ok(worker.includes("./"+asset));
   }
+});
+
+test("all four languages localize the privacy consent prompt and delete dialog",()=>{
+  const persian="آیا مایل هستید بخش‌های خصوصی راننده (مقدار اضافه سوخت و درآمد / سهم از فروش) در گزارش ارسالی گنجانده شوند؟\n\n• تأیید (OK): اطلاعات خصوصی در گزارش ارسال می‌شوند.\n• لغو (Cancel): اطلاعات خصوصی ارسال نمی‌شوند و محرمانه می‌مانند.";
+  for(const lang of ["en","tr","ar"]){
+    const i=locale(lang);
+    assert.notEqual(i.t(persian),persian);
+    assert.notEqual(i.t("سطر انتخاب‌شده حذف شود؟"),"سطر انتخاب‌شده حذف شود؟");
+  }
+});
+test("redaction always precedes report translation in the source",()=>{
+  const app=read("app.js");
+  assert.match(app,/const safeText = getSanitizedTextForPrivacy\(getReportTextContent\(\), allowPrivate\);\s*const txt = window\.TransitI18n\?\.report\(safeText\)/);
+  assert.match(app,/const safeReport = getSanitizedTextForPrivacy\(getReportTextContent\(\), askDriverPrivateDataPermission\(\)\);\s*const report = window\.TransitI18n\?\.report\(safeReport\)/);
 });
