@@ -68,12 +68,16 @@
           break;
         }
       }
-      for(const key of ["• سهمیه محاسباتی شرکت: ","• مازاد / کسری سوخت: ","• سوخت اضافی مسیر (رفت: ",
-         "• نرخ ارزها (تومان): لیر="," | دلار="," | یورو="," | منات="," | جمع: "," | برگشت: "]){
-        if(translations[key]?.[index]) result=result.split(key).join(translations[key][index]);
+      // Do not rewrite customer-entered titles, route names, plates or expense descriptions.
+      const isCalculatedLine=/^(?:[•📉💼👤🛢️🚧]|🧾 هزینه‌های سفر:)/u.test(body);
+      if(isCalculatedLine) {
+        for(const key of ["• سهمیه محاسباتی شرکت: ","• مازاد / کسری سوخت: ","• سوخت اضافی مسیر (رفت: ",
+           "• نرخ ارزها (تومان): لیر="," | دلار="," | یورو="," | منات="," | جمع: "," | برگشت: "]){
+          if(translations[key]?.[index]) result=result.split(key).join(translations[key][index]);
+        }
+        result=result.replace(/([0-9۰-۹٠-٩][0-9۰-۹٠-٩,.]*)\s+لیتر/g,(_,amount)=>amount+" "+t("لیتر"));
+        for(const piece of reportParts) result=result.split(piece[0]).join(piece[index+1]);
       }
-      result=result.replace(/([0-9۰-۹٠-٩][0-9۰-۹٠-٩,.]*)\s+لیتر/g,(_,amount)=>amount+" "+t("لیتر"));
-      for(const piece of reportParts) result=result.split(piece[0]).join(piece[index+1]);
       return digits(result);
     }).join("\n");
   }
