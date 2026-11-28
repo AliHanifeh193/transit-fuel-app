@@ -247,7 +247,9 @@
     }
     section.append(roster);
     const feedback = element("div", "");
-    section.append(button("صندوق بازخورد", async () => {
+    const feedbackActions = element("div", "");
+    feedbackActions.className = "company-action-row";
+    feedbackActions.append(button("صندوق بازخورد", async () => {
       feedback.replaceChildren(...(await api("feedback")).map(entry => element("p", entry.at + " | " + entry.message)));
     }));
     section.append(feedbackActions, feedback);
@@ -436,8 +438,8 @@
       authMode = (await api("health")).authMode === "sms" ? "sms" : "password";
       activeUser = await api("session");
       await refresh();
-    } catch {
-      status.textContent = "برای ورود، برنامه را از نشانی سامانه شرکت باز کنید";
+    } catch (error) {
+      report(error);
     }
   });
   window.addEventListener("online", async () => {
