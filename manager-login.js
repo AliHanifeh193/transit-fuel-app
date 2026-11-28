@@ -1,0 +1,56 @@
+"use strict";
+(()=>{
+ const staff=document.getElementById("staffLogin");
+ const otp=document.getElementById("otpLogin");
+ const message=document.getElementById("message");
+ const hint=document.getElementById("otpHint");
+ let challenge=null;
+ async function send(route,body){
+   const response=await fetch("/api/"+route,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store",credentials:"same-origin"});
+   const data=await response.json();
+   if(!response.ok)throw Error(data.error||"server_error");
+   return data;
+ }
+ const errors={
+  invalid_credentials:"نام کاربری یا رمز عبور نادرست است.",
+  sms_unavailable:"ارسال پیامک آزمایشی ناموفق بود.",
+  try_later:"تعداد تلاش‌ها زیاد است. کمی بعد دوباره امتحان کنید.",
+  phone_required:"شماره موبایل برای این حساب ثبت نشده است.",
+  invalid_otp:"کد اشتباه یا منقضی شده است.",
+  invalid_challenge:"درخواست کد منقضی شده است؛ دوباره وارد شوید."
+ };
+ function showError(error){message.textContent=errors[error.message]||"ورود انجام نشد ("+error.message+").";}
+ staff.addEventListener("submit",async event=>{
+   event.preventDefault();
+   const button=staff.querySelector("button");
+   button.disabled=true;
+   message.textContent="در حال بررسی رمز و درخواست کد...";
+   try{
+     const response=await send("login",Object.fromEntries(new FormData(staff)));
+     staff.elements.password.value="";
+     if(response.mfaRequired!==true||!response.challengeId)throw Error("unexpected_login_response");
+     challenge=response.challengeId;
+     hint.textContent="کد یک‌بارمصرف به "+response.phoneMasked+" درخواست شد؛ اعتبار ۳ دقیقه.";
+     staff.hidden=true;
+     otp.hidden=false;
+     message.textContent="کد جدید را از پنجره PowerShell سرور آزمایشی بخوانید و فقط اینجا وارد کنید.";
+     otp.elements.code.focus();
+   }catch(error){showError(error);staff.elements.password.value="";}
+   finally{button.disabled=false;}
+ });
+ otp.addEventListener("submit",async event=>{
+   event.preventDefault();
+   const button=otp.querySelector('button[type="submit"]');
+   button.disabled=true;message.textContent="در حال بررسی کد...";
+   try{
+     await send("auth/verify",{challengeId:challenge,code:otp.elements.code.value});
+     challenge=null;
+     message.textContent="ورود تأیید شد. انتقال به سامانه...";
+     window.location.replace("/?manager-login-complete=1");
+   }catch(error){showError(error);otp.elements.code.value="";}
+   finally{button.disabled=false;}
+ });
+ document.getElementById("back").addEventListener("click",()=>{
+   challenge=null;otp.reset();otp.hidden=true;staff.hidden=false;message.textContent="";staff.elements.password.focus();
+ });
+})();
