@@ -5,6 +5,11 @@
  const message=document.getElementById("message");
  const hint=document.getElementById("otpHint");
  const toggle=document.getElementById("togglePassword");
+ // Avoid carrying a stale saved password into a fresh diagnostic attempt.
+ staff.elements.password.value="";
+ window.addEventListener("pageshow",event=>{
+   if(event.persisted && !staff.hidden){staff.elements.password.value="";showInputDiagnostics();}
+ });
  toggle.addEventListener("click",()=>{
    const field=staff.elements.password;
    const visible=field.type==="password";
