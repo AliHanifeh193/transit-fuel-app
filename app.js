@@ -262,10 +262,12 @@ function convertToToman(amount, currency) {
   return TransitCalc.convert(state, amount, currency);
 }
 
-const persianTimestamp = new Intl.DateTimeFormat("fa-IR", {
+// Date presentation follows the selected UI language. Stored ISO timestamps are unchanged.
+const displayLocale = ({fa:"fa-IR",en:"en-GB",tr:"tr-TR",ar:"ar-EG"})[window.TransitI18n?.language || "fa"] || "fa-IR";
+const persianTimestamp = new Intl.DateTimeFormat(displayLocale, {
   dateStyle: "medium", timeStyle: "medium"
 });
-const persianTripDate = new Intl.DateTimeFormat("fa-IR", {
+const persianTripDate = new Intl.DateTimeFormat(displayLocale, {
   dateStyle: "medium", timeZone: "UTC"
 });
 
