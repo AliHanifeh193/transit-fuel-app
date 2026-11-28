@@ -7,6 +7,7 @@
   Object.assign(translations,{"📲 نصب اپلیکیشن روی گوشی اندروید و آیفون (iOS)":["📲 Install app on Android & iPhone (iOS)","📲 Android ve iPhone'a uygulama yükle (iOS)","📲 تثبيت التطبيق على أندرويد وآيفون (iOS)"],"در اندروید با دکمه نصب یا منوی مرورگر «Add to Home Screen» و در آیفون از منوی Share گزینه «Add to Home Screen» را بزنید.":["On Android use Install or Add to Home Screen; on iPhone choose Share → Add to Home Screen.","Android'de Yükle veya Ana ekrana ekle; iPhone'da Paylaş → Ana Ekrana Ekle seçeneğini kullanın.","على أندرويد اختر تثبيت أو إضافة إلى الشاشة الرئيسية؛ وعلى آيفون اختر مشاركة ثم إضافة إلى الشاشة الرئيسية."],"📱 نصب روی گوشی !":["📱 Install on phone","📱 Telefona yükle","📱 تثبيت على الهاتف"],"نصب روی گوشی !":["Install on phone","Telefona yükle","تثبيت على الهاتف"],"📂 آرشیو سفرها (":["📂 Trip archive (","📂 Sefer arşivi (","📂 أرشيف الرحلات ("],"آخرین به‌روزرسانی: همین لحظه":["Last updated: just now","Son güncelleme: şimdi","آخر تحديث: الآن"],"اطلاعات پایه سفر، موجودی و سهمیه سوخت، مسافت و ضریب مصرف را وارد کنید تا محاسبات لحظه‌ای انجام شود.":["Enter trip details, initial fuel, allowance, distance and consumption rate to calculate live totals.","Anlık hesaplama için sefer bilgilerini, yakıtı, kotayı, mesafeyi ve tüketim oranını girin.","أدخل بيانات الرحلة والوقود والحصة والمسافة ومعدل الاستهلاك للحساب الفوري."],"مثلاً 1405-012":["e.g. 1405-012","ör. 1405-012","مثال 1405-012"],"مانده باک:":["Fuel remaining:","Depoda kalan yakıt:","الوقود المتبقي:"],"لیتر":["L","Litre","لتر"],"آخرین ذخیره خودکار:":["Last autosave:","Son otomatik kayıt:","آخر حفظ تلقائي:"],"امکان نصب مستقیم روی دستگاه آماده است. دکمه «نصب روی گوشی» را بزنید.":["Direct installation is available. Select Install on phone.","Doğrudan yükleme hazır. Telefona yükle seçeneğini kullanın.","التثبيت المباشر متاح. اختر التثبيت على الهاتف."],"اپلیکیشن با موفقیت روی دستگاه نصب شد.":["App installed successfully.","Uygulama başarıyla yüklendi.","تم تثبيت التطبيق بنجاح."],"اپلیکیشن نصب شد":["App installed","Uygulama yüklendi","تم تثبيت التطبيق"]});
   Object.assign(translations, {"⬇ نصب روی گوشی":["⬇ Install on phone","⬇ Telefona yükle","⬇ تثبيت على الهاتف"],"📂 آرشیو سفرها (":["📂 Trip archive (","📂 Sefer arşivi (","📂 أرشيف الرحلات ("]});
   Object.assign(translations, global.TransitLocaleCatalog || {}, global.TransitLocaleCatalogExtra || {}, global.TransitLocaleCatalogDynamic || {});
+  Object.assign(translations,Object.fromEntries([["🚛 گزارش تسویه سفر: ","🚛 Trip settlement report: ","🚛 Sefer hesaplaşma raporu: ","🚛 تقرير تسوية الرحلة: "],["پلاک: ","Plate: ","Plaka: ","اللوحة: "],["⛽ سوخت اولیه: ","⛽ Initial fuel: ","⛽ Başlangıç yakıtı: ","⛽ الوقود الابتدائي: "],["📉 مصرف کل: ","📉 Total consumed: ","📉 Toplam tüketim: ","📉 إجمالي الاستهلاك: "],["💼 اضافه‌سوخت شرکت: ","💼 Company surplus: ","💼 Şirket fazlası: ","💼 فائض الشركة: "],["👤 سهم سوخت شخصی: ","👤 Personal fuel share: ","👤 Kişisel yakıt payı: ","👤 حصة الوقود الشخصية: "],["🛢️ کل باقیمانده باک: ","🛢️ Fuel remaining: ","🛢️ Depoda kalan: ","🛢️ الوقود المتبقي: "],["🚧 خرید و جرایم مرزی: ","🚧 Border purchases & fines: ","🚧 Sınır alımları ve cezaları: ","🚧 مشتريات الحدود وغراماتها: "],["🧾 هزینه‌های سفر: ","🧾 Trip expenses: ","🧾 Sefer giderleri: ","🧾 مصاريف الرحلة: "],["• سهمیه محاسباتی شرکت: ","• Calculated company allowance: ","• Hesaplanan şirket kotası: ","• حصة الشركة المحسوبة: "],["• مازاد / کسری سوخت: ","• Fuel surplus / deficit: ","• Yakıt fazlası / açığı: ","• فائض / عجز الوقود: "],["• سوخت اضافی مسیر (رفت: ","• Extra route fuel (outbound: ","• Ek rota yakıtı (gidiş: ","• الوقود الإضافي (ذهاب: "],["• نرخ ارزها (تومان): لیر=","• Exchange rates (toman): TRY=","• Döviz kurları (tümen): TRY=","• أسعار الصرف (تومان): ليرة="],["لیتر","L","L","لتر"],[" مورد):"," items):"," kalem):"," بنود):"],[" مورد"," items"," öğe"," بنود"]].map(([k,en,tr,ar])=>[k,[en,tr,ar]])));
   const order=["en","tr","ar"];
   const key="transit_fuel_ui_language_v1";
   function selected(){
@@ -53,14 +54,7 @@
     "🛢️ کل باقیمانده باک: ","🚧 خرید و جرایم مرزی: ","🧾 هزینه‌های سفر: ",
     "  موردی ثبت نشده است."
   ];
-  const reportParts = {
-    " | برگشت: ":" | Return: "," | جمع: ":" | Total: ",
-    " | تاریخ: ":" | Date: "," | خارج از ایران ":" | Outside Iran ",
-    " | مرز خارج ":" | Foreign border "," | مرز ایران ":" | Iranian border ",
-    " رفت ":" outbound "," + خالی ":" + empty "," + درجا ":" + idle ",
-    " + برگشت ":" + return "," مورد):":" items):",
-    " لیتر":" L"
-  };
+  const reportParts = [[" | برگشت: "," | Return: "," | Dönüş: "," | العودة: "],[" | جمع: "," | Total: "," | Toplam: "," | الإجمالي: "],[" | تاریخ: "," | Date: "," | Tarih: "," | التاريخ: "],[" | خارج از ایران "," | Outside Iran "," | İran dışında "," | خارج إيران "],[" | مرز خارج "," | Foreign border "," | Dış sınır "," | حدود خارجية "],[" | مرز ایران "," | Iranian border "," | İran sınırı "," | حدود إيران "],[" رفت "," outbound "," gidiş "," ذهاب "],[" + خالی "," + empty "," + boş "," + فارغ "],[" + درجا "," + idle "," + rölanti "," + توقف "],[" + برگشت "," + return "," + dönüş "," + عودة "],[" مورد):"," items):"," kalem):"," بنود):"],[" لیتر"," L"," L"," لتر"],[" | دلار="," | USD="," | USD="," | دولار="],[" | یورو="," | EUR="," | EUR="," | يورو="],[" | منات="," | AZN="," | AZN="," | مانات="]];
   function report(value) {
     if(lang==="fa" || typeof value!=="string")return value;
     return value.split("\n").map(line=>{
@@ -78,9 +72,7 @@
         if(translations[key]?.[index]) result=result.split(key).join(translations[key][index]);
       }
       result=result.replace(/([0-9۰-۹٠-٩][0-9۰-۹٠-٩,.]*)\s+لیتر/g,(_,amount)=>amount+" "+t("لیتر"));
-      if(lang==="en"){
-        for(const [fa,en] of Object.entries(reportParts)) result=result.split(fa).join(en);
-      }
+      for(const piece of reportParts) result=result.split(piece[0]).join(piece[index+1]);
       return digits(result);
     }).join("\n");
   }
