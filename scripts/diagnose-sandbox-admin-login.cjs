@@ -3,7 +3,8 @@ const fs=require("node:fs");
 const {DatabaseSync}=require("node:sqlite");
 const {scryptSync,timingSafeEqual}=require("node:crypto");
 const dbPath="I:\\TransitFuel-SMS-Test\\data\\transit-sms-test.sqlite";
-const base="http://localhost:8112";
+const base="http://127.0.0.1:8112";
+const permittedOrigin="http://localhost:8112";
 async function main(){
   let password=fs.readFileSync(0,"utf8").replace(/\r?\n$/,"");
   if(!password){console.log("CHECK: EMPTY_PASSWORD");process.exitCode=2;return;}
@@ -20,7 +21,7 @@ async function main(){
   if(!matched)return;
   const response=await fetch(base+"/api/login",{
     method:"POST",
-    headers:{"Content-Type":"application/json","Origin":base},
+    headers:{"Content-Type":"application/json","Origin":permittedOrigin},
     body:JSON.stringify({username:"transit-admin",password}),
     signal:AbortSignal.timeout(12000)
   });
