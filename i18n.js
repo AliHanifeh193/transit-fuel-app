@@ -16,6 +16,7 @@
   const index=order.indexOf(lang);
   // Prefixes apply only to fixed interface messages followed by computed values.
   const prefixKeys = ["📂 آرشیو سفرها (","مانده باک:","آخرین ذخیره خودکار:","مصرف کل سفر:","اضافه‌سوخت شرکت (قابل فروش):","سهم سوخت شخصی شما:","کل باقیمانده واقعی باک:","زمان ایجاد سفر:","کل لیتر ثبت‌شده:","تعداد اسناد تصویری:","جزئیات ارزها:","ارزها:","کد تأیید به ","خالص دریافتی راننده: ","در صف ارسال: "];
+  const suffixKeys = [" ارسال شد؛ اعتبار: ۳ دقیقه"," لیتر"," مورد):"," مورد", " عکس"];
   const digitsFa="۰۱۲۳۴۵۶۷۸۹", digitsAr="٠١٢٣٤٥٦٧٨٩";
   function digits(value){
     return String(value).replace(/[0-9۰-۹٠-٩]/g,ch=>{
@@ -27,10 +28,61 @@
   function t(text){
     if(index<0 || typeof text!=="string")return text;
     if(Object.hasOwn(translations,text))return translations[text][index] || text;
+    let value=text;
     for(const key of prefixKeys){
-      if(text.startsWith(key) && translations[key]?.[index])return translations[key][index] + text.slice(key.length);
+      if(value.startsWith(key) && translations[key]?.[index]){
+        value=translations[key][index]+value.slice(key.length);
+        break;
+      }
     }
-    return text;
+    for(const key of suffixKeys){
+      if(value.endsWith(key) && translations[key]?.[index]){
+        value=value.slice(0,-key.length)+translations[key][index];
+        break;
+      }
+    }
+    return value;
+  }
+  // Output-only report translation. Trip data, financial numbers and records are never rewritten.
+  const reportKeys = [
+    "🚛 گزارش کامل تسویه و سوخت ترانزیت","📌 عنوان سفر: ","📅 تاریخ سفر: ","زمان ایجاد سفر: ",
+    "🕒 زمان تهیه گزارش: ","⛽ خلاصه وضعیت سوخت:","• مصرف کل سوخت: ","• سهمیه کل شرکت: ",
+    "• جمع هزینه‌های سفر (تومان): ","💰 خلاصه مالی و هزینه‌ها:","🛂 سوخت‌های مرزی (",
+    "🧾 هزینه‌های سفر (","🚛 گزارش تسویه سفر: ","پلاک: ","⛽ سوخت اولیه: ",
+    "📉 مصرف کل: ","💼 اضافه‌سوخت شرکت: ","👤 سهم سوخت شخصی: ",
+    "🛢️ کل باقیمانده باک: ","🚧 خرید و جرایم مرزی: ","🧾 هزینه‌های سفر: ",
+    "  موردی ثبت نشده است."
+  ];
+  const reportParts = {
+    " | برگشت: ":" | Return: "," | جمع: ":" | Total: ",
+    " | تاریخ: ":" | Date: "," | خارج از ایران ":" | Outside Iran ",
+    " | مرز خارج ":" | Foreign border "," | مرز ایران ":" | Iranian border ",
+    " رفت ":" outbound "," + خالی ":" + empty "," + درجا ":" + idle ",
+    " + برگشت ":" + return "," مورد):":" items):",
+    " لیتر":" L"
+  };
+  function report(value) {
+    if(lang==="fa" || typeof value!=="string")return value;
+    return value.split("\\n").map(line=>{
+      let result=line;
+      const leading=result.match(/^\\s*/)?.[0] || "";
+      const body=result.slice(leading.length);
+      for(const key of reportKeys){
+        if(body.startsWith(key) && translations[key]?.[index]){
+          result=leading + translations[key][index] + body.slice(key.length);
+          break;
+        }
+      }
+      for(const key of ["• سهمیه محاسباتی شرکت: ","• مازاد / کسری سوخت: ","• سوخت اضافی مسیر (رفت: ",
+         "• نرخ ارزها (تومان): لیر="," | دلار="," | یورو="," | منات="," | جمع: "," | برگشت: "]){
+        if(translations[key]?.[index]) result=result.split(key).join(translations[key][index]);
+      }
+      result=result.replace(/([0-9۰-۹٠-٩][0-9۰-۹٠-٩,.]*)\\s+لیتر/g,(_,amount)=>amount+" "+t("لیتر"));
+      if(lang==="en"){
+        for(const [fa,en] of Object.entries(reportParts)) result=result.split(fa).join(en);
+      }
+      return digits(result);
+    }).join("\\n");
   }
   function translatedText(raw){
     const trimmed=raw.trim();
@@ -106,7 +158,7 @@
     }
     window.dispatchEvent(new CustomEvent("transit-language-ready",{detail:{language:lang}}));
   }
-  global.TransitI18n=Object.freeze({language:lang,languages,t,digits});
+  global.TransitI18n=Object.freeze({language:lang,languages,t,digits,report});
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot,{once:true});
   else boot();
 })(window);
