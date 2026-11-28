@@ -202,7 +202,9 @@
     const role = select(Object.entries(roles)), phone = input("tel", 20);
     phone.placeholder = "+989121234567 / +905321234567";
     const plate = input("text", 100);
-    section.append(element("h3", "مدیریت کاربران و ناوگان"));
+    const fleetControls = element("div", "");
+    fleetControls.className = "company-fleet-controls";
+    section.append(element("h3", "مدیریت کاربران و ناوگان"), element("h4", "ایجاد کاربر"));
     controls.append(
       field("نام کاربری", username), field("نام", name), field("رمز اولیه مدیر/حسابدار", password),
       field("نقش", role), field("شماره موبایل ثبت‌شده", phone),
@@ -213,11 +215,12 @@
          });
         password.value = "";
         await refresh();
-      }), field("پلاک", plate), button("ثبت خودرو", async () => {
-        await api("vehicles", "POST", {plate: plate.value});
-        await refresh();
       }));
-    section.append(controls);
+    fleetControls.append(field("پلاک", plate), button("ثبت خودرو", async () => {
+      await api("vehicles", "POST", {plate: plate.value});
+      await refresh();
+    }));
+    section.append(controls, element("h4", "ثبت خودرو"), fleetControls, element("h4", "کاربران و خودروهای ثبت‌شده"));
     const roster = element("div", "");
     roster.className = "company-admin-roster";
     for (const [resource, entries] of [["users", await api("users")], ["vehicles", vehicles]]) {
@@ -246,7 +249,8 @@
     const feedback = element("div", "");
     section.append(button("صندوق بازخورد", async () => {
       feedback.replaceChildren(...(await api("feedback")).map(entry => element("p", entry.at + " | " + entry.message)));
-    }), feedback);
+    }));
+    section.append(feedbackActions, feedback);
     return section;
   }
 
@@ -326,20 +330,26 @@
     if (activeUser.role !== "driver") {
       const log = element("div", "");
       let after = 0;
-      workspace.append(button("نمایش رویدادهای حسابرسی", async () => {
+      const auditActions = element("div", "");
+      auditActions.className = "company-action-row";
+      auditActions.append(button("نمایش رویدادهای حسابرسی", async () => {
         for (const entry of await api("audit?after=" + after)) {
           log.append(element("p", [formatTimestamp(entry.at), entry.action, entry.entity, entry.note].join(" | ")));
           after = entry.id;
         }
-      }), log);
+      }));
+      workspace.append(auditActions, log);
     }
     const message = document.createElement("textarea");
     message.maxLength = 4000;
-    workspace.append(field("پیام برای شرکت", message), button("ارسال بازخورد", async () => {
+    const messageBox = element("div", "");
+    messageBox.className = "company-feedback-compose";
+    messageBox.append(field("پیام برای شرکت", message), button("ارسال بازخورد", async () => {
       await api("feedback", "POST", {message: message.value});
       message.value = "";
       status.textContent = "بازخورد به شرکت ارسال شد";
     }));
+    workspace.append(messageBox);
   }
 
   // Switch to the OTP step immediately after a successful first factor.
