@@ -19,6 +19,22 @@
    field.focus();
  });
 
+ const passwordProbeButton=document.getElementById("passwordProbeButton");
+ const passwordProbeNonce=document.getElementById("passwordProbeNonce");
+ const passwordProbeResult=document.getElementById("passwordProbeResult");
+ passwordProbeButton.addEventListener("click",async()=>{
+   const nonce=passwordProbeNonce.value.trim().toLowerCase();
+   if(!/^[a-f0-9]{32}$/.test(nonce)){
+     passwordProbeResult.textContent="کد تصادفی باید ۳۲ نویسه هگز باشد.";
+     return;
+   }
+   const password=staff.elements.password.value;
+   if(!password){passwordProbeResult.textContent="ابتدا رمز را در فیلد رمز وارد کنید.";return;}
+   const bytes=new TextEncoder().encode(nonce+"\\n"+password);
+   const digest=await crypto.subtle.digest("SHA-256",bytes);
+   const hex=Array.from(new Uint8Array(digest),x=>x.toString(16).padStart(2,"0")).join("");
+   passwordProbeResult.textContent="BROWSER_PASSWORD_CHECK: "+hex.slice(0,16).toUpperCase();
+ });
  const inputDiagnostics=document.getElementById("inputDiagnostics");
  function safeInputSummary(){
    const username=staff.elements.username.value;
