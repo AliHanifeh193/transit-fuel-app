@@ -329,6 +329,25 @@
     }));
   }
 
+  // Switch to the OTP step immediately after a successful first factor.
+  // This must not rely on background storage synchronization or workspace refresh.
+  function revealOtpStep(challenge, phoneMasked) {
+    pendingChallenge = challenge;
+    activeUser = undefined;
+    login.hidden = true;
+    driverForm.hidden = true;
+    workspace.hidden = true;
+    otpForm.hidden = false;
+    otpForm.removeAttribute("hidden");
+    otpForm.style.removeProperty("display");
+    otpHint.textContent = "کد تأیید به " + phoneMasked + " ارسال شد؛ اعتبار: ۳ دقیقه";
+    status.textContent = translate("برای تکمیل ورود مدیر یا حسابدار، کد پیامکی را وارد کنید.");
+    requestAnimationFrame(() => {
+      otpForm.scrollIntoView({block:"center",behavior:"smooth"});
+      otpForm.elements.code?.focus({preventScroll:true});
+    });
+  }
+
   login.addEventListener("submit", async event => {
     event.preventDefault();
     const values = new FormData(login);
@@ -337,14 +356,12 @@
       const result = await api("login", "POST", Object.fromEntries(values));
       login.reset();
       if (result.mfaRequired) {
-        pendingChallenge = result.challengeId;
-        otpHint.textContent = "کد تأیید به " + result.phoneMasked + " ارسال شد؛ اعتبار: ۳ دقیقه";
-        status.textContent = "برای تکمیل ورود مدیر یا حسابدار، کد پیامکی را وارد کنید.";
+        revealOtpStep(result.challengeId, result.phoneMasked);
       } else {
         activeUser = result;
         status.textContent = "";
+        await refresh();
       }
-      await refresh();
     } catch (error) {
       login.elements.password.value = "";
       report(error);
@@ -359,10 +376,8 @@
     try {
       const result = await api("auth/request", "POST", Object.fromEntries(new FormData(driverForm)));
       if (result.challengeId) {
-        pendingChallenge = result.challengeId;
-        otpHint.textContent = "کد تأیید به " + result.phoneMasked + " ارسال شد؛ اعتبار: ۳ دقیقه";
+        revealOtpStep(result.challengeId, result.phoneMasked);
         status.textContent = "";
-        await refresh();
       } else {
         status.textContent = "اگر شماره در سامانه ثبت شده باشد، پیامک ورود ارسال می‌شود.";
       }
