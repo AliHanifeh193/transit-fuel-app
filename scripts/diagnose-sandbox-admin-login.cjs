@@ -31,6 +31,11 @@ async function main(){
   console.log("LOGIN_HTTP_STATUS:",response.status);
   if(response.status===200&&result.mfaRequired===true&&/^[a-f0-9]{64}$/.test(result.challengeId||"")){
     console.log("LOGIN_RESULT: MFA_REQUIRED");
+    // Local sandbox only: transfer the challenge to the browser via a URL fragment.
+    // The server never sees this fragment; a separate OTP is still mandatory.
+    console.log("LOCAL_OTP_BROWSER_URL: http://localhost:8112/manager-login.html#challenge="+result.challengeId);
+    console.log("LOCAL_OTP_BROWSER_URL_PRIVATE: YES — do not share this link or its code.");
+
     console.log("NEXT: Check the existing server PowerShell window for LOCAL_SANDBOX_OTP; do not share the code.");
   }else if(response.status===200)console.log("LOGIN_RESULT: RESPONSE_UNEXPECTED");
   else{
