@@ -84,7 +84,7 @@
     for(const unit of units){
       const translated=t(unit);
       if(translated===unit)continue;
-      const pattern=new RegExp("("+num+")\\\\s+"+unit+"(?=\\\\s|$|[|)،])","g");
+      const pattern=new RegExp("("+num+")\\s+"+unit+"(?=\\s|$|[|)،])","g");
       text=text.replace(pattern,(_,amount)=>amount+" "+translated);
     }
     return text;
