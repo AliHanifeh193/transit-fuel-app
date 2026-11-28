@@ -70,7 +70,7 @@ async function sendViaTurkeyGateway(phone, code, {env=process.env, fetchFn=fetch
 async function providerSms(phone, code, options) {
   if (phone.startsWith("+98")) return sendViaSmsIr(phone,code,options);
   // Iran-only rollout: defer Turkish delivery until a separately approved gateway exists.
-  if (phone.startsWith("+90") && (options?.env || process.env).TRANSIT_COUNTRY_SCOPE === "iran") {
+  if (phone.startsWith("+90") && (options?.env || process.env).TRANSIT_COUNTRY_SCOPE !== "iran-and-turkey") {
     throw Error("turkey_deferred");
   }
   if (phone.startsWith("+90")) return sendViaTurkeyGateway(phone,code,options);
