@@ -16,6 +16,9 @@ test("management workspace uses separated toolbar, responsive admin controls and
   assert.match(js,/const roster = element\("div", ""\)/);
   assert.match(js,/roster\.className = "company-admin-roster"/);
   assert.match(js,/workspace\.replaceChildren\(toolbar\)/);
+  assert.match(js,/const feedbackActions = element\("div", ""\)/);
+  assert.match(js,/feedbackActions\.append\(button\("صندوق بازخورد"/);
+  assert.match(js,/section\.append\(feedbackActions, feedback\)/);
   assert.match(html,/#companyWorkspace \.company-admin-controls/);
   assert.match(html,/grid-template-columns:repeat\(auto-fit,minmax/);
   assert.match(html,/#companyWorkspace \.company-admin-roster-row/);
