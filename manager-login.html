@@ -20,9 +20,9 @@ button:disabled{opacity:.6} #message{min-height:2em;color:#ffcf84}
 <h1>ورود امن مدیریت Transit Fuel</h1>
 <p>محیط آزمایشی ایران — ورود مدیر با رمز عبور و کد شش‌رقمی</p>
 <p id="message" role="status" aria-live="polite"></p>
-<form id="staffLogin">
+<form id="staffLogin" autocomplete="off">
 <label>نام کاربری<input name="username" value="transit-admin" autocomplete="username" required></label>
-<label>رمز عبور<input name="password" type="password" autocomplete="current-password" required></label>
+<label>رمز عبور<input name="password" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" required></label>
 <button id="togglePassword" type="button" aria-pressed="false">نمایش رمز عبور</button>
 <p id="inputDiagnostics" role="status" aria-live="polite"></p>
 <button type="submit">دریافت کد تأیید</button>
