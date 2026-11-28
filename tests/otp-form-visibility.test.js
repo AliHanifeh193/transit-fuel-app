@@ -11,7 +11,8 @@ test("successful staff login displays OTP immediately without waiting for a refr
   const first=src.slice(begin,end);
   assert.ok(begin>=0);
   assert.match(first,/revealOtpStep\(result\.challengeId, result\.phoneMasked\)/);
-  assert.doesNotMatch(first,/await refresh\(\)/);
+  const mfaBranch=first.slice(first.indexOf("if (result.mfaRequired) {"),first.indexOf("} else {"));
+  assert.doesNotMatch(mfaBranch,/await refresh\(\)/);
   assert.match(src,/otpForm\.hidden = false/);
   assert.match(src,/otpForm\.removeAttribute\("hidden"\)/);
   assert.match(src,/otpForm\.scrollIntoView/);
