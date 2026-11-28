@@ -19,6 +19,7 @@ $env:TRANSIT_SMS_ENV = 'sandbox'
 $env:TRANSIT_COUNTRY_SCOPE = 'iran'
 $env:TRANSIT_SMSIR_TEMPLATE_ID = '123456'
 $env:TRANSIT_SMSIR_PARAMETER = 'Code'
+$env:TRANSIT_SANDBOX_SHOW_OTP = '1'
 $secure = $null
 $p = [IntPtr]::Zero
 try {
@@ -29,12 +30,14 @@ try {
         throw 'INVALID_API_KEY_INPUT'
     }
     Write-Host 'SANDBOX_SERVER_STARTING: http://localhost:8112'
+    Write-Host 'LOCAL OTP PREVIEW: Each accepted Sandbox login prints LOCAL_SANDBOX_OTP in THIS window. Do not share codes or console logs.'
     Write-Host 'Close this PowerShell window or press Ctrl+C to stop the server'
     node .\server\app.js
     if ($LASTEXITCODE -ne 0) { throw 'SERVER_EXITED_WITH_ERROR' }
 }
 finally {
     Remove-Item Env:\TRANSIT_SMSIR_API_KEY -ErrorAction SilentlyContinue
+    Remove-Item Env:\TRANSIT_SANDBOX_SHOW_OTP -ErrorAction SilentlyContinue
     if ($p -ne [IntPtr]::Zero) { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($p) }
     if ($secure) { $secure.Dispose() }
 }
