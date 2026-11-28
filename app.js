@@ -240,7 +240,7 @@ function updateArchiveCountBadge() {
 }
 
 function toPersianDigits(val) {
-  return String(val).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+  return window.TransitI18n?.digits(val) ?? String(val).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
 }
 
 function formatNum(num, decimals = 2) {
@@ -255,7 +255,7 @@ function formatNum(num, decimals = 2) {
 }
 
 function formatToman(amount) {
-  return formatNum(Math.round(Number(amount) || 0), 0) + " تومان";
+  return formatNum(Math.round(Number(amount) || 0), 0) + " " + (window.TransitI18n?.t("تومان") || "تومان");
 }
 
 function convertToToman(amount, currency) {
