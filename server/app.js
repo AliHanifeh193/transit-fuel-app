@@ -8,6 +8,7 @@ const {randomBytes, randomUUID, scryptSync, timingSafeEqual, createHash} = requi
 const {DatabaseSync} = require("node:sqlite");
 const {normalizePhone,maskPhone,newChallenge,verifyCode,webhookSms} = require("./sms-auth");
 const {providerSms,assertSmsSettings} = require("./sms-providers");
+const {localPreviewEnabled} = require("./sandbox-preview");
 const {calculate, fields, currencies} = require("../calculations");
 const root = path.resolve(__dirname, "..");
 const assets = new Map(Object.entries({
@@ -199,6 +200,7 @@ async function getBody(req) {
 }
 
 function createServer({filename, origin, secure = true, authMode = "password", sendSms = webhookSms}) {
+  const sandboxOtpPreview=localPreviewEnabled({filename,origin,secure,env:process.env});
   const db = openDatabase(filename);
   requireCondition(["password","sms"].includes(authMode),500,"invalid_auth_mode");
   if (authMode === "sms" && sendSms === webhookSms) {
@@ -246,6 +248,8 @@ function createServer({filename, origin, secure = true, authMode = "password", s
       db.prepare("DELETE FROM otp_challenges WHERE id=?").run(id);
       throw new RequestError(503,"sms_unavailable");
     }
+    // Show the code only on the isolated localhost Sandbox console, never in an HTTP response.
+    if(sandboxOtpPreview) console.log("LOCAL_SANDBOX_OTP:",code,"VALID_FOR_SECONDS: 180");
     return{challengeId:id,phoneMasked:maskPhone(phone),expiresIn:180};
   }
   async function api(req, res, route) {
