@@ -63,9 +63,9 @@
   };
   function report(value) {
     if(lang==="fa" || typeof value!=="string")return value;
-    return value.split("\\n").map(line=>{
+    return value.split("\n").map(line=>{
       let result=line;
-      const leading=result.match(/^\\s*/)?.[0] || "";
+      const leading=result.match(/^\s*/)?.[0] || "";
       const body=result.slice(leading.length);
       for(const key of reportKeys){
         if(body.startsWith(key) && translations[key]?.[index]){
@@ -77,12 +77,12 @@
          "• نرخ ارزها (تومان): لیر="," | دلار="," | یورو="," | منات="," | جمع: "," | برگشت: "]){
         if(translations[key]?.[index]) result=result.split(key).join(translations[key][index]);
       }
-      result=result.replace(/([0-9۰-۹٠-٩][0-9۰-۹٠-٩,.]*)\\s+لیتر/g,(_,amount)=>amount+" "+t("لیتر"));
+      result=result.replace(/([0-9۰-۹٠-٩][0-9۰-۹٠-٩,.]*)\s+لیتر/g,(_,amount)=>amount+" "+t("لیتر"));
       if(lang==="en"){
         for(const [fa,en] of Object.entries(reportParts)) result=result.split(fa).join(en);
       }
       return digits(result);
-    }).join("\\n");
+    }).join("\n");
   }
   function translatedText(raw){
     const trimmed=raw.trim();
