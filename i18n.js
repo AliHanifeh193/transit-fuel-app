@@ -37,8 +37,9 @@
       }
     }
     for(const key of suffixKeys){
-      if(value.endsWith(key) && translations[key]?.[index]){
-        value=value.slice(0,-key.length)+translations[key][index];
+      const replacement=translations[key]?.[index] || (key.startsWith(" ")?(" "+(translations[key.trim()]?.[index] || "")):null);
+      if(value.endsWith(key) && replacement?.trim()){
+        value=value.slice(0,-key.length)+replacement;
         break;
       }
     }
@@ -76,11 +77,23 @@
       return digits(result);
     }).join("\n");
   }
+  const units=["لیتر","لیر","تومان","دلار","یورو","مانات"];
+  function localizeUnits(text){
+    if(lang==="fa")return text;
+    const num="[0-9۰-۹٠-٩][0-9۰-۹٠-٩,.]*";
+    for(const unit of units){
+      const translated=t(unit);
+      if(translated===unit)continue;
+      const pattern=new RegExp("("+num+")\\\\s+"+unit+"(?=\\\\s|$|[|)،])","g");
+      text=text.replace(pattern,(_,amount)=>amount+" "+translated);
+    }
+    return text;
+  }
   function translatedText(raw){
     const trimmed=raw.trim();
     if(!trimmed)return raw;
     const changed=t(trimmed);
-    return digits(changed===trimmed?raw:raw.replace(trimmed,changed));
+    return digits(localizeUnits(changed===trimmed?raw:raw.replace(trimmed,changed)));
   }
   const attributeNames=["placeholder","title","aria-label"];
   // Input values are never altered. Text selection, IDs, API payloads and financial storage remain unchanged.
