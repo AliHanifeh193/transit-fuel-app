@@ -4,6 +4,16 @@
  const otp=document.getElementById("otpLogin");
  const message=document.getElementById("message");
  const hint=document.getElementById("otpHint");
+ const toggle=document.getElementById("togglePassword");
+ toggle.addEventListener("click",()=>{
+   const field=staff.elements.password;
+   const visible=field.type==="password";
+   field.type=visible?"text":"password";
+   toggle.textContent=visible?"مخفی کردن رمز عبور":"نمایش رمز عبور";
+   toggle.setAttribute("aria-pressed",String(visible));
+   field.focus();
+ });
+
  let challenge=null;
  async function send(route,body){
    const response=await fetch("/api/"+route,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),cache:"no-store",credentials:"same-origin"});
