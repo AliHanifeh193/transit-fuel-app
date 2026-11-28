@@ -26,7 +26,7 @@ button:disabled{opacity:.6} #message{min-height:2em;color:#ffcf84}
 <button id="togglePassword" type="button" aria-pressed="false">نمایش رمز عبور</button>
 <p id="inputDiagnostics" role="status" aria-live="polite"></p>
 <button type="submit">دریافت کد تأیید</button>
-<details><summary>بررسی محلی تطابق رمز (بدون ارسال رمز)</summary><p>کد تصادفی را از ابزار PowerShell وارد کنید و «محاسبه» را بزنید. فقط کد تطبیق را با خروجی همان ابزار مقایسه کنید؛ هیچ کدی را برای دیگران نفرستید.</p><label>کد تصادفی آزمون<input id="passwordProbeNonce" type="text" autocomplete="off" spellcheck="false" pattern="[a-f0-9]{32}" maxlength="32"></label><button id="passwordProbeButton" type="button">محاسبه کد تطبیق در مرورگر</button><p id="passwordProbeResult" role="status" aria-live="polite"></p></details>
+<details><summary>بررسی محلی تطابق رمز (بدون ارسال رمز)</summary><p>کد تصادفی را از ابزار PowerShell وارد کنید و «محاسبه» را بزنید. فقط کد تطبیق را با خروجی همان ابزار مقایسه کنید؛ هیچ کدی را برای دیگران نفرستید.</p><label>کد تصادفی آزمون<input id="passwordProbeNonce" type="text" autocomplete="off" spellcheck="false" maxlength="160" placeholder="NONCE: (۳۲ نویسه)"></label><button id="passwordProbeButton" type="button">محاسبه کد تطبیق در مرورگر</button><p id="passwordProbeResult" role="status" aria-live="polite"></p></details>
 </form>
 <form id="otpLogin" hidden>
 <p id="otpHint"></p>
