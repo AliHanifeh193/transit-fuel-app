@@ -68,3 +68,15 @@ test("SMS.ir Sandbox requires explicit sandbox mode and reserved template", asyn
   };
   await sendViaSmsIr("+989121234567","482731",{env:sandbox,fetchFn});
 });
+
+test("Iran-only rollout never contacts Turkish gateway", async () => {
+  let called = 0;
+  await assert.rejects(
+    providerSms("+905321234567", "123456", {
+      env:{...env,TRANSIT_COUNTRY_SCOPE:"iran"},
+      fetchFn:async()=>{ called++; return {ok:true}; }
+    }),
+    /turkey_deferred/
+  );
+  assert.equal(called,0);
+});
