@@ -1,10 +1,10 @@
 "use strict";
 
 const PREFIX = "transit-fuel-pwa-";
-const CACHE_NAME = PREFIX + "1.0.0-dates";
+const CACHE_NAME = PREFIX + "1.0.8-otp-ui-fix";
 const ASSETS = [
   "./", "./index.html", "./manifest.json", "./calculations.js", "./storage.js",
-  "./company.js", "./app.js", "./privacy.html", "./icon-192.png", "./icon-512.png",
+  "./company.js", "./app.js", "./i18n.js", "./i18n-catalog.js", "./i18n-catalog-extra.js", "./i18n-catalog-dynamic.js", "./i18n-catalog-app.js", "./privacy.html", "./icon-192.png", "./icon-512.png",
   "./icon-192.svg", "./icon-512.svg"
 ];
 const assetPaths = new Set(ASSETS.map(asset => new URL(asset, self.registration.scope).pathname));
@@ -27,7 +27,16 @@ self.addEventListener("fetch", event => {
   if (event.request.method !== "GET" || url.origin !== self.location.origin || !assetPaths.has(url.pathname)) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(event.request, {ignoreSearch: true});
-    return cached || fetch(event.request);
+    // Online-first for app shell/scripts: never pin an old login form after an update.
+    // Offline fallback remains available for the PWA.
+    try {
+      const response = await fetch(event.request, {cache:"no-store"});
+      if (response.ok) await cache.put(event.request, response.clone());
+      return response;
+    } catch {
+      const cached = await cache.match(event.request, {ignoreSearch: true});
+      if (cached) return cached;
+      throw Error("offline_asset_unavailable");
+    }
   })());
 });

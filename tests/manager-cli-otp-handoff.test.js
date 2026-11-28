@@ -1,0 +1,20 @@
+"use strict";
+const {test}=require("node:test");
+const assert=require("node:assert/strict");
+const fs=require("node:fs");
+const path=require("node:path");
+const root=path.resolve(__dirname,"..");
+test("local diagnostic browser handoff stays OTP-gated",()=>{
+  const page=fs.readFileSync(path.join(root,"manager-login.js"),"utf8");
+  const cli=fs.readFileSync(path.join(root,"scripts","diagnose-sandbox-admin-login.cjs"),"utf8");
+  assert.match(cli,/LOGIN_RESULT: MFA_REQUIRED/);
+  assert.match(cli,/manager-login\.html#challenge=/);
+  assert.match(page,/new URLSearchParams\(window\.location\.hash\.slice\(1\)\)/);
+  assert.match(page,/history\.replaceState\(null/);
+  assert.match(page,/\^\[a-f0-9\]\{64\}\$/);
+  assert.match(page,/challenge=value/);
+  assert.match(page,/otp\.hidden=false/);
+  assert.match(page,/send\("auth\/verify",\{challengeId:challenge,code:otp\.elements\.code\.value\}\)/);
+  assert.match(page,/window\.location\.replace\("\/\?manager-login-complete=1"\)/);
+  new (require("node:vm").Script)(page);
+});

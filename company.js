@@ -3,8 +3,14 @@
 (() => {
   const login = document.getElementById("companyLogin");
   const workspace = document.getElementById("companyWorkspace");
+  const driverForm = document.getElementById("driverPhoneLogin");
+  const otpForm = document.getElementById("companyOtp");
+  const otpHint = document.getElementById("otpHint");
+  const cancelOtp = document.getElementById("cancelOtp");
   const status = document.getElementById("companyStatus");
   let activeUser;
+  let authMode = "password";
+  let pendingChallenge = null;
   let local = {};
   let ready = false;
   let syncing = false;
@@ -20,12 +26,24 @@
     invalid_amount: "مقادیر سفر باید عدد معتبر و نامنفی باشند",
     invalid_password: "رمز عبور باید ۱۲ تا ۱۲۸ نویسه داشته باشد",
     invalid_vehicle: "وسیله نقلیه فعال نیست",
-    try_later: "تلاش‌های ورود زیاد است. چند دقیقه بعد دوباره امتحان کنید."
+    try_later: "تلاش‌های ورود زیاد است. بعداً دوباره امتحان کنید.",
+    invalid_phone: "شماره موبایل ایران یا ترکیه معتبر نیست.",
+    invalid_otp: "کد نامعتبر یا منقضی شده است.",
+    invalid_challenge: "درخواست تأیید نامعتبر است. دوباره کد بخواهید.",
+    phone_required: "شماره موبایل این حساب ثبت نشده است. با مدیر سامانه تماس بگیرید.",
+    sms_unavailable: "ارسال پیامک در حال حاضر در دسترس نیست.",
+    driver_otp_only: "رانندگان باید از ورود پیامکی استفاده کنند."
   };
+
+  function translate(text) { return window.TransitI18n?.t(text) || text; }
+  function confirmLocalized(message) { return window.confirm(translate(message)); }
+  for (const entries of [roles,states,errors]) {
+    for (const key of Object.keys(entries)) entries[key] = translate(entries[key]);
+  }
 
   function element(tag, value) {
     const node = document.createElement(tag);
-    node.textContent = value;
+    node.textContent = translate(value);
     return node;
   }
 
@@ -60,7 +78,7 @@
   }
 
   function field(label, input) {
-    const wrapper = element("label", label + " ");
+    const wrapper = element("label", translate(label) + " ");
     wrapper.append(input);
     return wrapper;
   }
@@ -105,7 +123,7 @@
   }
 
   async function submit(vehicle, existing) {
-    if (!confirm("اطلاعات مالی، سوخت اضافی و تصاویر اسناد این سفر برای حسابداری شرکت ارسال شوند؟")) return;
+    if (!confirmLocalized("اطلاعات مالی، سوخت اضافی و تصاویر اسناد این سفر برای حسابداری شرکت ارسال شوند؟")) return;
     readFormIntoState();
     if ([...document.querySelectorAll("input[type=number]")].some(control => !control.validity.valid)) {
       throw Error("invalid_amount");
@@ -155,7 +173,7 @@
       if (actions.length) view.append(field("یادداشت حسابداری", note));
       for (const [action, label] of actions) {
         view.append(button(label, async () => {
-          if (!confirm(label + " این سفر؟")) return;
+          if (!confirmLocalized(label + " این سفر؟")) return;
           await api("trips/" + trip.id, "PATCH", {action, revision: trip.revision, note: note.value});
           await refresh();
         }));
@@ -163,7 +181,7 @@
     }
     if (activeUser.role === "driver" && trip.status === "rejected") {
       view.append(button("بارگذاری برای اصلاح", () => {
-        if (!confirm("فرم محلی با نسخه ارسالی جایگزین شود؟")) return;
+        if (!confirmLocalized("فرم محلی با نسخه ارسالی جایگزین شود؟")) return;
         state = normalizeDraft(trip.data);
         state.plateNo = "";
         for (const entry of [...state.borderFuelItems, ...state.tripExpenses]) entry.id = crypto.randomUUID();
@@ -177,40 +195,72 @@
 
   async function administration(vehicles) {
     const section = element("section", "");
+    section.className = "company-admin-panel";
+    const controls = element("div", "");
+    controls.className = "company-admin-controls";
     const username = input("text", 64), name = input("text", 120), password = input("password", 128);
-    const role = select(Object.entries(roles));
+    const role = select(Object.entries(roles)), phone = input("tel", 20);
+    phone.placeholder = "+989121234567 / +905321234567";
     const plate = input("text", 100);
-    section.append(element("h3", "مدیریت کاربران و ناوگان"),
-      field("نام کاربری", username), field("نام", name), field("رمز اولیه", password), field("نقش", role),
+    const fleetControls = element("div", "");
+    fleetControls.className = "company-fleet-controls";
+    section.append(element("h3", "مدیریت کاربران و ناوگان"), element("h4", "ایجاد کاربر"));
+    controls.append(
+      field("نام کاربری", username), field("نام", name), field("رمز اولیه مدیر/حسابدار", password),
+      field("نقش", role), field("شماره موبایل ثبت‌شده", phone),
       button("ایجاد کاربر", async () => {
-        await api("users", "POST", {username: username.value, name: name.value, password: password.value, role: role.value});
+        await api("users", "POST", {
+           username: username.value, name: name.value, role: role.value, phone: phone.value,
+           password: authMode === "sms" && role.value === "driver" ? crypto.randomUUID() : password.value
+         });
         password.value = "";
         await refresh();
-      }), field("پلاک", plate), button("ثبت خودرو", async () => {
-        await api("vehicles", "POST", {plate: plate.value});
-        await refresh();
       }));
+    fleetControls.append(field("پلاک", plate), button("ثبت خودرو", async () => {
+      await api("vehicles", "POST", {plate: plate.value});
+      await refresh();
+    }));
+    section.append(controls, element("h4", "ثبت خودرو"), fleetControls, element("h4", "کاربران و خودروهای ثبت‌شده"));
+    const roster = element("div", "");
+    roster.className = "company-admin-roster";
     for (const [resource, entries] of [["users", await api("users")], ["vehicles", vehicles]]) {
       for (const entry of entries) {
-        const line = element("p", entry.plate || entry.name + " (" + roles[entry.role] + ")");
+        const line = element("div", entry.plate || entry.name + " (" + roles[entry.role] + ")" +
+           (entry.phone ? " | " + entry.phone : ""));
+        line.className = "company-admin-roster-row";
+        if (resource === "users" && entry.id !== activeUser.id) {
+          const newPhone = input("tel", 20);
+          newPhone.placeholder = "+989121234567 / +905321234567";
+          line.append(field("اصلاح شماره", newPhone), button("ثبت شماره جدید", async () => {
+            if (!confirmLocalized("شماره تلفن تغییر کند؟ تمام نشست‌های فعلی این کاربر خارج خواهند شد.")) return;
+            await api("users/" + entry.id + "/phone", "PATCH", {phone: newPhone.value});
+            await refresh();
+          }));
+        }
         if (entry.id !== activeUser.id) line.append(button(entry.active ? "غیرفعال" : "فعال", async () => {
-          if (!confirm("وضعیت تغییر کند؟")) return;
+          if (!confirmLocalized("وضعیت تغییر کند؟")) return;
           await api(resource + "/" + entry.id, "PATCH", {active: !entry.active});
           await refresh();
         }));
-        section.append(line);
+        roster.append(line);
       }
     }
+    section.append(roster);
     const feedback = element("div", "");
-    section.append(button("صندوق بازخورد", async () => {
+    const feedbackActions = element("div", "");
+    feedbackActions.className = "company-action-row";
+    feedbackActions.append(button("صندوق بازخورد", async () => {
       feedback.replaceChildren(...(await api("feedback")).map(entry => element("p", entry.at + " | " + entry.message)));
-    }), feedback);
+    }));
+    section.append(feedbackActions, feedback);
     return section;
   }
 
   async function refresh() {
     workspace.hidden = !activeUser;
-    login.hidden = Boolean(activeUser);
+    login.hidden = Boolean(activeUser) || Boolean(pendingChallenge);
+    driverForm.hidden = Boolean(activeUser) || authMode !== "sms" || Boolean(pendingChallenge);
+    otpForm.hidden = Boolean(activeUser) || !pendingChallenge;
     if (!activeUser) { workspace.replaceChildren(); return; }
     await synchronize();
     let vehicles, trips;
@@ -229,14 +279,18 @@
       trips = [];
     }
     const heading = element("h3", activeUser.name + " | " + roles[activeUser.role]);
-    workspace.replaceChildren(heading, button("به‌روزرسانی", refresh),
+    const toolbar = element("div", "");
+    toolbar.className = "company-workspace-toolbar";
+    toolbar.append(heading, button("به‌روزرسانی", refresh),
       button("خروج", async () => {
         await api("logout", "POST");
         activeUser = undefined;
         status.textContent = "";
         await refresh();
       }));
+    workspace.replaceChildren(toolbar);
     const credentials = element("details", "");
+    credentials.className = "company-password-details";
     const current = input("password", 128);
     const next = input("password", 128);
     current.autocomplete = "current-password";
@@ -260,7 +314,7 @@
       for (const entry of (local.pending || []).filter(item => item.userId === activeUser.id)) {
         const row = element("p", "در صف ارسال: " + entry.payload.data.tripTitle);
         row.append(button("حذف از صف", async () => {
-          if (syncing || !confirm("درخواست از صف ارسال حذف شود؟")) return;
+          if (syncing || !confirmLocalized("درخواست از صف ارسال حذف شود؟")) return;
           await storeLocal({...local, pending: local.pending.filter(item => item.id !== entry.id)});
           await refresh();
         }));
@@ -278,20 +332,45 @@
     if (activeUser.role !== "driver") {
       const log = element("div", "");
       let after = 0;
-      workspace.append(button("نمایش رویدادهای حسابرسی", async () => {
+      const auditActions = element("div", "");
+      auditActions.className = "company-action-row";
+      auditActions.append(button("نمایش رویدادهای حسابرسی", async () => {
         for (const entry of await api("audit?after=" + after)) {
           log.append(element("p", [formatTimestamp(entry.at), entry.action, entry.entity, entry.note].join(" | ")));
           after = entry.id;
         }
-      }), log);
+      }));
+      workspace.append(auditActions, log);
     }
     const message = document.createElement("textarea");
     message.maxLength = 4000;
-    workspace.append(field("پیام برای شرکت", message), button("ارسال بازخورد", async () => {
+    const messageBox = element("div", "");
+    messageBox.className = "company-feedback-compose";
+    messageBox.append(field("پیام برای شرکت", message), button("ارسال بازخورد", async () => {
       await api("feedback", "POST", {message: message.value});
       message.value = "";
       status.textContent = "بازخورد به شرکت ارسال شد";
     }));
+    workspace.append(messageBox);
+  }
+
+  // Switch to the OTP step immediately after a successful first factor.
+  // This must not rely on background storage synchronization or workspace refresh.
+  function revealOtpStep(challenge, phoneMasked) {
+    pendingChallenge = challenge;
+    activeUser = undefined;
+    login.hidden = true;
+    driverForm.hidden = true;
+    workspace.hidden = true;
+    otpForm.hidden = false;
+    otpForm.removeAttribute("hidden");
+    otpForm.style.removeProperty("display");
+    otpHint.textContent = "کد تأیید به " + phoneMasked + " ارسال شد؛ اعتبار: ۳ دقیقه";
+    status.textContent = translate("برای تکمیل ورود مدیر یا حسابدار، کد پیامکی را وارد کنید.");
+    requestAnimationFrame(() => {
+      otpForm.scrollIntoView({block:"center",behavior:"smooth"});
+      otpForm.elements.code?.focus({preventScroll:true});
+    });
   }
 
   login.addEventListener("submit", async event => {
@@ -299,10 +378,15 @@
     const values = new FormData(login);
     login.querySelector("button").disabled = true;
     try {
-      activeUser = await api("login", "POST", Object.fromEntries(values));
+      const result = await api("login", "POST", Object.fromEntries(values));
       login.reset();
-      status.textContent = "";
-      await refresh();
+      if (result.mfaRequired) {
+        revealOtpStep(result.challengeId, result.phoneMasked);
+      } else {
+        activeUser = result;
+        status.textContent = "";
+        await refresh();
+      }
     } catch (error) {
       login.elements.password.value = "";
       report(error);
@@ -310,15 +394,52 @@
       login.querySelector("button").disabled = false;
     }
   });
+  driverForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = driverForm.querySelector("button");
+    button.disabled = true;
+    try {
+      const result = await api("auth/request", "POST", Object.fromEntries(new FormData(driverForm)));
+      if (result.challengeId) {
+        revealOtpStep(result.challengeId, result.phoneMasked);
+        status.textContent = "";
+      } else {
+        status.textContent = "اگر شماره در سامانه ثبت شده باشد، پیامک ورود ارسال می‌شود.";
+      }
+    } catch (error) { report(error); }
+    finally { button.disabled = false; }
+  });
+  otpForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = otpForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    try {
+      activeUser = await api("auth/verify", "POST", {
+        challengeId: pendingChallenge,
+        code: otpForm.elements.code.value
+      });
+      pendingChallenge = null;
+      otpForm.reset();
+      status.textContent = "";
+      await refresh();
+    } catch (error) { otpForm.elements.code.value = ""; report(error); }
+    finally { button.disabled = false; }
+  });
+  cancelOtp.addEventListener("click", async () => {
+    pendingChallenge = null;
+    otpForm.reset();
+    status.textContent = "";
+    await refresh();
+  });
   document.addEventListener("transit-storage-ready", async event => {
     local = event.detail;
     ready = true;
     try {
-      await api("health");
+      authMode = (await api("health")).authMode === "sms" ? "sms" : "password";
       activeUser = await api("session");
       await refresh();
-    } catch {
-      status.textContent = "برای ورود، برنامه را از نشانی سامانه شرکت باز کنید";
+    } catch (error) {
+      report(error);
     }
   });
   window.addEventListener("online", async () => {

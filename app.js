@@ -196,7 +196,7 @@ async function restoreWorkspace(input) {
       || !Array.isArray(backup.feedback) || !backup.feedback.every(entry => entry && typeof entry.id === "string")) {
       throw Error("Invalid backup");
     }
-    if (!confirm("بازیابی، اطلاعات این دستگاه را جایگزین می‌کند. ابتدا از داده‌های فعلی پشتیبان بگیرید. ادامه می‌دهید؟")) return;
+    if (!confirmLocalized("بازیابی، اطلاعات این دستگاه را جایگزین می‌کند. ابتدا از داده‌های فعلی پشتیبان بگیرید. ادامه می‌دهید؟")) return;
     await TransitStorage.save({draft: backup.draft, archive: backup.archive, feedback: backup.feedback, editedArchiveId: backup.editedArchiveId || null});
     applyWorkspace(backup);
     showToast("پشتیبان بازیابی شد");
@@ -240,7 +240,7 @@ function updateArchiveCountBadge() {
 }
 
 function toPersianDigits(val) {
-  return String(val).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
+  return window.TransitI18n?.digits(val) ?? String(val).replace(/\d/g, d => "۰۱۲۳۴۵۶۷۸۹"[d]);
 }
 
 function formatNum(num, decimals = 2) {
@@ -255,17 +255,19 @@ function formatNum(num, decimals = 2) {
 }
 
 function formatToman(amount) {
-  return formatNum(Math.round(Number(amount) || 0), 0) + " تومان";
+  return formatNum(Math.round(Number(amount) || 0), 0) + " " + (window.TransitI18n?.t("تومان") || "تومان");
 }
 
 function convertToToman(amount, currency) {
   return TransitCalc.convert(state, amount, currency);
 }
 
-const persianTimestamp = new Intl.DateTimeFormat("fa-IR", {
+// Date presentation follows the selected UI language. Stored ISO timestamps are unchanged.
+const displayLocale = ({fa:"fa-IR",en:"en-GB",tr:"tr-TR",ar:"ar-EG"})[window.TransitI18n?.language || "fa"] || "fa-IR";
+const persianTimestamp = new Intl.DateTimeFormat(displayLocale, {
   dateStyle: "medium", timeStyle: "medium"
 });
-const persianTripDate = new Intl.DateTimeFormat("fa-IR", {
+const persianTripDate = new Intl.DateTimeFormat(displayLocale, {
   dateStyle: "medium", timeZone: "UTC"
 });
 
@@ -372,7 +374,7 @@ function askDriverPrivateDataPermission() {
   if (!currentlyHidden) {
     return true;
   }
-  const allowPrivate = confirm(
+  const allowPrivate = confirmLocalized(
     "آیا مایل هستید بخش‌های خصوصی راننده (مقدار اضافه سوخت و درآمد / سهم از فروش) در گزارش ارسالی گنجانده شوند؟\n\n" +
     "• تأیید (OK): اطلاعات خصوصی در گزارش ارسال می‌شوند.\n" +
     "• لغو (Cancel): اطلاعات خصوصی ارسال نمی‌شوند و محرمانه می‌مانند."
@@ -490,14 +492,16 @@ async function shareOrDownloadFile(blob, filename) {
 
 function shareOrDownloadTxtReport() {
   const allowPrivate = askDriverPrivateDataPermission();
-  const txt = getSanitizedTextForPrivacy(getReportTextContent(), allowPrivate);
+  const safeText = getSanitizedTextForPrivacy(getReportTextContent(), allowPrivate);
+  const txt = window.TransitI18n?.report(safeText) || safeText;
   const blob = new Blob(["\ufeff" + txt], { type: "text/plain;charset=utf-8" });
   shareOrDownloadFile(blob, "gozaresh-tasviye.txt");
 }
 
 function shareOrDownloadCsvReport() {
+  const t = text => window.TransitI18n?.t(text) || text;
   const rows = [
-    ["ردیف", "بخش", "شرح / مرز", "مقدار (لیتر)", "مبلغ اصلی", "واحد ارز", "نرخ به تومان", "معادل تومان", "زمان ثبت"]
+    ["ردیف", "بخش", "شرح / مرز", "مقدار (لیتر)", "مبلغ اصلی", "واحد ارز", "نرخ به تومان", "معادل تومان", "زمان ثبت"].map(t)
   ];
   let rowNum = 1;
   (state.borderFuelItems || []).forEach(it => {
@@ -507,11 +511,11 @@ function shareOrDownloadCsvReport() {
     const tomanVal = toTomanAmount(it.amount, cur);
     rows.push([
       rowNum++,
-      "سوخت مرزی",
+      t("سوخت مرزی"),
       it.borderName || "",
       Number(it.liters) || 0,
       Number(it.amount) || 0,
-      curLabel,
+      t(curLabel),
       rate,
       Math.round(tomanVal),
       it.createdAt || ""
@@ -524,7 +528,7 @@ function shareOrDownloadCsvReport() {
     const tomanVal = toTomanAmount(it.amount, cur);
     rows.push([
       rowNum++,
-      "هزینه سفر",
+      t("هزینه سفر"),
       it.title || "",
       "",
       Number(it.amount) || 0,
@@ -562,6 +566,9 @@ function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
 
 function shareOrDownloadPngReport() {
   const includePrivate = askDriverPrivateDataPermission();
+  const uiText = text => window.TransitI18n?.t(text) || text;
+  const locale = window.TransitI18n?.language || "fa";
+  const isLtr = locale === "en" || locale === "tr";
   const m = calculateMetrics();
   const title = (state && state.tripTitle) || "سفر ترانزیتی";
   const dateStr = formatTripDate(state.tripDate) || "نامشخص";
@@ -581,26 +588,30 @@ function shareOrDownloadPngReport() {
   ctx.lineWidth = 2;
   ctx.strokeRect(36, 36, canvas.width - 72, 140);
 
-  ctx.textAlign = "right";
+  ctx.textAlign = isLtr ? "left" : "right";
+  ctx.direction = isLtr ? "ltr" : "rtl";
+  const edgeX = isLtr ? 44 : canvas.width - 44;
+  const headerX = isLtr ? 64 : canvas.width - 64;
   ctx.fillStyle = "#38bdf8";
   ctx.font = "bold 34px sans-serif";
-  ctx.fillText("گزارش کامل تسویه و سوخت ترانزیت", canvas.width - 64, 92);
+  ctx.fillText(uiText("گزارش کامل تسویه و سوخت ترانزیت"), headerX, 92);
 
   ctx.fillStyle = "#cbd5e1";
   ctx.font = "21px sans-serif";
-  ctx.fillText("سفر: " + title + "   |   تاریخ سفر: " + dateStr, canvas.width - 64, 138);
+  ctx.fillText(uiText("سفر: ") + title + uiText("   |   تاریخ سفر: ") + dateStr, headerX, 138);
 
   const cards = [
-    { label: "مصرف کل سوخت", val: formatNum(m.totalConsumed || 0, 2) + " L", color: "#38bdf8" },
-    { label: "سهمیه شرکت", val: formatNum(state.companyQuota || 0, 2) + " L", color: "#34d399" },
-    { label: "مازاد / کسری", val: includePrivate ? formatNum(m.companySurplus, 2) + " L" : "محرمانه", color: "#fbbf24" },
-    { label: "جمع هزینه‌ها", val: formatToman(m.totalExpensesToman || 0), color: "#f87171" }
+    { label: uiText("مصرف کل سوخت"), val: formatNum(m.totalConsumed || 0, 2) + " L", color: "#38bdf8" },
+    { label: uiText("سهمیه شرکت"), val: formatNum(state.companyQuota || 0, 2) + " L", color: "#34d399" },
+    { label: uiText("مازاد / کسری"), val: includePrivate ? formatNum(m.companySurplus, 2) + " L" : uiText("محرمانه"), color: "#fbbf24" },
+    { label: uiText("جمع هزینه‌ها"), val: formatToman(m.totalExpensesToman || 0), color: "#f87171" }
   ];
   const cardW = 204;
   const gap = 16;
   cards.forEach((c, idx) => {
-    const xRight = canvas.width - 36 - idx * (cardW + gap);
-    const xLeft = xRight - cardW;
+    const xLeft = isLtr ? 36 + idx * (cardW + gap) : canvas.width - 36 - (idx + 1) * cardW - idx * gap;
+    const xRight = xLeft + cardW;
+    const cardTextX = isLtr ? xLeft + 16 : xRight - 16;
     ctx.fillStyle = "#111c30";
     ctx.fillRect(xLeft, 200, cardW, 120);
     ctx.strokeStyle = "#243b5a";
@@ -608,42 +619,42 @@ function shareOrDownloadPngReport() {
 
     ctx.fillStyle = "#94a3b8";
     ctx.font = "18px sans-serif";
-    ctx.fillText(c.label, xRight - 16, 236);
+    ctx.fillText(c.label, cardTextX, 236);
 
     ctx.fillStyle = c.color;
     ctx.font = "bold 22px sans-serif";
-    ctx.fillText(c.val, xRight - 16, 286);
+    ctx.fillText(c.val, cardTextX, 286);
   });
 
   let y = 370;
   ctx.fillStyle = "#e2e8f0";
   ctx.font = "bold 25px sans-serif";
-  ctx.fillText("ریز آیتم‌های ثبت‌شده", canvas.width - 44, y);
+  ctx.fillText(uiText("ریز آیتم‌های ثبت‌شده"), edgeX, y);
   y += 42;
 
   const allItems = [];
   (state.borderFuelItems || []).forEach(it => {
     const cur = it.currency || "IRT";
     const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-    allItems.push(`[مرز] ${it.borderName || "مرز"} — ${formatNum(it.liters || 0, 1)}L — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel}`);
+    allItems.push(`[${uiText("مرز")}] ${it.borderName || uiText("مرز")} — ${formatNum(it.liters || 0, 1)}L — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${uiText(curLabel)}`);
   });
   (state.tripExpenses || []).forEach(it => {
     const cur = it.currency || "IRT";
     const curLabel = (typeof CURRENCY_LABELS !== "undefined" && CURRENCY_LABELS[cur]) || cur;
-    allItems.push(`[هزینه] ${it.title || "هزینه"} — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${curLabel}`);
+    allItems.push(`[${uiText("هزینه")}] ${it.title || uiText("هزینه")} — ${formatNum(it.amount || 0, cur === "IRT" ? 0 : 2)} ${uiText(curLabel)}`);
   });
 
   ctx.font = "21px sans-serif";
   if (!allItems.length) {
     ctx.fillStyle = "#94a3b8";
-    ctx.fillText("هیچ آیتم سوخت مرزی یا هزینه سفری ثبت نشده است.", canvas.width - 44, y);
+    ctx.fillText(uiText("هیچ آیتم سوخت مرزی یا هزینه سفری ثبت نشده است."), edgeX, y);
     y += 36;
   } else {
     for (let i = 0; i < allItems.length && y < 1160; i++) {
       ctx.fillStyle = i % 2 === 0 ? "#101a2d" : "#0e1728";
       ctx.fillRect(36, y - 24, canvas.width - 72, 38);
       ctx.fillStyle = "#f1f5f9";
-      y = wrapCanvasText(ctx, `${i + 1}. ${allItems[i]}`, canvas.width - 52, y, canvas.width - 104, 34);
+      y = wrapCanvasText(ctx, `${i + 1}. ${allItems[i]}`, isLtr ? 52 : canvas.width - 52, y, canvas.width - 104, 34);
       y += 8;
     }
   }
@@ -651,18 +662,22 @@ function shareOrDownloadPngReport() {
   ctx.fillStyle = "#64748b";
   ctx.font = "18px sans-serif";
   if (allItems.length > 15) {
-    ctx.fillText("برای همه ردیف‌ها، گزارش متنی یا چاپی را بررسی کنید.", canvas.width - 44, canvas.height - 62);
+    ctx.fillText(uiText("برای همه ردیف‌ها، گزارش متنی یا چاپی را بررسی کنید."), edgeX, canvas.height - 62);
   }
-  ctx.fillText("ایجاد شده در: " + nowStr, canvas.width - 44, canvas.height - 32);
+  ctx.fillText(uiText("ایجاد شده در: ") + nowStr, edgeX, canvas.height - 32);
 
   canvas.toBlob(blob => {
     if (blob) shareOrDownloadFile(blob, "gozaresh-tasviye.png");
   }, "image/png");
 }
 
+function confirmLocalized(message) {
+  return window.confirm(window.TransitI18n?.t(message) || message);
+}
+
 function showToast(msg) {
   const toast = document.getElementById("toast");
-  toast.textContent = msg;
+  toast.textContent = window.TransitI18n?.t(msg) || msg;
   toast.classList.add("show");
   clearTimeout(window.__toastTimer);
   window.__toastTimer = setTimeout(() => {
@@ -851,7 +866,7 @@ function addBorderFuelItem() {
 }
 
 function deleteBorderFuelItem(id) {
-  if (!confirm("سطر انتخاب‌شده حذف شود؟")) return;
+  if (!confirmLocalized("سطر انتخاب‌شده حذف شود؟")) return;
   state.borderFuelItems = state.borderFuelItems.filter(x => x.id !== id);
   persistCurrentState();
   renderAll();
@@ -996,7 +1011,7 @@ function addTripExpenseItem() {
 }
 
 function deleteTripExpenseItem(id) {
-  if (!confirm("هزینه انتخاب‌شده حذف شود؟")) return;
+  if (!confirmLocalized("هزینه انتخاب‌شده حذف شود؟")) return;
   state.tripExpenses = state.tripExpenses.filter(x => x.id !== id);
   persistCurrentState();
   renderAll();
@@ -1198,7 +1213,7 @@ function exportArchivedTrip(archiveId, format) {
 function loadArchivedTrip(archiveId) {
   const list = loadArchive();
   const found = list.find(x => x.archiveId === archiveId);
-  if (!found || !found.data || !confirm("سفر انتخاب‌شده جایگزین فرم فعلی شود؟")) return;
+  if (!found || !found.data || !confirmLocalized("سفر انتخاب‌شده جایگزین فرم فعلی شود؟")) return;
   editedArchiveId = archiveId;
   state = normalizeDraft(found.data);
   editingTarget = null;
@@ -1211,7 +1226,7 @@ function loadArchivedTrip(archiveId) {
 }
 
 async function deleteArchivedTrip(archiveId) {
-  if (!storageReady || workspaceBusy || !confirm("سفر انتخاب‌شده حذف شود؟")) return;
+  if (!storageReady || workspaceBusy || !confirmLocalized("سفر انتخاب‌شده حذف شود؟")) return;
   workspaceBusy = true;
   try {
     const nextId = editedArchiveId === archiveId ? null : editedArchiveId;
@@ -1225,7 +1240,7 @@ async function deleteArchivedTrip(archiveId) {
 }
 
 function resetDefaultTrip() {
-  if (!confirm("آیا مطمئن هستید که می‌خواهید اطلاعات سفر فعلی را به حالت پیش‌فرض بازنشانی کنید؟")) return;
+  if (!confirmLocalized("آیا مطمئن هستید که می‌خواهید اطلاعات سفر فعلی را به حالت پیش‌فرض بازنشانی کنید؟")) return;
   editedArchiveId = null;
   state = getDefaultState();
   populateFormFromState();
@@ -1267,7 +1282,8 @@ function copyFullReport() {
     `🧾 هزینه‌های سفر: داخل ایران ${formatToman(expInsideToman)} | خارج از ایران ${formatToman(expOutsideToman)} | جمع: ${formatToman(expInsideToman + expOutsideToman)}`
   ];
 
-  const text = getSanitizedTextForPrivacy(lines.join("\n"), askDriverPrivateDataPermission());
+  const plain = getSanitizedTextForPrivacy(lines.join("\n"), askDriverPrivateDataPermission());
+  const text = window.TransitI18n?.report(plain) || plain;
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => showToast("گزارش کامل کپی شد")).catch(() => fallbackCopy(text));
   } else {
@@ -1302,7 +1318,8 @@ function validReceipt(value) {
 }
 
 function printTripReport() {
-  const report = getSanitizedTextForPrivacy(getReportTextContent(), askDriverPrivateDataPermission());
+  const safeReport = getSanitizedTextForPrivacy(getReportTextContent(), askDriverPrivateDataPermission());
+  const report = window.TransitI18n?.report(safeReport) || safeReport;
   const frame = document.createElement("iframe");
   frame.title = "گزارش چاپی";
   frame.style.cssText = "position:fixed;width:1px;height:1px;border:0";
@@ -1310,9 +1327,11 @@ function printTripReport() {
     frame.contentWindow.addEventListener("afterprint", () => frame.remove(), {once: true});
     frame.contentWindow.print();
   };
-  frame.srcdoc = '<!doctype html><html lang="fa" dir="rtl"><meta charset="utf-8"><title>گزارش تسویه</title>'
+  const locale = window.TransitI18n?.language || "fa";
+  const direction = (locale === "en" || locale === "tr") ? "ltr" : "rtl";
+  frame.srcdoc = '<!doctype html><html lang="' + locale + '" dir="' + direction + '"><meta charset="utf-8"><title>Transit Fuel Report</title>'
     + '<style>body{font:14px/1.8 sans-serif;margin:24px}pre{white-space:pre-wrap;font:inherit}</style>'
-    + '<h1>گزارش تسویه سفر ترانزیتی</h1><pre>' + escapeHtml(report) + '</pre></html>';
+    + '<h1>' + escapeHtml(window.TransitI18n?.t("گزارش تسویه سفر ترانزیتی") || "گزارش تسویه سفر ترانزیتی") + '</h1><pre>' + escapeHtml(report) + '</pre></html>';
   document.body.appendChild(frame);
 }
 
@@ -1385,7 +1404,7 @@ async function submitUserFeedback() {
 }
 
 async function deleteUserFeedback(id) {
-  if (!confirm("بازخورد انتخاب‌شده حذف شود؟")) return;
+  if (!confirmLocalized("بازخورد انتخاب‌شده حذف شود؟")) return;
   const next = loadUserFeedbacks().filter(x => String(x.id) !== String(id));
   try { await saveUserFeedbacks(next); } catch (error) { storageError(error); return; }
   renderUserFeedbacks();

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ورود امن مدیریت | Transit Fuel</title>
+<style>
+:root{color-scheme:dark;font-family:Tahoma,system-ui,sans-serif}
+body{min-height:100vh;display:grid;place-items:center;background:#101827;color:#edf2f9;margin:0;padding:16px}
+main{width:min(440px,100%);padding:26px;border:1px solid #3a4960;border-radius:16px;background:#19253a;box-sizing:border-box}
+h1{font-size:1.4rem} p{line-height:1.8;color:#c8d6e6}
+form{display:grid;gap:14px;margin-top:20px}label{display:grid;gap:7px}
+input{font:inherit;padding:13px;border:1px solid #687c9a;border-radius:8px;background:#0b1424;color:white;direction:ltr}
+button{font:inherit;padding:12px;border:0;border-radius:8px;background:#33b5dd;color:#04111a;cursor:pointer;font-weight:bold}
+button:disabled{opacity:.6} #message{min-height:2em;color:#ffcf84}
+[hidden]{display:none!important} a{color:#80d9ff}
+</style>
+</head>
+<body><main>
+<h1>ورود امن مدیریت Transit Fuel</h1>
+<p>محیط آزمایشی ایران — ورود مدیر با رمز عبور و کد شش‌رقمی</p>
+<p id="message" role="status" aria-live="polite"></p>
+<form id="staffLogin" autocomplete="off">
+<label>نام کاربری<input name="username" value="transit-admin" autocomplete="username" required></label>
+<label>رمز عبور<input name="password" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" required></label>
+<button id="togglePassword" type="button" aria-pressed="false">نمایش رمز عبور</button>
+<p id="inputDiagnostics" role="status" aria-live="polite"></p>
+<button type="submit">دریافت کد تأیید</button>
+<details><summary>بررسی محلی تطابق رمز (بدون ارسال رمز)</summary><p>کد تصادفی را از ابزار PowerShell وارد کنید و «محاسبه» را بزنید. فقط کد تطبیق را با خروجی همان ابزار مقایسه کنید؛ هیچ کدی را برای دیگران نفرستید.</p><label>کد تصادفی آزمون<input id="passwordProbeNonce" type="text" autocomplete="off" spellcheck="false" maxlength="160" placeholder="NONCE: (۳۲ نویسه)"></label><button id="passwordProbeButton" type="button">محاسبه کد تطبیق در مرورگر</button><p id="passwordProbeResult" role="status" aria-live="polite"></p></details>
+</form>
+<form id="otpLogin" hidden>
+<p id="otpHint"></p>
+<label>کد شش‌رقمی<input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required></label>
+<button type="submit">تأیید و ورود به مدیریت</button>
+<button id="back" type="button">بازگشت</button>
+</form>
+<p><a href="/">بازگشت به صفحه اصلی</a></p>
+</main><script src="/manager-login.js" defer></script></body></html>

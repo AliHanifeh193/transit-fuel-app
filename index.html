@@ -724,9 +724,120 @@
       margin: 4px;
     }
     #companyPanel button { margin: 4px; }
+    /* Accessible, wrapped login layout: prevents clipped fields on narrow screens. */
+    #companyPanel #companyLogin,
+    #companyPanel #driverPhoneLogin,
+    #companyPanel #companyOtp {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+      align-items: end;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    #companyPanel #companyLogin[hidden],
+    #companyPanel #driverPhoneLogin[hidden],
+    #companyPanel #companyOtp[hidden] { display: none; }
+    #companyPanel form > h3, #companyPanel form > p { grid-column: 1 / -1; }
+    #companyPanel form > label { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    #companyPanel form > label > input { width: 100%; margin: 0; box-sizing: border-box; }
+    #companyPanel form > button { min-height: 42px; justify-self: start; }
+    #companyPanel #companyStatus { min-height: 1.5em; line-height: 1.8; }
   </style>
 
-    <style id="scrollFixStyle">
+  
+  <style id="companyResponsiveLayout">
+    /* Scoped to the authenticated company workspace; no effect on trip calculations. */
+    #companyPanel { width:100%; min-width:0; overflow-wrap:anywhere; }
+    #companyWorkspace { width:100%; min-width:0; display:grid; gap:18px; margin-top:18px; }
+    #companyWorkspace[hidden] { display:none !important; }
+    #companyWorkspace .company-workspace-toolbar {
+      display:flex; flex-wrap:wrap; align-items:center; gap:12px;
+      padding:16px; border-radius:14px; border:1px solid rgba(148,163,184,.24);
+      background:rgba(15,23,42,.66);
+    }
+    #companyWorkspace .company-workspace-toolbar h3 { flex:1 1 260px; margin:0; line-height:1.5; }
+    #companyWorkspace .company-admin-panel {
+      width:100%; min-width:0; display:grid; gap:16px; padding:18px;
+      border:1px solid rgba(148,163,184,.24); border-radius:14px;
+      background:rgba(15,23,42,.45); box-sizing:border-box;
+    }
+    #companyWorkspace .company-admin-panel h3 { margin:0; }
+    #companyWorkspace .company-admin-controls {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr));
+      gap:14px; align-items:end; min-width:0;
+    }
+    #companyWorkspace .company-admin-controls > label,
+    #companyWorkspace .company-password-details > label,
+    #companyWorkspace > label,
+    #companyWorkspace .company-admin-roster-row > label {
+      display:flex; flex-direction:column; align-items:stretch; gap:6px;
+      min-width:0; font-size:.91rem;
+    }
+    #companyWorkspace .company-admin-controls input,
+    #companyWorkspace .company-admin-controls select,
+    #companyWorkspace .company-password-details input,
+    #companyWorkspace .company-admin-roster-row input,
+    #companyWorkspace > label textarea {
+      display:block; width:100%; min-width:0; max-width:100%;
+      box-sizing:border-box; margin:0; padding:11px 12px;
+      border:1px solid rgba(148,163,184,.32);
+      border-radius:9px; background:#111c2d; color:#f1f5f9;
+    }
+    #companyWorkspace .company-admin-controls button { width:100%; min-height:43px; }
+
+    #companyWorkspace .company-fleet-controls {
+      display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px;
+      align-items:end; max-width:600px;
+    }
+    #companyWorkspace .company-fleet-controls > label {
+      min-width:0; display:flex; flex-direction:column; gap:6px;
+    }
+    #companyWorkspace .company-fleet-controls input {
+      display:block; width:100%; box-sizing:border-box; padding:11px 12px; margin:0;
+      background:#111c2d; color:#f1f5f9; border:1px solid rgba(148,163,184,.32); border-radius:9px;
+    }
+    #companyWorkspace .company-action-row {display:flex; align-items:center; flex-wrap:wrap; gap:10px;}
+    #companyWorkspace .company-action-row button {width:auto; max-width:100%; padding:10px 18px;}
+    #companyWorkspace .company-feedback-compose {display:grid; gap:10px; max-width:760px;}
+    #companyWorkspace .company-feedback-compose > label {display:grid; gap:7px;}
+    #companyWorkspace .company-feedback-compose textarea {
+      min-height:100px; max-width:100%; width:100%; box-sizing:border-box; padding:12px;
+      background:#111c2d; color:#f1f5f9; border:1px solid rgba(148,163,184,.32); border-radius:9px;
+    }
+    #companyWorkspace .company-feedback-compose > button {justify-self:start; width:auto; padding:10px 20px;}
+    #companyWorkspace .company-admin-panel h4 {margin:2px 0 0; font-size:1rem; color:#dbeafe;}
+    @media(max-width:540px) {
+      #companyWorkspace .company-fleet-controls {grid-template-columns:minmax(0,1fr);}
+      #companyWorkspace .company-fleet-controls > button {width:100%;}
+    }
+
+    #companyWorkspace .company-admin-roster { display:grid; gap:10px; min-width:0; }
+    #companyWorkspace .company-admin-roster-row {
+      display:flex; align-items:center; flex-wrap:wrap; gap:12px;
+      padding:12px 14px; background:rgba(30,41,59,.6);
+      border:1px solid rgba(148,163,184,.15); border-radius:10px;
+      line-height:1.8; overflow-wrap:anywhere;
+    }
+    #companyWorkspace .company-admin-roster-row > label { flex:1 1 180px; }
+    #companyWorkspace .company-password-details {
+      padding:14px 16px; border:1px solid rgba(148,163,184,.2);
+      border-radius:12px; background:rgba(15,23,42,.45);
+    }
+    #companyWorkspace .company-password-details summary { cursor:pointer; font-weight:600; }
+    #companyWorkspace .company-password-details[open] {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));
+      gap:12px; align-items:end;
+    }
+    #companyWorkspace .company-password-details summary { grid-column:1/-1; }
+    #companyWorkspace > label textarea { min-height:96px; }
+    @media(max-width:540px) {
+      #companyWorkspace .company-admin-panel { padding:12px; }
+      #companyWorkspace .company-workspace-toolbar { padding:12px; }
+      #companyWorkspace .company-admin-roster-row > button { width:100%; }
+    }
+  </style>
+
+  <style id="scrollFixStyle">
       html, body {
         overflow-x: hidden;
         overflow-y: auto !important;
@@ -1459,10 +1570,31 @@
         <label>رمز عبور <input name="password" type="password" autocomplete="current-password" required></label>
         <button>ورود</button>
       </form>
+      <form id="driverPhoneLogin" hidden>
+        <h3>ورود راننده با پیامک</h3>
+        <label>شماره موبایل ایران
+          <input name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="+989121234567" required>
+        </label>
+        <button type="submit">ارسال کد ورود</button>
+      </form>
+      <form id="companyOtp" hidden>
+        <h3>تأیید کد یک‌بارمصرف</h3>
+        <p id="otpHint"></p>
+        <label>کد شش‌رقمی
+          <input name="code" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required>
+        </label>
+        <button type="submit">تأیید و ورود</button>
+        <button type="button" id="cancelOtp">بازگشت</button>
+      </form>
       <div id="companyWorkspace" hidden></div>
     </section>
     <script src="calculations.js"></script>
     <script src="storage.js"></script>
+    <script src="i18n-catalog.js" defer></script>
+    <script src="i18n-catalog-extra.js" defer></script>
+    <script src="i18n-catalog-dynamic.js" defer></script>
+    <script src="i18n-catalog-app.js" defer></script>
+    <script src="i18n.js" defer></script>
     <script src="app.js" defer></script>
     <script src="company.js" defer></script>
 
