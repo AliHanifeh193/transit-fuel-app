@@ -1,10 +1,10 @@
 "use strict";
 
 const PREFIX = "transit-fuel-pwa-";
-const CACHE_NAME = PREFIX + "1.0.1-sms-mfa";
+const CACHE_NAME = PREFIX + "1.0.2-multilang";
 const ASSETS = [
   "./", "./index.html", "./manifest.json", "./calculations.js", "./storage.js",
-  "./company.js", "./app.js", "./privacy.html", "./icon-192.png", "./icon-512.png",
+  "./company.js", "./app.js", "./i18n.js", "./privacy.html", "./icon-192.png", "./icon-512.png",
   "./icon-192.svg", "./icon-512.svg"
 ];
 const assetPaths = new Set(ASSETS.map(asset => new URL(asset, self.registration.scope).pathname));
